@@ -1,0 +1,12 @@
+from poster.encode import multipart_encode
+from poster.streaminghttp import register_openers
+import urllib2
+
+register_openers()
+
+datagen, headers = multipart_encode({"url" : "http://gipp.com/wp-content/papercite-data/pdf/alcala04.pdf", "format" : "json"})
+
+request = urllib2.Request("http://api.mr-dlib.org/tools/pdfextract", datagen, headers)
+
+print urllib2.urlopen(request).read()
+

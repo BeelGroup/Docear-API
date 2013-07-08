@@ -1,0 +1,6 @@
+Struktur Dateinamen PDFs:
+
+Document ID: 123451234
+Fulltext (URL) ID: 678906789067890
+
+0/1/2/3/4/5/1/2/3/4/678906789067890.pdf

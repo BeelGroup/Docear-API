@@ -1,0 +1,11 @@
+import httplib, urllib
+params = urllib.urlencode({'url': 'http://gipp.com/wp-content/papercite-data/pdf/alcala04.pdf', 'format': 'json' })
+headers = {"Accept": "text/plain"}
+conn = httplib.HTTPConnection("api.mr-dlib.org")
+conn.set_debuglevel(10)
+conn.request("GET", "/tools/pdfextract?" + params, '', headers)
+response = conn.getresponse()
+print response.status, response.reason
+data = response.read()
+print data
+conn.close()

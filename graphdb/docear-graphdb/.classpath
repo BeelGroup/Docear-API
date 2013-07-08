@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry excluding="resources/" kind="src" path="src"/>
+	<classpathentry kind="src" path="home"/>
+	<classpathentry kind="src" path="resources"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="lib/DocearPlugin.jar"/>
+	<classpathentry kind="lib" path="lib/jersey-client-1.9.jar"/>
+	<classpathentry kind="lib" path="lib/nanoxml-2.2.1.jar"/>
+	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/docear_mindmap_parser"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/NEO4J"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

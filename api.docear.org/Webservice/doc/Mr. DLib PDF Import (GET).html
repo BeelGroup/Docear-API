@@ -1,0 +1,17 @@
+<html>
+	<body>
+		<h1>PDF / XML Upload to Mr. DLib</h1>
+		<form action="http://api.mr-dlib.org/tools/pdfextract/" method="GET" enctype="multipart/form-data">
+			<div>
+				URL: <input name="url" size="45" /><p />
+				<input type="hidden" name="source" value="jabref"/>
+				Format: 
+				<select name="format">
+					<option value="xml">XML</option>
+					<option value="json" selected="selected">JSON</option>
+				</select>
+			</div>
+			<input type="submit" value="Upload It" />
+		</form>
+	</body>
+</html>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="javadoc">
+    <target name="javadoc">
+        <javadoc access="public" author="true" classpath="lib/hibernate3.jar:lib/log4j-1.2.15.jar:lib/cglib-2.2.jar:lib/javassist-3.9.0.GA.jar:lib/c3p0-0.9.1.jar:lib/antlr-2.7.6.jar:lib/mysql-connector-java-5.1.12-bin.jar:lib/dom4j-1.6.1.jar:lib/jta-1.1.jar:lib/commons-collections-3.1.jar:lib/slf4j-log4j12-1.5.11.jar:lib/hibernate-jpa-2.0-api-1.0.0.Final.jar:lib/slf4j-api-1.5.8.jar" destdir="doc" nodeprecated="false" nodeprecatedlist="false" noindex="false" nonavbar="false" notree="false" packagenames="org.sciplore.resources" source="1.6" sourcefiles="src/org/sciplore/database/Session.java,src/org/sciplore/tools/Tools.java" sourcepath="src" splitindex="true" use="true" version="true">
+            <link href="file:/Users/law/Documents/Diplomarbeit/SVN/SciPlore_Project/Database_and_API/DB_Access_Library/doc/"/>
+            <link href="http://java.sun.com/javase/6/docs/api/"/>
+        </javadoc>
+    </target>
+</project>

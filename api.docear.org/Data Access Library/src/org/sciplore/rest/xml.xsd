@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema elementFormDefault="qualified" targetNamespace="http://dke113.cs.uni-magdeburg.de/rest/xml" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://dke113.cs.uni-magdeburg.de/rest/xml">
+
+    
+
+    <xsd:complexType name="documentType">
+    	<xsd:sequence maxOccurs="1" minOccurs="1">
+    		<xsd:element name="title" type="titleType" maxOccurs="1"
+    			minOccurs="1">
+    		</xsd:element>
+    		<xsd:element name="abstract" type="abstractType"
+    			maxOccurs="1" minOccurs="0">
+    		</xsd:element>
+    		<xsd:element name="authors" type="authorsType" maxOccurs="1"
+    			minOccurs="0">
+    		</xsd:element>
+    		<xsd:element name="keywords" type="keywordsType"
+    			maxOccurs="1" minOccurs="0">
+    		</xsd:element>
+    		<xsd:element name="fulltexts" type="fulltextsType"
+    			maxOccurs="1" minOccurs="0">
+    		</xsd:element>
+    		<xsd:element name="references" type="referencesType"
+    			maxOccurs="1" minOccurs="0">
+    		</xsd:element>
+    		<xsd:element name="cited_by" type="cited_byType"
+    			maxOccurs="1" minOccurs="0">
+    		</xsd:element>
+    		<xsd:element name="related_documents"
+    			type="related_documentsType" maxOccurs="1" minOccurs="0">
+    		</xsd:element>
+    		<xsd:element name="doi" type="doiType" maxOccurs="1"
+    			minOccurs="0">
+    		</xsd:element>
+    		<xsd:element name="venue" type="venueType" maxOccurs="1"
+    			minOccurs="0">
+    		</xsd:element>
+    		<xsd:element name="issn" type="issnType" maxOccurs="1"
+    			minOccurs="0">
+    		</xsd:element>
+    		<xsd:element name="isbn" type="isbnType" maxOccurs="1"
+    			minOccurs="0">
+    		</xsd:element>
+    		<xsd:element name="language" type="languageType"
+    			maxOccurs="1" minOccurs="0">
+    		</xsd:element>
+    		<xsd:element name="series" type="seriesType" maxOccurs="1"
+    			minOccurs="0">
+    		</xsd:element>
+    		<xsd:element name="pages" type="pagesType" maxOccurs="1"
+    			minOccurs="0">
+    		</xsd:element>
+    		<xsd:element name="volume" type="volumeType" maxOccurs="1"
+    			minOccurs="0">
+    		</xsd:element>
+    		<xsd:element name="edition" type="editionType" maxOccurs="1"
+    			minOccurs="0">
+    		</xsd:element>
+    		<xsd:element name="number" type="numberType" maxOccurs="1"
+    			minOccurs="0">
+    		</xsd:element>
+    		<xsd:element name="publishdate" type="publishdateType"
+    			maxOccurs="1" minOccurs="0">
+    		</xsd:element>
+    		<xsd:element name="annotations" type="annotationsType"
+    			maxOccurs="1" minOccurs="0">
+    		</xsd:element>
+
+    		<xsd:element name="relatedness" type="relatednessType" maxOccurs="1" minOccurs="0"></xsd:element>
+    	</xsd:sequence>
+        
+        <xsd:attribute name="type" type="xsd:string" use="required"></xsd:attribute>
+        <xsd:attribute name="hash" type="xsd:string" use="required"></xsd:attribute>  
+        <xsd:attribute name="id" type="xsd:unsignedLong" use="required"></xsd:attribute>
+    	<xsd:attribute name="href" type="xsd:string" use="required"></xsd:attribute>         	
+    </xsd:complexType>
+
+    <xsd:complexType name="titleType">
+    	<xsd:simpleContent>
+    		<xsd:extension base="xsd:string">
+    			<xsd:attribute name="href" type="xsd:string" use="required"></xsd:attribute>
+    		</xsd:extension>
+    	</xsd:simpleContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="annotationType">
+    	<xsd:sequence maxOccurs="1" minOccurs="1">
+    		<xsd:element name="user" type="userType" maxOccurs="1"
+    			minOccurs="0">
+    		</xsd:element>
+    		<xsd:element name="title" type="xsd:string" maxOccurs="1" minOccurs="0"></xsd:element>
+    		<xsd:element name="text" type="textType" maxOccurs="1"
+    			minOccurs="0">
+    		</xsd:element>
+    	</xsd:sequence>
+    	<xsd:attribute name="rating" type="xsd:int" use="required"></xsd:attribute>
+    	<xsd:attribute name="parent" type="xsd:unsignedLong" use="required"></xsd:attribute>
+    	<xsd:attribute name="type" type="xsd:string" use="required"></xsd:attribute>    	
+    	<xsd:attribute name="id" type="xsd:unsignedLong" use="required"></xsd:attribute>
+    	<xsd:attribute name="href" type="xsd:string" use="required"></xsd:attribute>   	
+    </xsd:complexType>
+
+
+    <xsd:complexType name="userType">
+    	<xsd:simpleContent>
+    		<xsd:extension base="xsd:string">
+    			<xsd:attribute name="href" type="xsd:string"></xsd:attribute>
+    		</xsd:extension>
+    	</xsd:simpleContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="textType">
+    	<xsd:simpleContent>
+    		<xsd:extension base="xsd:string">
+    			<xsd:attribute name="href" type="xsd:string"></xsd:attribute>
+    		</xsd:extension>
+    	</xsd:simpleContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="annotationsType">
+    	<xsd:sequence maxOccurs="unbounded" minOccurs="1">
+    		<xsd:element name="annotation" type="annotationType"></xsd:element>
+    	</xsd:sequence>
+    	<xsd:attribute name="href" type="xsd:string" use="required"></xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:element name="webservice" type="webserviceType"></xsd:element>
+
+
+    <xsd:complexType name="webserviceType">
+    	<xsd:choice>
+    		<xsd:element name="document" type="documentType"></xsd:element>
+    		<xsd:element name="annotations" type="annotationsType"></xsd:element>
+    	</xsd:choice>
+    </xsd:complexType>
+
+    <xsd:complexType name="abstractType">
+    	<xsd:simpleContent>
+    		<xsd:extension base="xsd:string">
+    			<xsd:attribute name="id" type="xsd:unsignedLong" use="required"></xsd:attribute>
+    			<xsd:attribute name="href" type="xsd:string" use="required"></xsd:attribute>
+    		</xsd:extension>
+    	</xsd:simpleContent>    	
+    </xsd:complexType>
+
+    <xsd:complexType name="authorsType">
+    	<xsd:sequence maxOccurs="unbounded" minOccurs="1">
+    		<xsd:element name="author" type="authorType"></xsd:element>
+    	</xsd:sequence>
+    	<xsd:attribute name="href" type="xsd:string" use="required"></xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:complexType name="authorType">
+    	<xsd:simpleContent>
+    		<xsd:extension base="xsd:string">
+    			<xsd:attribute name="id" type="xsd:unsignedLong" use="required"></xsd:attribute>
+    			<xsd:attribute name="href" type="xsd:string" use="required"></xsd:attribute>
+    		</xsd:extension>
+    	</xsd:simpleContent>    	
+    </xsd:complexType>
+
+    <xsd:complexType name="keywordsType">
+    	<xsd:sequence maxOccurs="unbounded" minOccurs="1">
+    		<xsd:element name="keyword" type="keywordType"></xsd:element>
+    	</xsd:sequence>
+    	<xsd:attribute name="href" type="xsd:string" use="required"></xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:complexType name="keywordType">
+    	<xsd:simpleContent>
+    		<xsd:extension base="xsd:string">
+    			<xsd:attribute name="keywordtype" type="xsd:string"></xsd:attribute>
+    		</xsd:extension>
+    	</xsd:simpleContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="fulltextsType">
+    	<xsd:sequence maxOccurs="unbounded" minOccurs="1">
+    		<xsd:element name="fulltext" type="fulltextType"></xsd:element>
+    	</xsd:sequence>
+    	<xsd:attribute name="href" type="xsd:string" use="required"></xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:complexType name="fulltextType">
+    	<xsd:simpleContent>
+    		<xsd:extension base="xsd:string">
+    		    <xsd:attribute name="href" type="xsd:string" use="required"></xsd:attribute>
+    		    <xsd:attribute name="id" type="xsd:unsignedLong" use="required"></xsd:attribute>  
+    			<xsd:attribute name="licence" type="xsd:int" use="required"></xsd:attribute>               
+    		</xsd:extension>
+    	</xsd:simpleContent>    	
+    </xsd:complexType>
+
+    <xsd:complexType name="referencesType">
+    	<xsd:sequence maxOccurs="unbounded" minOccurs="1">
+    		<xsd:element name="document" type="documentType"></xsd:element>
+    	</xsd:sequence>
+    	<xsd:attribute name="href" type="xsd:string" use="required"></xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:complexType name="referenceType">
+    	<xsd:simpleContent>
+    		<xsd:extension base="xsd:string">
+    		    <xsd:attribute name="href" type="xsd:string"></xsd:attribute>
+                <xsd:attribute name="id" type="xsd:unsignedLong"></xsd:attribute>
+                <xsd:attribute name="hash" type="xsd:string"></xsd:attribute>  
+    			<xsd:attribute name="type" type="xsd:string"></xsd:attribute>
+    		</xsd:extension>
+    	</xsd:simpleContent>    	
+    </xsd:complexType>
+
+    <xsd:complexType name="cited_byType">
+    	<xsd:sequence maxOccurs="unbounded" minOccurs="1">
+    		<xsd:element name="document" type="documentType"></xsd:element>
+    	</xsd:sequence>
+    	<xsd:attribute name="href" type="xsd:string" use="required"></xsd:attribute>
+    	<xsd:attribute name="citationcount" type="xsd:int" use="required"></xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:complexType name="related_documentsType">
+    	<xsd:sequence maxOccurs="unbounded" minOccurs="1">
+    		<xsd:element name="document" type="documentType"></xsd:element>
+    	</xsd:sequence>
+    	<xsd:attribute name="href" type="xsd:string" use="required"></xsd:attribute>
+    </xsd:complexType>
+
+
+    <xsd:complexType name="doiType">
+    	<xsd:simpleContent>
+    		<xsd:extension base="xsd:string">
+    			<xsd:attribute name="href" type="xsd:string" use="required"></xsd:attribute>
+    		</xsd:extension>
+    	</xsd:simpleContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="venueType">
+    	<xsd:simpleContent>
+    		<xsd:extension base="xsd:string">
+    			<xsd:attribute name="id" type="xsd:unsignedLong" use="required"></xsd:attribute>
+    			<xsd:attribute name="href" type="xsd:string" use="required"></xsd:attribute>
+    		</xsd:extension>
+    	</xsd:simpleContent>    	
+    </xsd:complexType>
+
+    <xsd:complexType name="issnType">
+    	<xsd:simpleContent>
+    		<xsd:extension base="xsd:string">
+    			<xsd:attribute name="href" type="xsd:string" use="required">
+    			</xsd:attribute>
+    		</xsd:extension>
+    	</xsd:simpleContent>
+    </xsd:complexType>
+    
+    <xsd:complexType name="isbnType">
+    	<xsd:simpleContent>
+    		<xsd:extension base="xsd:string">
+    			<xsd:attribute name="href" type="xsd:string" use="required"></xsd:attribute>
+    		</xsd:extension>
+    	</xsd:simpleContent>
+    </xsd:complexType>
+
+
+    <xsd:complexType name="languageType">
+    	<xsd:simpleContent>
+    		<xsd:extension base="xsd:string">
+    			<xsd:attribute name="href" type="xsd:string" use="required"></xsd:attribute>
+    		</xsd:extension>
+    	</xsd:simpleContent>
+    </xsd:complexType>
+
+
+    <xsd:complexType name="seriesType">
+    	<xsd:simpleContent>
+    		<xsd:extension base="xsd:string">
+    			<xsd:attribute name="href" type="xsd:string" use="prohibited"></xsd:attribute>
+    		</xsd:extension>
+    	</xsd:simpleContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="publishdateType">
+    	<xsd:simpleContent>
+    		<xsd:extension base="xsd:date">
+    			<xsd:attribute name="date_published"
+    				type="xsd:string" use="required">
+    			</xsd:attribute>
+    		</xsd:extension>
+    	</xsd:simpleContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="numberType">
+    	<xsd:simpleContent>
+    		<xsd:extension base="xsd:short">
+    			<xsd:attribute name="href" type="xsd:string" use="required"></xsd:attribute>
+    		</xsd:extension>
+    	</xsd:simpleContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="editionType">
+    	<xsd:simpleContent>
+    		<xsd:extension base="xsd:short">
+    			<xsd:attribute name="href" type="xsd:string" use="required"></xsd:attribute>
+    		</xsd:extension>
+    	</xsd:simpleContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="volumeType">
+    	<xsd:simpleContent>
+    		<xsd:extension base="xsd:short">
+    			<xsd:attribute name="href" type="xsd:string" use="required"></xsd:attribute>
+    		</xsd:extension>
+    	</xsd:simpleContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="pagesType">
+    	<xsd:simpleContent>
+    		<xsd:extension base="xsd:string">
+    			<xsd:attribute name="href" type="xsd:string" use="required"></xsd:attribute>
+    		</xsd:extension>
+    	</xsd:simpleContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="relatednessType">
+    	<xsd:attribute name="value" type="xsd:double" use="required"></xsd:attribute>
+    	<xsd:attribute name="doc1" type="xsd:unsignedLong" use="required"></xsd:attribute>
+    	<xsd:attribute name="doc2" type="xsd:unsignedLong" use="required"></xsd:attribute>
+    </xsd:complexType>
+</xsd:schema>

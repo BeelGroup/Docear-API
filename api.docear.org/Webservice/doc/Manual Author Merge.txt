@@ -1,0 +1,11 @@
+﻿Find author IDs to merge.
+E.g. by looking at PAS author index. The ID is visible from the link.
+Remember ID of "authoritive record", the name that is displayed in the author list.
+Search in person_homonyms for author to merge. Edit record. Change person_id to "authoritive id". Same for person_xref, document_persons.
+
+SET @merge_into = 1934;
+SET @merge_from = 5687;
+UPDATE person_homonyms SET person_id=@merge_into WHERE person_id=@merge_from;
+UPDATE person_xref SET person_id=@merge_into WHERE person_id=@merge_from;
+UPDATE documents_persons SET person_id=@merge_into WHERE person_id=@merge_from;
+DELETE FROM persons WHERE id=@merge_from;

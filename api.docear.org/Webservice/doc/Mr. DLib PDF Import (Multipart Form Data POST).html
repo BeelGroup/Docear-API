@@ -1,0 +1,21 @@
+<html>
+	<body>
+		<h1>PDF / XML Upload to Mr. DLib</h1>
+		<form action="http://api.mr-dlib.org/tools/pdfextract/" method="post" enctype="multipart/form-data">
+<!--
+		<form action="http://localhost:8080/documents/" method="post" enctype="multipart/form-data">
+-->
+			<div>
+				Select a file : <input type="file" name="file" size="45" /><br />
+				or enter an URL: <input name="url" size="45" /><p />
+				<input type="hidden" name="source" value="jabref"/>
+				Format: 
+				<select name="format">
+					<option value="xml">XML</option>
+					<option value="json" selected="selected">JSON</option>
+				</select>
+			</div>
+			<input type="submit" value="Upload It" />
+		</form>
+	</body>
+</html>
