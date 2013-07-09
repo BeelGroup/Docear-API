@@ -14,16 +14,13 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriInfo;
 
-import org.apache.log4j.Logger;
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.sciplore.data.BeanFactory;
 import org.sciplore.database.SessionProvider;
 import org.sciplore.formatter.Bean;
 import org.sciplore.queries.ApplicationQueries;
-import org.sciplore.queries.UserQueries;
 import org.sciplore.resources.Application;
-import org.sciplore.resources.User;
 
 import util.ResourceCommons;
 import util.Tools;
@@ -87,21 +84,27 @@ public class ApplicationResource {
 			charset = "UTF-8";
 		}
 
+		List<Application> apps;
 		try {
-			List<Application> apps = ApplicationQueries.getLatestApplicationVersion(session, appName, minStatus);
-			if (apps.size() > 0) {
-				Bean bean = new BeanFactory(ui, request).getApplicationBean(apps);
-				return Tools.getSerializedResponse(outputFormat, bean, stream);
-			}
-			else {
-				builder.type(MediaType.TEXT_PLAIN_TYPE);
-				builder.status(Status.NO_CONTENT);
-				builder.entity("no versions found");
-			}
-		} 
+			apps = ApplicationQueries.getLatestApplicationVersion(session, appName, minStatus);
+		}
+		catch(Exception e) {
+			apps = null;
+		}
 		finally {
 			Tools.tolerantClose(session);
 		}
+		
+		if (apps == null || apps.size() == 0) {
+			builder.type(MediaType.TEXT_PLAIN_TYPE);
+			builder.status(Status.NO_CONTENT);
+			builder.entity("no versions found");
+		}
+		else {
+			Bean bean = new BeanFactory(ui, request).getApplicationBean(apps);
+			return Tools.getSerializedResponse(outputFormat, bean, stream);			
+		}
+		
 		return builder.build();
 
 	}
