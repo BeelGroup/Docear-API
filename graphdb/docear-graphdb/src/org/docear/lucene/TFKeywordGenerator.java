@@ -2,7 +2,9 @@ package org.docear.lucene;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -14,6 +16,7 @@ import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.index.TermEnum;
+import org.apache.lucene.index.TermFreqVector;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.LockObtainFailedException;
 import org.apache.lucene.store.RAMDirectory;
@@ -28,7 +31,9 @@ public class TFKeywordGenerator implements ResultGenerator {
 	private GraphDbWorker worker;
 	private final AlgorithmArguments args;
 	
-	protected Document doc; // the document that contains node info for the user
+	protected Map<String, Double> nodeWeights = new HashMap<String, Double>();
+			
+	private static final String FIELD = "field";
 	
 	public TFKeywordGenerator(AlgorithmArguments args) {
 		this(args, LuceneController.getCurrentController().getGraphDbWorker());
@@ -52,21 +57,32 @@ public class TFKeywordGenerator implements ResultGenerator {
 		IndexReader reader = IndexReader.open(directory);
 		// reader.getUniqueTermCount();
 		TermEnum terms = reader.terms();
-	
+		
 		while (terms.next()) {
 			Term term = terms.term();
 			String termText = term.text();
-			// access the field, where this term comes from
-			String fieldName = term.field();
-			Fieldable fieldFromDoc = doc.getFieldable(fieldName);
 			try {
 				Float.parseFloat(termText);
 			} catch (Exception e) {
 				try {
+					// get all documents that contain the term
 					TermDocs docs = reader.termDocs(term);
 					double frequency = 0;
-					while (docs.next()) {
-						frequency += (docs.freq() * fieldFromDoc.getBoost());
+					
+					while (docs.next()) { 
+							// get term frequencies for each field in the document
+							TermFreqVector[] tvf = reader.getTermFreqVectors(docs.doc());
+							for (int i=0; i<tvf.length; i++)
+							{
+								// if the term exists in this field
+								int termIndex = tvf[i].indexOf(termText);
+								if (termIndex > -1) {
+									// get the frequency of the term in the document field multiplied the node weight
+									Integer freq = tvf[i].getTermFrequencies()[termIndex];
+									frequency += freq * nodeWeights.get(tvf[i].getField());
+								}
+							
+							}
 					}
 					docs.close();
 					userModel.getKeywords().addKeyword(termText, frequency);					
@@ -91,7 +107,7 @@ public class TFKeywordGenerator implements ResultGenerator {
 		try {
 			IndexWriter writer = new IndexWriter(directory, config);
 
-			doc = getDocument(userId, args, userModel, excludePdfHash);
+			Document doc = getDocument(userId, args, userModel, excludePdfHash);
 			if (doc == null) {
 				writer.close();
 				throw new Exception("not enough data gathered for (" + args + ")");
@@ -131,16 +147,20 @@ public class TFKeywordGenerator implements ResultGenerator {
 		int fieldNumber = 1;
 		for (Iterator<NodeInfo> iter = nodesInfo.iterator(); iter.hasNext();) {
 			NodeInfo nodeInfo = iter.next();
-			Field fieldToAdd = new Field("field".concat(String.valueOf(fieldNumber++)), nodeInfo.getText(), Field.Store.YES, Field.Index.ANALYZED);
+			String fieldName = FIELD.concat(String.valueOf(fieldNumber++));
+			Field fieldToAdd = new Field(fieldName, nodeInfo.getText(), 
+					Field.Store.YES, Field.Index.ANALYZED, Field.TermVector.YES);
 			// root nodes acquire a depth of 1
 			// if NODE_DEPTH is set to 1 term weight will be divided by node depth
 			if (new Integer(1).equals(args.getArgument(AlgorithmArguments.NODE_DEPTH)))
-				fieldToAdd.setBoost(new Float(1.0) / (nodeInfo.getDepth() + 1));
+				nodeWeights.put(fieldName, 1.0 / (nodeInfo.getDepth() + 1));
+				//fieldToAdd.setBoost(new Float(1.0) / (nodeInfo.getDepth() + 1));
 			// if NODE_DEPTH is set to 2 term weight will be multiplied with node depth
 			else if (new Integer(2).equals(args.getArgument(AlgorithmArguments.NODE_DEPTH)))
-				fieldToAdd.setBoost(nodeInfo.getDepth() + 1);
+				nodeWeights.put(fieldName, nodeInfo.getDepth() + 1.0);
+				//fieldToAdd.setBoost(nodeInfo.getDepth() + 1);
 			// if NODE_DEPTH is set to 0 node depth is not taken into account
-			else fieldToAdd.setBoost(new Integer(1));
+			else nodeWeights.put(fieldName, 1.0); //fieldToAdd.setBoost(new Integer(1));
 			doc.add(fieldToAdd);
 		}
 		return doc;
