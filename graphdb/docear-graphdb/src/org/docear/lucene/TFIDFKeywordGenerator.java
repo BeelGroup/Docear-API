@@ -7,6 +7,7 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.index.TermEnum;
+import org.apache.lucene.index.TermFreqVector;
 import org.apache.lucene.store.Directory;
 import org.docear.database.AlgorithmArguments;
 import org.docear.graphdb.GraphDbWorker;
@@ -33,25 +34,34 @@ public class TFIDFKeywordGenerator extends TFKeywordGenerator {
 		// reader.getUniqueTermCount();
 		TermEnum tfTerms = tfReader.terms();
 				
-		//initialize tfIdfMap with term frequencies
 		while (tfTerms.next()) {
 			Term term = tfTerms.term();
 			String termText = term.text();
-			// access the field, where this term comes from
-			String fieldName = term.field();
-			Fieldable fieldFromDoc = doc.getFieldable(fieldName);
 			try {
-				//Filter number-only-terms
 				Float.parseFloat(termText);
 			} catch (Exception e) {
 				try {
+					// get all documents that contain the term
 					TermDocs docs = tfReader.termDocs(term);
 					double frequency = 0;
-					while (docs.next()) {
-						frequency += (docs.freq() * fieldFromDoc.getBoost());
+					
+					while (docs.next()) { 
+							// get term frequencies for each field in the document
+							TermFreqVector[] tvf = tfReader.getTermFreqVectors(docs.doc());
+							for (int i=0; i<tvf.length; i++)
+							{
+								// if the term exists in this field
+								int termIndex = tvf[i].indexOf(termText);
+								if (termIndex > -1) {
+									// get the frequency of the term in the document field multiplied the node weight
+									Integer freq = tvf[i].getTermFrequencies()[termIndex];
+									frequency += freq * nodeWeights.get(tvf[i].getField());
+								}
+							
+							}
 					}
 					docs.close();
-					userModel.getKeywords().addKeyword(termText, frequency);				
+					userModel.getKeywords().addKeyword(termText, frequency);					
 				} catch (IOException ex) {
 					ex.printStackTrace();
 				}
