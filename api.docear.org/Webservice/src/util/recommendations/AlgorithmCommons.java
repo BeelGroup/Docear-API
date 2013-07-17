@@ -33,6 +33,7 @@ public class AlgorithmCommons {
 			alg.setWeightIDF(null);
 			alg.setWeightingScheme(null);
 			alg.setApproach(Algorithm.APPROACH_STEREOTYPE);
+			alg.setNodeDepth(null);
 			alg.setWeightTF(null);
 			
 			return alg;
@@ -83,6 +84,15 @@ public class AlgorithmCommons {
 		}
 		else {
 			alg.setWeightingScheme(2);
+		}
+		
+		//0=node depth not considered; 1=divide by node depth; 2=multiply with node depth
+		i = r.nextInt(3);
+		if (i==0) {
+			alg.setNodeDepth(0);
+		}
+		else {
+			alg.setNodeDepth(i==1 ? 1 : 2);
 		}
 		
 		//keywords use "1" as factor for their weight

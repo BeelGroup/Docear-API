@@ -2,6 +2,7 @@ package org.docear.lucene;
 
 import java.io.IOException;
 
+import org.apache.lucene.document.Fieldable;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermDocs;
@@ -36,18 +37,21 @@ public class TFIDFKeywordGenerator extends TFKeywordGenerator {
 		while (tfTerms.next()) {
 			Term term = tfTerms.term();
 			String termText = term.text();
+			// access the field, where this term comes from
+			String fieldName = term.field();
+			Fieldable fieldFromDoc = doc.getFieldable(fieldName);
 			try {
 				//Filter number-only-terms
 				Float.parseFloat(termText);
 			} catch (Exception e) {
 				try {
 					TermDocs docs = tfReader.termDocs(term);
-					int frequency = 0;
+					double frequency = 0;
 					while (docs.next()) {
-						frequency += docs.freq();
+						frequency += (docs.freq() * fieldFromDoc.getBoost());
 					}
 					docs.close();
-					userModel.getKeywords().addKeyword(termText, (double) frequency);				
+					userModel.getKeywords().addKeyword(termText, frequency);				
 				} catch (IOException ex) {
 					ex.printStackTrace();
 				}

@@ -1,9 +1,12 @@
 package org.docear.lucene;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.document.Fieldable;
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
@@ -18,12 +21,14 @@ import org.apache.lucene.util.Version;
 import org.docear.database.AlgorithmArguments;
 import org.docear.graphdb.GraphDbWorker;
 import org.docear.query.ResultGenerator;
+import org.docear.structs.NodeInfo;
 import org.docear.xml.UserModel;
 
 public class TFKeywordGenerator implements ResultGenerator {	
 	private GraphDbWorker worker;
 	private final AlgorithmArguments args;
 	
+	protected Document doc; // the document that contains node info for the user
 	
 	public TFKeywordGenerator(AlgorithmArguments args) {
 		this(args, LuceneController.getCurrentController().getGraphDbWorker());
@@ -47,20 +52,24 @@ public class TFKeywordGenerator implements ResultGenerator {
 		IndexReader reader = IndexReader.open(directory);
 		// reader.getUniqueTermCount();
 		TermEnum terms = reader.terms();
+	
 		while (terms.next()) {
 			Term term = terms.term();
 			String termText = term.text();
+			// access the field, where this term comes from
+			String fieldName = term.field();
+			Fieldable fieldFromDoc = doc.getFieldable(fieldName);
 			try {
 				Float.parseFloat(termText);
 			} catch (Exception e) {
 				try {
 					TermDocs docs = reader.termDocs(term);
-					int frequency = 0;
+					double frequency = 0;
 					while (docs.next()) {
-						frequency += docs.freq();
+						frequency += (docs.freq() * fieldFromDoc.getBoost());
 					}
 					docs.close();
-					userModel.getKeywords().addKeyword(termText, (double) frequency);					
+					userModel.getKeywords().addKeyword(termText, frequency);					
 				} catch (IOException ex) {
 					ex.printStackTrace();
 				}
@@ -82,7 +91,7 @@ public class TFKeywordGenerator implements ResultGenerator {
 		try {
 			IndexWriter writer = new IndexWriter(directory, config);
 
-			Document doc = getDocument(userId, args, userModel, excludePdfHash);
+			doc = getDocument(userId, args, userModel, excludePdfHash);
 			if (doc == null) {
 				writer.close();
 				throw new Exception("not enough data gathered for (" + args + ")");
@@ -110,15 +119,30 @@ public class TFKeywordGenerator implements ResultGenerator {
 		return null;
 	}
 	
-	private Document getDocument(int userId, AlgorithmArguments args, UserModel userModel, String excludePdfHash) {
-		String text = worker.getUserText(userId, args, userModel, excludePdfHash);		
+	private Document getDocument(int userId, AlgorithmArguments args, UserModel userModel, String excludePdfHash) {		
+		ArrayList<NodeInfo> nodesInfo = worker.getUserNodesInfo(userId, args, userModel, excludePdfHash);		
 		
-		if(text == null) {
+		if(nodesInfo == null || nodesInfo.size() == 0) {
 			return null;
 		}
 		
 		Document doc = new Document();
-		doc.add(new Field("text", text, Field.Store.YES, Field.Index.ANALYZED));
+		
+		int fieldNumber = 1;
+		for (Iterator<NodeInfo> iter = nodesInfo.iterator(); iter.hasNext();) {
+			NodeInfo nodeInfo = iter.next();
+			Field fieldToAdd = new Field("field".concat(String.valueOf(fieldNumber++)), nodeInfo.getText(), Field.Store.YES, Field.Index.ANALYZED);
+			// root nodes acquire a depth of 1
+			// if NODE_DEPTH is set to 1 term weight will be divided by node depth
+			if (new Integer(1).equals(args.getArgument(AlgorithmArguments.NODE_DEPTH)))
+				fieldToAdd.setBoost(new Float(1.0) / (nodeInfo.getDepth() + 1));
+			// if NODE_DEPTH is set to 2 term weight will be multiplied with node depth
+			else if (new Integer(2).equals(args.getArgument(AlgorithmArguments.NODE_DEPTH)))
+				fieldToAdd.setBoost(nodeInfo.getDepth() + 1);
+			// if NODE_DEPTH is set to 0 node depth is not taken into account
+			else fieldToAdd.setBoost(new Integer(1));
+			doc.add(fieldToAdd);
+		}
 		return doc;
 	}
 	

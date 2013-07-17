@@ -28,6 +28,7 @@ import org.docear.graphdb.relationship.Type;
 import org.docear.graphdb.relationship.UserRelationship;
 import org.docear.graphdb.threading.GraphCreatorJob;
 import org.docear.query.HashReferenceItem;
+import org.docear.structs.NodeInfo;
 import org.docear.xml.UserModel;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
@@ -40,6 +41,12 @@ import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.graphdb.traversal.Traverser;
 import org.neo4j.kernel.Traversal;
 import org.neo4j.kernel.Uniqueness;
+
+/**
+* This class is responsible for extracting the required nodes and relevant information from the graph DB.
+* @author beel, stlanger, marcel, gkapi
+* @version 1.x
+*/
 
 public class GraphDbWorker {
 	
@@ -231,6 +238,10 @@ public class GraphDbWorker {
 		}
 	}
 
+	public ArrayList<NodeInfo> getUserNodesInfo(int userId, AlgorithmArguments args, UserModel userModel, String pdfHash) {
+		return getUserNodesInfo(getRelevantNodes(userId, args, userModel, pdfHash));
+	}
+	
 	public String getUserText(int userId, AlgorithmArguments args, UserModel userModel, String pdfHash) {
 		return getUserText(getRelevantNodes(userId, args, userModel, pdfHash));
 	}
@@ -280,7 +291,7 @@ public class GraphDbWorker {
 			}			
 		}
 		
-		// expanded and reduced is the same for references, since stopwordsa can't be removed on references
+		// expanded and reduced is the same for references, since stopwords can't be removed on references
 		userModel.getReferences().addVariable("feature_count_expanded", ""+featureCountReferences);
 		userModel.getReferences().addVariable("feature_count_reduced", ""+featureCountReferences);
 		userModel.getReferences().addVariable("feature_count_expanded_unique", ""+occurenceMap.size());
@@ -503,7 +514,30 @@ public class GraphDbWorker {
 		}
 	}
 
-	private String getUserText(Collection<Node> nodes) {
+	/**
+	 * @param collection of nodes on the user mind map
+	 * @return arraylist of node info with information on each node
+	 */
+	private ArrayList<NodeInfo> getUserNodesInfo(Collection<Node> nodes) {		
+		if (nodes == null || nodes.size() == 0) {
+			return null;
+		}
+		
+		ArrayList<NodeInfo> nodeInfos = new ArrayList<NodeInfo>();		
+		try {			
+			Iterator<Node> iter = nodes.iterator();
+			while (iter.hasNext()) {
+				Node node = iter.next();
+				nodeInfos.add(extraxtTextAndDepth(node));
+			}
+			return nodeInfos;
+		} catch (Exception e) {
+			e.printStackTrace();			
+		}
+		return null;
+	}
+	
+	private String getUserText(Collection<Node> nodes) {		
 		if (nodes == null) {
 			return null;
 		}
@@ -521,6 +555,17 @@ public class GraphDbWorker {
 		return null;
 	}
 
+	/**
+	 * @param node
+	 * @return node info object
+	 */
+	private NodeInfo extraxtTextAndDepth(Node node) {
+		NodeInfo nodeInfo = new NodeInfo();
+		nodeInfo.setText(extractText(node));
+		nodeInfo.setDepth(calculateDepth(node));
+		return nodeInfo;
+	}
+	
 	private String extractText(Node node) {
 		StringBuffer text = new StringBuffer();
 		if (node.hasProperty("TEXT")) {
@@ -537,6 +582,20 @@ public class GraphDbWorker {
 		}
 
 		return filterText(text.toString());
+	}
+	
+	/**
+	 * @param node
+	 * @return the depth of a node on the mind map (distance from root mind map node)
+	 */
+	private Integer calculateDepth(Node node) {
+		Iterable<Relationship> parents = node.getRelationships(Type.CHILD, Direction.INCOMING);
+		if (parents != null) {
+			for (Relationship parent : parents) {
+				return new Integer(1) + calculateDepth(parent.getStartNode());
+			}
+		}
+		return new Integer(0);
 	}
 
 	private String filterText(String text) {

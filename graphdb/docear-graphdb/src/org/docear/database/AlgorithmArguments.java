@@ -21,6 +21,7 @@ public class AlgorithmArguments {
 	public static final String SOURCE = "source";
 //	public static final String RESULT_AMOUNT = "resultAmount";
 	public static final String WEIGHTING_SCHEME = "weightingScheme";
+	public static final String NODE_DEPTH = "nodeDepth";
 	public static final String WEIGHT_TF = "weightTF";
 	public static final String WEIGHT_IDF = "weightIDF";
 
@@ -38,6 +39,7 @@ public class AlgorithmArguments {
 		this.arguments.put(STOPWORDS, 1);
 		this.arguments.put(ELEMENT_SELECTION_METHOD, 0);
 		this.arguments.put(WEIGHTING_SCHEME, 1);
+		this.arguments.put(NODE_DEPTH, 0);
 		this.arguments.put(WEIGHT_IDF, 0);
 		this.arguments.put(WEIGHT_TF, 1);
 		this.arguments.put(DATA_ELEMENT_TYPE, 1);
