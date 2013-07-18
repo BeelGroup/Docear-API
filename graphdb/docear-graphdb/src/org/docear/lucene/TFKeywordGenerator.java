@@ -8,7 +8,6 @@ import java.util.Map;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
-import org.apache.lucene.document.Fieldable;
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
@@ -28,12 +27,12 @@ import org.docear.structs.NodeInfo;
 import org.docear.xml.UserModel;
 
 public class TFKeywordGenerator implements ResultGenerator {	
+	private static final String FIELD = "field";
+	
 	private GraphDbWorker worker;
 	private final AlgorithmArguments args;
 	
 	protected Map<String, Double> nodeWeights = new HashMap<String, Double>();
-			
-	private static final String FIELD = "field";
 	
 	public TFKeywordGenerator(AlgorithmArguments args) {
 		this(args, LuceneController.getCurrentController().getGraphDbWorker());
@@ -147,20 +146,39 @@ public class TFKeywordGenerator implements ResultGenerator {
 		int fieldNumber = 1;
 		for (Iterator<NodeInfo> iter = nodesInfo.iterator(); iter.hasNext();) {
 			NodeInfo nodeInfo = iter.next();
+			
+			// give a unique name to the document field
 			String fieldName = FIELD.concat(String.valueOf(fieldNumber++));
-			Field fieldToAdd = new Field(fieldName, nodeInfo.getText(), 
-					Field.Store.YES, Field.Index.ANALYZED, Field.TermVector.YES);
-			// root nodes acquire a depth of 1
-			// if NODE_DEPTH is set to 1 term weight will be divided by node depth
-			if (new Integer(1).equals(args.getArgument(AlgorithmArguments.NODE_DEPTH)))
-				nodeWeights.put(fieldName, 1.0 / (nodeInfo.getDepth() + 1));
-				//fieldToAdd.setBoost(new Float(1.0) / (nodeInfo.getDepth() + 1));
-			// if NODE_DEPTH is set to 2 term weight will be multiplied with node depth
-			else if (new Integer(2).equals(args.getArgument(AlgorithmArguments.NODE_DEPTH)))
-				nodeWeights.put(fieldName, nodeInfo.getDepth() + 1.0);
-				//fieldToAdd.setBoost(nodeInfo.getDepth() + 1);
-			// if NODE_DEPTH is set to 0 node depth is not taken into account
-			else nodeWeights.put(fieldName, 1.0); //fieldToAdd.setBoost(new Integer(1));
+			Field fieldToAdd = new Field(fieldName, nodeInfo.getText(), Field.Store.YES, Field.Index.ANALYZED, Field.TermVector.YES);
+			Double fieldWeight = 1.0;
+			
+			if (args.getArgument(AlgorithmArguments.NODE_WEIGHTING_SCHEME) != null) {
+				switch ((Integer)args.getArgument(AlgorithmArguments.NODE_WEIGHTING_SCHEME)) {
+				case 1: //only node depth considered
+					// add 1.0 to the weight so that no cases with division by zero occur
+					fieldWeight = NodeWeightCalculator.applyParameter(fieldWeight, 1.0 + nodeInfo.getDepth(), 
+							new Integer(1).equals(args.getArgument(AlgorithmArguments.NODE_DEPTH)) ? NodeWeightCalculator.ParameterOperator.DIVIDE : NodeWeightCalculator.ParameterOperator.MULTIPLY);
+					break;
+				case 2: //only no siblings considered
+					fieldWeight = NodeWeightCalculator.applyParameter(fieldWeight, 1.0 + nodeInfo.getNoOfSiblings(), 
+							new Integer(1).equals(args.getArgument(AlgorithmArguments.NO_SIBLINGS)) ? NodeWeightCalculator.ParameterOperator.DIVIDE : NodeWeightCalculator.ParameterOperator.MULTIPLY);
+					break;
+				case 3: //only no children considered
+					fieldWeight = NodeWeightCalculator.applyParameter(fieldWeight, 1.0 + nodeInfo.getNoOfChildren(), 
+							new Integer(1).equals(args.getArgument(AlgorithmArguments.NO_CHILDREN)) ? NodeWeightCalculator.ParameterOperator.DIVIDE : NodeWeightCalculator.ParameterOperator.MULTIPLY);
+					break;
+				case 4: //combined case
+					fieldWeight = NodeWeightCalculator.applyParameter(fieldWeight, 1.0 + nodeInfo.getDepth(), 
+							new Integer(1).equals(args.getArgument(AlgorithmArguments.NODE_DEPTH)) ? NodeWeightCalculator.ParameterOperator.DIVIDE : NodeWeightCalculator.ParameterOperator.MULTIPLY);
+					fieldWeight = NodeWeightCalculator.applyParameter(fieldWeight, 1.0 + nodeInfo.getNoOfSiblings(), 
+							new Integer(1).equals(args.getArgument(AlgorithmArguments.NO_SIBLINGS)) ? NodeWeightCalculator.ParameterOperator.DIVIDE : NodeWeightCalculator.ParameterOperator.MULTIPLY);
+					fieldWeight = NodeWeightCalculator.applyParameter(fieldWeight, 1.0 + nodeInfo.getNoOfChildren(), 
+							new Integer(1).equals(args.getArgument(AlgorithmArguments.NO_CHILDREN)) ? NodeWeightCalculator.ParameterOperator.DIVIDE : NodeWeightCalculator.ParameterOperator.MULTIPLY);
+				}
+				
+				nodeWeights.put(fieldName, fieldWeight);
+			}
+			
 			doc.add(fieldToAdd);
 		}
 		return doc;
