@@ -239,7 +239,7 @@ public class GraphDbWorker {
 	}
 
 	public ArrayList<NodeInfo> getUserNodesInfo(int userId, AlgorithmArguments args, UserModel userModel, String pdfHash) {
-		return getUserNodesInfo(getRelevantNodes(userId, args, userModel, pdfHash));
+		return getUserNodesInfo(getRelevantNodes(userId, args, userModel, pdfHash), args);
 	}
 	
 	public String getUserText(int userId, AlgorithmArguments args, UserModel userModel, String pdfHash) {
@@ -518,7 +518,7 @@ public class GraphDbWorker {
 	 * @param collection of nodes on the user mind map
 	 * @return arraylist of node info with information on each node
 	 */
-	private ArrayList<NodeInfo> getUserNodesInfo(Collection<Node> nodes) {		
+	private ArrayList<NodeInfo> getUserNodesInfo(Collection<Node> nodes, AlgorithmArguments args) {		
 		if (nodes == null || nodes.size() == 0) {
 			return null;
 		}
@@ -528,7 +528,7 @@ public class GraphDbWorker {
 			Iterator<Node> iter = nodes.iterator();
 			while (iter.hasNext()) {
 				Node node = iter.next();
-				nodeInfos.add(extraxtTextAndDepth(node));
+				nodeInfos.add(extraxtNodeInfo(node, args));
 			}
 			return nodeInfos;
 		} catch (Exception e) {
@@ -559,10 +559,28 @@ public class GraphDbWorker {
 	 * @param node
 	 * @return node info object
 	 */
-	private NodeInfo extraxtTextAndDepth(Node node) {
+	private NodeInfo extraxtNodeInfo(Node node, AlgorithmArguments args) {
 		NodeInfo nodeInfo = new NodeInfo();
 		nodeInfo.setText(extractText(node));
-		nodeInfo.setDepth(calculateDepth(node));
+		
+		// make only the necessary node calculations
+		if (args.getArgument(AlgorithmArguments.NODE_WEIGHTING_SCHEME) != null) {
+			switch ((Integer)args.getArgument(AlgorithmArguments.NODE_WEIGHTING_SCHEME)) {
+			case 1: //only node depth considered
+				nodeInfo.setDepth(calculateDepth(node));
+				break;
+			case 2: //only no siblings considered
+				nodeInfo.setNoOfSiblings(callculateNoOfSiblings(node));
+				break;
+			case 3: //only no children considered
+				nodeInfo.setNoOfChildren((callculateNoOfChildren(node)));
+				break;
+			case 4: //combined case
+				nodeInfo.setDepth(calculateDepth(node));
+				nodeInfo.setNoOfSiblings(callculateNoOfSiblings(node));
+				nodeInfo.setNoOfChildren((callculateNoOfChildren(node)));
+			}
+		}
 		return nodeInfo;
 	}
 	
@@ -597,7 +615,38 @@ public class GraphDbWorker {
 		}
 		return new Integer(0);
 	}
-
+	
+	/**
+	 * @param node
+	 * @return the number of siblings of the node (on the mind map)
+	 */
+	private Integer callculateNoOfSiblings(Node node) {
+		Integer noOfSiblings = 0;
+		Iterable<Relationship> parents = node.getRelationships(Type.CHILD, Direction.INCOMING);
+		
+		// each mind map node has only one parent 
+		for (Relationship parent : parents) {
+			noOfSiblings += callculateNoOfChildren(parent.getStartNode());
+		}
+		// minus 1 since the node itself is also considered
+		return noOfSiblings - 1;
+	}
+	
+	/**
+	 * @param node
+	 * @return the number of children of the node (on the mind map)
+	 */
+	private Integer callculateNoOfChildren(Node node) {
+		Integer noOfChildren = 0;
+		Iterator<Relationship> it = node.getRelationships(Type.CHILD, Direction.OUTGOING).iterator();
+		
+		while(it.hasNext()) {
+			it.next(); 
+			noOfChildren++;
+		}
+		return noOfChildren;
+	}
+	
 	private String filterText(String text) {
 		return text.toLowerCase()
 				// image extensions
