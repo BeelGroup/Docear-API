@@ -33,8 +33,11 @@ public class AlgorithmCommons {
 			alg.setWeightIDF(null);
 			alg.setWeightingScheme(null);
 			alg.setApproach(Algorithm.APPROACH_STEREOTYPE);
-			alg.setNodeDepth(null);
 			alg.setWeightTF(null);
+			alg.setNodeWeightingScheme(null);
+			alg.setNodeDepth(null);
+			alg.setNoSiblings(null);
+			alg.setNoChildren(null);
 			
 			return alg;
 		}		
@@ -86,15 +89,6 @@ public class AlgorithmCommons {
 			alg.setWeightingScheme(2);
 		}
 		
-		//0=node depth not considered; 1=divide by node depth; 2=multiply with node depth
-		i = r.nextInt(3);
-		if (i==0) {
-			alg.setNodeDepth(0);
-		}
-		else {
-			alg.setNodeDepth(i==1 ? 1 : 2);
-		}
-		
 		//keywords use "1" as factor for their weight
 		String s = "1";
 		//citations are used
@@ -129,6 +123,32 @@ public class AlgorithmCommons {
 //		else {
 //			alg.setApproach(Algorithm.APPROACH_CONTENT_BASED);
 //		}
+		
+		//0=none; 1=node_depth; 2=no_siblings; 3=no_children; 4=combination of the above node weighting schemes
+		//i = r.nextInt(5);
+		i = 4;
+		switch(i) {
+		case 1: //only node depth considered
+			alg.setNodeWeightingScheme(i);
+			// choose a random value for node depth among: 1=divide by node depth; 2=multiply with node depth
+			alg.setNodeDepth(r.nextInt(2)==1 ? 1 : 2);
+			break;
+		case 2: //only no siblings considered
+			alg.setNodeWeightingScheme(i);
+			// choose a random value for no_sliblings among: 1=divide by no of siblings; 2=multiply with no of siblings
+			alg.setNoSiblings(r.nextInt(2)==1 ? 1 : 2);
+			break;
+		case 3: //only no children considered
+			alg.setNodeWeightingScheme(i);
+			// choose a random value for no_children among: 1=divide by no of children; 2=multiply with no of children
+			alg.setNoChildren(r.nextInt(2)==1 ? 1 : 2);
+			break;
+		case 4: //combined case
+			alg.setNodeWeightingScheme(i);
+			alg.setNodeDepth(r.nextInt(2)==1 ? 1 : 2);
+			alg.setNoSiblings(r.nextInt(2)==1 ? 1 : 2);
+			alg.setNoChildren(r.nextInt(2)==1 ? 1 : 2);
+		}
 		
 		return alg;
 	}
