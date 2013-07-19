@@ -34,10 +34,10 @@ public class AlgorithmCommons {
 			alg.setWeightingScheme(null);
 			alg.setApproach(Algorithm.APPROACH_STEREOTYPE);
 			alg.setWeightTF(null);
-			alg.setNodeWeightingScheme(null);
+			alg.setNodeWeightingScheme(Algorithm.NODE_WEIGHTING_SCHEME_NONE);
 			alg.setNodeDepth(null);
 			alg.setNoSiblings(null);
-			alg.setNoChildren(null);
+			alg.setNoChildren(null);;
 			
 			return alg;
 		}		
@@ -125,8 +125,8 @@ public class AlgorithmCommons {
 //		}
 		
 		//0=none; 1=node_depth; 2=no_siblings; 3=no_children; 4=combination of the above node weighting schemes
-		//i = r.nextInt(5);
-		i = 4;
+		
+//		i = r.nextInt(5);
 		switch(i) {
 		case 1: //only node depth considered
 			alg.setNodeWeightingScheme(i);
