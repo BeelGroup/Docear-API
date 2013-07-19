@@ -126,7 +126,7 @@ public class AlgorithmCommons {
 		
 		//0=none; 1=node_depth; 2=no_siblings; 3=no_children; 4=combination of the above node weighting schemes
 		
-//		i = r.nextInt(5);
+		i = r.nextInt(5);
 		switch(i) {
 		case 1: //only node depth considered
 			alg.setNodeWeightingScheme(i);
