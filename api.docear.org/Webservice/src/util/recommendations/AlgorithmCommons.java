@@ -34,7 +34,6 @@ public class AlgorithmCommons {
 			alg.setWeightingScheme(null);
 			alg.setApproach(Algorithm.APPROACH_STEREOTYPE);
 			alg.setWeightTF(null);
-			alg.setNodeWeightingScheme(Algorithm.NODE_WEIGHTING_SCHEME_NONE);
 			alg.setNodeDepth(null);
 			alg.setNoSiblings(null);
 			alg.setNoChildren(null);;
@@ -126,29 +125,26 @@ public class AlgorithmCommons {
 		
 		//0=none; 1=node_depth; 2=no_siblings; 3=no_children; 4=combination of the above node weighting schemes
 		
-		i = r.nextInt(5);
-		switch(i) {
-		case 1: //only node depth considered
-			alg.setNodeWeightingScheme(i);
-			// choose a random value for node depth among: 1=divide by node depth; 2=multiply with node depth
-			alg.setNodeDepth(r.nextInt(2)==1 ? 1 : 2);
-			break;
-		case 2: //only no siblings considered
-			alg.setNodeWeightingScheme(i);
-			// choose a random value for no_sliblings among: 1=divide by no of siblings; 2=multiply with no of siblings
-			alg.setNoSiblings(r.nextInt(2)==1 ? 1 : 2);
-			break;
-		case 3: //only no children considered
-			alg.setNodeWeightingScheme(i);
-			// choose a random value for no_children among: 1=divide by no of children; 2=multiply with no of children
-			alg.setNoChildren(r.nextInt(2)==1 ? 1 : 2);
-			break;
-		case 4: //combined case
-			alg.setNodeWeightingScheme(i);
-			alg.setNodeDepth(r.nextInt(2)==1 ? 1 : 2);
-			alg.setNoSiblings(r.nextInt(2)==1 ? 1 : 2);
-			alg.setNoChildren(r.nextInt(2)==1 ? 1 : 2);
-		}
+		// choose a random value for node depth among: 0=not considered; 1=divide by node depth; 2=multiply with node depth
+		alg.setNodeDepth(r.nextInt(3));
+		
+		// choose a random value for node depth metric among: 0=absolute value; 1=natural logarithm; 2=logarithm with base 10; 3=square root
+		alg.setNodeDepthMetric(r.nextInt(3));
+		
+		// choose a random value for no_siblings among: 0=not considered; 1=divide by no of siblings; 2=multiply with no of siblings			
+		alg.setNoSiblings(r.nextInt(3));
+		
+		// choose a random value for no_siblings metric among: 0=absolute value; 1=natural logarithm; 2=logarithm with base 10; 3=square root
+		alg.setNoSiblingsMetric(r.nextInt(3));
+		
+		// choose a random value for no_children among: 0=not considered; 1=divide by no of children; 2=multiply with no of children			
+		alg.setNoChildren(r.nextInt(3));
+		
+		// choose a random value for no_children metric among: 0=absolute value; 1=natural logarithm; 2=logarithm with base 10; 3=square root
+		alg.setNoChildrenMetric(r.nextInt(3));
+		
+		// 0=none; 1=normalize to the resulting node weight (relative to the max value); 2=normalize each individual parameter
+		alg.setNodeWeightNormalization(r.nextInt(3));
 		
 		return alg;
 	}
