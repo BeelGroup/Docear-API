@@ -55,7 +55,7 @@ public class TFIDFKeywordGenerator extends TFKeywordGenerator {
 								if (termIndex > -1) {
 									// get the frequency of the term in the document field multiplied the node weight
 									Integer freq = tvf[i].getTermFrequencies()[termIndex];
-									frequency += freq * nodeWeights.get(tvf[i].getField());
+									frequency += freq * nodeWeightsTotal.get(tvf[i].getField());
 								}
 							
 							}
