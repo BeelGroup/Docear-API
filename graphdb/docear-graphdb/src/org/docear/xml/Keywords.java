@@ -30,6 +30,13 @@ public class Keywords implements ISimpleXmlElement{
 		return keywords;
 	}
 	
+	public Keyword getKeywordByTerm(String term) {
+		for (Keyword keyword: keywords) 
+			if (keyword.getTerm().equals(term)) 
+				return keyword;
+		return null;
+	}
+	
 	public boolean isEmpty() {
 		return keywords == null || keywords.size() == 0;
 	}
