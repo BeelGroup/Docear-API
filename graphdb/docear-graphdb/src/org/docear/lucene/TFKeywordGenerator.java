@@ -22,8 +22,11 @@ import org.apache.lucene.store.RAMDirectory;
 import org.apache.lucene.util.Version;
 import org.docear.database.AlgorithmArguments;
 import org.docear.graphdb.GraphDbWorker;
+import org.docear.lucene.NodeWeightCalculator.ParameterMetric;
 import org.docear.query.ResultGenerator;
 import org.docear.structs.NodeInfo;
+import org.docear.xml.Keyword;
+import org.docear.xml.Keywords;
 import org.docear.xml.UserModel;
 
 public class TFKeywordGenerator implements ResultGenerator {	
@@ -32,7 +35,7 @@ public class TFKeywordGenerator implements ResultGenerator {
 	private GraphDbWorker worker;
 	private final AlgorithmArguments args;
 	
-	protected Map<String, Double> nodeWeights = new HashMap<String, Double>();
+	protected Map<String, Double> nodeWeightsTotal = new HashMap<String, Double>();
 	
 	public TFKeywordGenerator(AlgorithmArguments args) {
 		this(args, LuceneController.getCurrentController().getGraphDbWorker());
@@ -60,31 +63,30 @@ public class TFKeywordGenerator implements ResultGenerator {
 		while (terms.next()) {
 			Term term = terms.term();
 			String termText = term.text();
+
 			try {
 				Float.parseFloat(termText);
 			} catch (Exception e) {
 				try {
 					// get all documents that contain the term
 					TermDocs docs = reader.termDocs(term);
-					double frequency = 0;
+					double termNodeWeight = 0;
 					
-					while (docs.next()) { 
-							// get term frequencies for each field in the document
-							TermFreqVector[] tvf = reader.getTermFreqVectors(docs.doc());
-							for (int i=0; i<tvf.length; i++)
-							{
-								// if the term exists in this field
-								int termIndex = tvf[i].indexOf(termText);
-								if (termIndex > -1) {
-									// get the frequency of the term in the document field multiplied the node weight
-									Integer freq = tvf[i].getTermFrequencies()[termIndex];
-									frequency += freq * nodeWeights.get(tvf[i].getField());
-								}
-							
-							}
+					while (docs.next()) { 			
+						// get term frequencies for the field the term belongs to in the document
+						TermFreqVector tvf = reader.getTermFreqVector(docs.doc(), term.field());
+						Integer freqInField = tvf.getTermFrequencies()[tvf.indexOf(termText)];
+						termNodeWeight += freqInField * nodeWeightsTotal.get(tvf.getField());
 					}
 					docs.close();
-					userModel.getKeywords().addKeyword(termText, frequency);					
+					
+					Keywords keywds = userModel.getKeywords();
+					Keyword keywdForTerm = keywds.getKeywordByTerm(termText);		
+					// if the term already exists update its weight
+					if (keywdForTerm != null)
+						keywdForTerm.setWeight(keywdForTerm.getWeight() + termNodeWeight);
+					else
+						keywds.addKeyword(termText, termNodeWeight);					
 				} catch (IOException ex) {
 					ex.printStackTrace();
 				}
@@ -144,6 +146,8 @@ public class TFKeywordGenerator implements ResultGenerator {
 		Document doc = new Document();
 		
 		int fieldNumber = 1;
+		Double maxFieldWeight = 1.0;
+		
 		for (Iterator<NodeInfo> iter = nodesInfo.iterator(); iter.hasNext();) {
 			NodeInfo nodeInfo = iter.next();
 			
@@ -151,36 +155,39 @@ public class TFKeywordGenerator implements ResultGenerator {
 			String fieldName = FIELD.concat(String.valueOf(fieldNumber++));
 			Field fieldToAdd = new Field(fieldName, nodeInfo.getText(), Field.Store.YES, Field.Index.ANALYZED, Field.TermVector.YES);
 			Double fieldWeight = 1.0;
+	
+			if (nodeInfo.getDepth() != null) 				
+				fieldWeight = NodeWeightCalculator.applyParameter(fieldWeight, 
+						1.0 + nodeInfo.getDepth(), 
+						NodeWeightCalculator.ParameterMetric.values()[(Integer)args.getArgument(AlgorithmArguments.NODE_DEPTH_METRIC)],
+						NodeWeightCalculator.ParameterOperator.get((Integer)args.getArgument(AlgorithmArguments.NODE_DEPTH)));
+			if (nodeInfo.getNoOfSiblings() != null) 
+				fieldWeight = NodeWeightCalculator.applyParameter(fieldWeight, 
+						1.0 + nodeInfo.getNoOfSiblings(), 
+						NodeWeightCalculator.ParameterMetric.values()[(Integer)args.getArgument(AlgorithmArguments.NO_SIBLINGS_METRIC)],
+						NodeWeightCalculator.ParameterOperator.get((Integer)args.getArgument(AlgorithmArguments.NO_SIBLINGS)));
+			if (nodeInfo.getNoOfChildren() != null) 
+				fieldWeight = NodeWeightCalculator.applyParameter(fieldWeight, 
+						1.0 + nodeInfo.getNoOfChildren(), 
+						NodeWeightCalculator.ParameterMetric.values()[(Integer)args.getArgument(AlgorithmArguments.NO_CHILDREN_METRIC)],
+						NodeWeightCalculator.ParameterOperator.get((Integer)args.getArgument(AlgorithmArguments.NO_CHILDREN)));
 			
-			if (args.getArgument(AlgorithmArguments.NODE_WEIGHTING_SCHEME) != null) {
-				switch ((Integer)args.getArgument(AlgorithmArguments.NODE_WEIGHTING_SCHEME)) {
-				case 1: //only node depth considered
-					// add 1.0 to the weight so that no cases with division by zero occur
-					fieldWeight = NodeWeightCalculator.applyParameter(fieldWeight, 1.0 + nodeInfo.getDepth(), 
-							new Integer(1).equals(args.getArgument(AlgorithmArguments.NODE_DEPTH)) ? NodeWeightCalculator.ParameterOperator.DIVIDE : NodeWeightCalculator.ParameterOperator.MULTIPLY);
-					break;
-				case 2: //only no siblings considered
-					fieldWeight = NodeWeightCalculator.applyParameter(fieldWeight, 1.0 + nodeInfo.getNoOfSiblings(), 
-							new Integer(1).equals(args.getArgument(AlgorithmArguments.NO_SIBLINGS)) ? NodeWeightCalculator.ParameterOperator.DIVIDE : NodeWeightCalculator.ParameterOperator.MULTIPLY);
-					break;
-				case 3: //only no children considered
-					fieldWeight = NodeWeightCalculator.applyParameter(fieldWeight, 1.0 + nodeInfo.getNoOfChildren(), 
-							new Integer(1).equals(args.getArgument(AlgorithmArguments.NO_CHILDREN)) ? NodeWeightCalculator.ParameterOperator.DIVIDE : NodeWeightCalculator.ParameterOperator.MULTIPLY);
-					break;
-				case 4: //combined case
-					fieldWeight = NodeWeightCalculator.applyParameter(fieldWeight, 1.0 + nodeInfo.getDepth(), 
-							new Integer(1).equals(args.getArgument(AlgorithmArguments.NODE_DEPTH)) ? NodeWeightCalculator.ParameterOperator.DIVIDE : NodeWeightCalculator.ParameterOperator.MULTIPLY);
-					fieldWeight = NodeWeightCalculator.applyParameter(fieldWeight, 1.0 + nodeInfo.getNoOfSiblings(), 
-							new Integer(1).equals(args.getArgument(AlgorithmArguments.NO_SIBLINGS)) ? NodeWeightCalculator.ParameterOperator.DIVIDE : NodeWeightCalculator.ParameterOperator.MULTIPLY);
-					fieldWeight = NodeWeightCalculator.applyParameter(fieldWeight, 1.0 + nodeInfo.getNoOfChildren(), 
-							new Integer(1).equals(args.getArgument(AlgorithmArguments.NO_CHILDREN)) ? NodeWeightCalculator.ParameterOperator.DIVIDE : NodeWeightCalculator.ParameterOperator.MULTIPLY);
-				}
-				
-				nodeWeights.put(fieldName, fieldWeight);
-			}
+			nodeWeightsTotal.put(fieldName, fieldWeight);
+			
+			// compare with max node weight (if node weight normalization is set)
+			// check that at least one parameter is considered (although normnalization should not be set otherwise)
+			if (new Integer(1).equals(args.getArgument(AlgorithmArguments.NODE_WEIGHT_NORMALIZATION)) &&
+					(nodeInfo.getDepth() != null || nodeInfo.getNoOfSiblings() != null || nodeInfo.getNoOfChildren() != null)) 
+				maxFieldWeight = fieldWeight>maxFieldWeight ? fieldWeight : maxFieldWeight;
 			
 			doc.add(fieldToAdd);
 		}
+
+		// replace absolute weight with its normalized value
+		if (new Integer(1).equals(args.getArgument(AlgorithmArguments.NODE_WEIGHT_NORMALIZATION))) 
+			for (Map.Entry<String, Double> entry : nodeWeightsTotal.entrySet()) 
+			    entry.setValue(entry.getValue() / maxFieldWeight);
+		
 		return doc;
 	}
 	
