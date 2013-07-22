@@ -23,10 +23,13 @@ public class AlgorithmArguments {
 	public static final String WEIGHTING_SCHEME = "weightingScheme";
 	public static final String WEIGHT_TF = "weightTF";
 	public static final String WEIGHT_IDF = "weightIDF";
-	public static final String NODE_WEIGHTING_SCHEME = "nodeWeightingScheme";
 	public static final String NODE_DEPTH = "nodeDepth";
+	public static final String NODE_DEPTH_METRIC = "nodeDepthMetric";
 	public static final String NO_SIBLINGS = "noSiblings";
+	public static final String NO_SIBLINGS_METRIC = "noSiblingsMetric";
 	public static final String NO_CHILDREN = "noChildren";
+	public static final String NO_CHILDREN_METRIC = "noSiblingsMetric";
+	public static final String NODE_WEIGHT_NORMALIZATION = "nodeWeightNormalization";
 
 	private HashMap<String, Object> arguments = new HashMap<String, Object>(); 
 	
@@ -46,10 +49,13 @@ public class AlgorithmArguments {
 		this.arguments.put(WEIGHT_TF, 1);
 		this.arguments.put(DATA_ELEMENT_TYPE, 1);
 //		this.arguments.put(DATA_ELEMENT_TYPE_WEIGHTING, "1");
-		this.arguments.put(NODE_WEIGHTING_SCHEME, 0);
 		this.arguments.put(NODE_DEPTH, 0);
+		this.arguments.put(NODE_DEPTH_METRIC, 0);
 		this.arguments.put(NO_SIBLINGS, 0);
+		this.arguments.put(NO_SIBLINGS_METRIC, 0);
 		this.arguments.put(NO_CHILDREN, 0);
+		this.arguments.put(NO_CHILDREN_METRIC, 0);
+		this.arguments.put(NODE_WEIGHT_NORMALIZATION, 0);
 		
 		if(arguments == null || arguments.trim().length() == 0) {
 			return;
