@@ -139,7 +139,7 @@ public class GraphDbWorker {
 			
 		// get random number from size+1 --> amount==0 means take all, everything else means the size itself
 		int amount = new Random().nextInt(Math.min(nodeSet.size(), AlgorithmArguments.MAX_ELEMENT_AMOUNT)+1);
-		
+				
 		if (amount > 0) {
 			if (amount > nodeSet.size()) {
 				// not enough nodes
@@ -564,23 +564,16 @@ public class GraphDbWorker {
 		nodeInfo.setText(extractText(node));
 		
 		// make only the necessary node calculations
-		if (args.getArgument(AlgorithmArguments.NODE_WEIGHTING_SCHEME) != null) {
-			switch ((Integer)args.getArgument(AlgorithmArguments.NODE_WEIGHTING_SCHEME)) {
-			case 1: //only node depth considered
-				nodeInfo.setDepth(calculateDepth(node));
-				break;
-			case 2: //only no siblings considered
-				nodeInfo.setNoOfSiblings(callculateNoOfSiblings(node));
-				break;
-			case 3: //only no children considered
-				nodeInfo.setNoOfChildren((callculateNoOfChildren(node)));
-				break;
-			case 4: //combined case
-				nodeInfo.setDepth(calculateDepth(node));
-				nodeInfo.setNoOfSiblings(callculateNoOfSiblings(node));
-				nodeInfo.setNoOfChildren((callculateNoOfChildren(node)));
-			}
-		}
+		if (args.getArgument(AlgorithmArguments.NODE_DEPTH) != null 
+				&& !new Integer(0).equals(args.getArgument(AlgorithmArguments.NODE_DEPTH)))
+			nodeInfo.setDepth(calculateDepth(node));
+		if (args.getArgument(AlgorithmArguments.NO_SIBLINGS) != null 
+				&& !new Integer(0).equals(args.getArgument(AlgorithmArguments.NO_SIBLINGS))) 
+			nodeInfo.setNoOfSiblings(calculateNoOfSiblings(node));
+		if (args.getArgument(AlgorithmArguments.NO_CHILDREN) != null 
+				&& !new Integer(0).equals(args.getArgument(AlgorithmArguments.NO_CHILDREN))) 
+			nodeInfo.setNoOfChildren((calculateNoOfChildren(node)));;
+			
 		return nodeInfo;
 	}
 	
@@ -620,13 +613,13 @@ public class GraphDbWorker {
 	 * @param node
 	 * @return the number of siblings of the node (on the mind map)
 	 */
-	private Integer callculateNoOfSiblings(Node node) {
+	private Integer calculateNoOfSiblings(Node node) {
 		Integer noOfSiblings = 0;
 		Iterable<Relationship> parents = node.getRelationships(Type.CHILD, Direction.INCOMING);
 		
 		// each mind map node has only one parent 
 		for (Relationship parent : parents) {
-			noOfSiblings += callculateNoOfChildren(parent.getStartNode());
+			noOfSiblings += calculateNoOfChildren(parent.getStartNode());
 		}
 		// minus 1 since the node itself is also considered
 		return noOfSiblings - 1;
@@ -636,7 +629,7 @@ public class GraphDbWorker {
 	 * @param node
 	 * @return the number of children of the node (on the mind map)
 	 */
-	private Integer callculateNoOfChildren(Node node) {
+	private Integer calculateNoOfChildren(Node node) {
 		Integer noOfChildren = 0;
 		Iterator<Relationship> it = node.getRelationships(Type.CHILD, Direction.OUTGOING).iterator();
 		
