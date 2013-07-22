@@ -69,23 +69,36 @@ public class Algorithm extends Resource {
     public final static Integer APPROACH_STEREOTYPE = 2;
     public final static Integer APPROACH_COLLABORATIVE_FILTERING = 3;    
     
-    public final static Integer NODE_WEIGHTING_SCHEME_NONE = 0;
-    public final static Integer NODE_WEIGHTING_SCHEME_NODE_DEPTH = 1;
-    public final static Integer NODE_WEIGHTING_SCHEME_NO_SIBLINGS = 2;
-    public final static Integer NODE_WEIGHTING_SCHEME_NO_CHILDREN = 3;
-    public final static Integer NODE_WEIGHTING_SCHEME_COMBINATION = 4;
-    
     public final static Integer NODE_DEPTH_DISABLED = 0;
     public final static Integer NODE_DEPTH_DIVIDE = 1;
     public final static Integer NODE_DEPTH_MULTIPLY = 2;
+    
+    public final static Integer NODE_DEPTH_METRIC_ABS = 0;
+    public final static Integer NODE_DEPTH_METRIC_LOG = 1;
+    public final static Integer NODE_DEPTH_METRIC_LOG10 = 2;
+    public final static Integer NODE_DEPTH_METRIC_SQRT = 3;
     
     public final static Integer NO_SIBLINGS_DISABLED = 0;
     public final static Integer NO_SIBLINGS_DIVIDE = 1;
     public final static Integer NO_SIBLINGS_MULTIPLY = 2;
     
+    public final static Integer NO_SIBLINGS_METRIC_ABS = 0;
+    public final static Integer NO_SIBLINGS_METRIC_LOG = 1;
+    public final static Integer NO_SIBLINGS_METRIC_LOG10 = 2;
+    public final static Integer NO_SIBLINGS_METRIC_SQRT = 3;
+    
     public final static Integer NO_CHILDREN_DISABLED = 0;
     public final static Integer NO_CHILDREN_DIVIDE = 1;
     public final static Integer NO_CHILDREN_MULTIPLY = 2;
+    
+    public final static Integer NO_CHILDREN_METRIC_ABS = 0;
+    public final static Integer NO_CHILDREN_METRIC_LOG = 1;
+    public final static Integer NO_CHILDREN_METRIC_LOG10 = 2;
+    public final static Integer NO_CHILDREN_METRIC_SQRT = 3;
+    
+    public final static Integer NODE_WEIGHT_NORMALIZATION_DISABLED = 0;
+    public final static Integer NODE_WEIGHT_NORMALIZATION_ON_TOTAL = 1;
+    public final static Integer NODE_WEIGHT_NORMALIZATION_PER_PARAMETER = 2;
     
     protected Algorithm() {
     	
@@ -154,9 +167,6 @@ public class Algorithm extends Resource {
     private Boolean featureWeightSubmission;
     
     @Column()
-    private Integer node_weighting_scheme = NODE_WEIGHTING_SCHEME_NONE;
-    
-    @Column()
     private Integer node_depth = NODE_DEPTH_DISABLED;
     
     @Column()
@@ -164,6 +174,18 @@ public class Algorithm extends Resource {
     
     @Column()
     private Integer no_children = NO_CHILDREN_DISABLED;
+    
+    @Column()
+    private Integer node_depth_metric = NODE_DEPTH_METRIC_ABS;
+    
+    @Column()
+    private Integer no_siblings_metric = NO_SIBLINGS_METRIC_ABS;
+    
+    @Column()
+    private Integer no_children_metric = NO_CHILDREN_METRIC_ABS;
+    
+    @Column()
+    private Integer node_weight_normalization = NODE_WEIGHT_NORMALIZATION_DISABLED;
     
     public Integer getDataSource() {
 		return data_source;
@@ -372,14 +394,6 @@ public class Algorithm extends Resource {
 	public void setFeatureWeightSubmission(Boolean featureWeightSubmission) {
 		this.featureWeightSubmission = featureWeightSubmission;
 	}
-
-	public Integer getNodeWeightingScheme() {
-		return node_weighting_scheme;
-	}
-
-	public void setNodeWeightingScheme(Integer nodeWeightingScheme) {
-		this.node_weighting_scheme = nodeWeightingScheme;
-	}
 	
 	public Integer getNodeDepth() {
 		return node_depth;
@@ -389,12 +403,28 @@ public class Algorithm extends Resource {
 		this.node_depth = nodeDepth;
 	}
 	
+	public Integer getNodeDepthMetric() {
+		return node_depth_metric;
+	}
+
+	public void setNodeDepthMetric(Integer nodeDepthMetric) {
+		this.node_depth_metric = nodeDepthMetric;
+	}
+	
 	public Integer getNoSiblings() {
 		return no_siblings;
 	}
 
 	public void setNoSiblings(Integer noSiblings) {
 		this.no_siblings = noSiblings;
+	}
+
+	public Integer getNoSiblingsMetric() {
+		return no_siblings_metric;
+	}
+
+	public void setNoSiblingsMetric(Integer noSiblingsMetric) {
+		this.no_siblings_metric = noSiblingsMetric;
 	}
 	
 	public Integer getNoChildren() {
@@ -405,10 +435,26 @@ public class Algorithm extends Resource {
 		this.no_children = noChildren;
 	}
 	
+	public Integer getNoChildrenMetric() {
+		return no_children_metric;
+	}
+
+	public void setNoChildrenMetric(Integer noChildrenMetric) {
+		this.no_children_metric = noChildrenMetric;
+	}
+	
+	public Integer getNodeWeightNormalization() {
+		return node_weight_normalization;
+	}
+
+	public void setNodeWeightNormalization(Integer nodeWeightNormalization) {
+		this.node_weight_normalization = nodeWeightNormalization;
+	}
+	
 	public Algorithm getAlgorithm(Integer useStemming, Integer useStopWordRemoval, Integer useSiblingNodes, Integer childNodes
 			, Integer timeFrame, Integer useRootPath, Integer elementAmount, Integer elementSelectionMethod, Integer dataElementType, String dataElementTypeWeighting, Integer dataElement
 			, Integer dataSourceLimitation, Integer dataSource, Integer resultAmount, Integer approach, Integer weightingScheme, Integer weightTF, Integer weightIDF
-			, Integer nodeWeightingScheme, Integer nodeDepth, Integer noSiblings, Integer noChildren) {
+			, Integer nodeDepth, Integer nodeDepthMetric, Integer noSiblings, Integer noSiblingsMetric, Integer noChildren, Integer noChildrenMetric, Integer nodeWeightNormalization) {
 		
 		return (Algorithm)this.getSession().createCriteria(Algorithm.class)
 		.add(SimpleRestrictions.eq("stemming", useStemming))
@@ -429,10 +475,13 @@ public class Algorithm extends Resource {
 		.add(SimpleRestrictions.eq("weightingScheme", weightingScheme))
 		.add(SimpleRestrictions.eq("weightTF", weightTF))
 		.add(SimpleRestrictions.eq("weightIDF", weightIDF))
-		.add(SimpleRestrictions.eq("node_weighting_scheme", nodeWeightingScheme))
 		.add(SimpleRestrictions.eq("node_depth", nodeDepth))
+		.add(SimpleRestrictions.eq("node_depth_metric", nodeDepthMetric))
 		.add(SimpleRestrictions.eq("no_siblings", noSiblings))
+	    .add(SimpleRestrictions.eq("node_depth_metric", noSiblingsMetric))
 		.add(SimpleRestrictions.eq("no_children", noChildren))
+	    .add(SimpleRestrictions.eq("node_depth_metric", noChildrenMetric))
+	    .add(SimpleRestrictions.eq("node_weight_normalization", nodeWeightNormalization))
 		.setMaxResults(1)
 		.uniqueResult();
 	}
@@ -446,7 +495,7 @@ public class Algorithm extends Resource {
 			return this.getAlgorithm(getStemming(), getStopWordRemoval(), getSiblingNodes(), getChildNodes()
 					, getTimeFrame(), getRootPath(), getElementAmount(), getElementSelectionMethod(), getDataElementType(), getDataElementTypeWeighting(), getDataElement()
 					, getDataSourceLimitation(), getDataSource(), getResultAmount(), getApproach(), getWeightingScheme(), getWeightTF(), getWeightIDF()
-					, getNodeWeightingScheme(), getNodeDepth(), getNoSiblings(), getNoChildren() );
+					, getNodeDepth(), getNodeDepthMetric(), getNoSiblings(), getNoSiblingsMetric(), getNoChildren(), getNoChildrenMetric(), getNodeWeightNormalization() );
 		}
     }
     
@@ -469,10 +518,13 @@ public class Algorithm extends Resource {
     			+"element="+getDataElement()+";"
     			+"limitation="+getDataSourceLimitation()+";"
     			+"source="+getDataSource()+";"
-    			+"nodeWeightingScheme="+getNodeWeightingScheme()+";"
     			+"nodeDepth="+getNodeDepth()+";"
+    			+"nodeDepthMetric="+getNodeDepthMetric()+";"
     			+"noSiblings="+getNoSiblings()+";"
-    			+"noChildren="+getNoChildren();
+    			+"noSiblingsMetric="+getNoSiblingsMetric()+";"    			
+    			+"noChildren="+getNoChildren()+";" 
+				+"noChildrenMetric="+getNoChildrenMetric()+";"
+				+"nodeWeightNormalization="+getNodeWeightNormalization();
     }
 
 }
