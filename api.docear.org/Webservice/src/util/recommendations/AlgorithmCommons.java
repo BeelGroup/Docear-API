@@ -125,31 +125,47 @@ public class AlgorithmCommons {
 		
 		//0=none; 1=node_depth; 2=no_siblings; 3=no_children; 4=combination of the above node weighting schemes
 		
-		// choose a random value for node depth among: 0=not considered; 1=divide by node depth; 2=multiply with node depth
-		alg.setNodeDepth(r.nextInt(3));
+		// choose a random value for node depth among: 0=not considered; 1=consider node depth; 2=consider reverse node depth (1/node depth)
+		i = r.nextInt(3);
+		alg.setNodeDepth(i);
+		if (i != 0)
+			// choose a random value for node depth metric among: 0=absolute value; 1=natural logarithm; 2=logarithm with base 10; 3=square root; 4=relative (to the max value)
+			alg.setNodeDepthMetric(r.nextInt(5));
+	
+		// choose a random value for no_siblings among: 0=not considered; 1=consider no siblings; 2=consider reverse no siblings (1/no siblings)
+		int j = r.nextInt(3);
+		alg.setNoSiblings(j);
+		if (j != 0)
+			// choose a random value for no_siblings metric among: 0=absolute value; 1=natural logarithm; 2=logarithm with base 10; 3=square root; 4=relative (to the max value)
+			alg.setNoSiblingsMetric(r.nextInt(5));
 		
-		// choose a random value for node depth metric among: 0=absolute value; 1=natural logarithm; 2=logarithm with base 10; 3=square root
-		alg.setNodeDepthMetric(r.nextInt(3));
+		// choose a random value for no_children among: 0=not considered; 1=consider no children; 2=consider reverse no children (1/no children)
+		int k = r.nextInt(3);
+		alg.setNoChildren(k);
+		if (k != 0)
+			// choose a random value for no_children metric among: 0=absolute value; 1=natural logarithm; 2=logarithm with base 10; 3=square root; 4=relative (to the max value)
+			alg.setNoChildrenMetric(r.nextInt(5));
 		
-		// choose a random value for no_siblings among: 0=not considered; 1=divide by no of siblings; 2=multiply with no of siblings			
-		alg.setNoSiblings(r.nextInt(3));
+		// choose a random value for word count among: 0=not considered; 1=consider word count; 2=consider reverse word count (1/word count)
+		int l = r.nextInt(3);
+		alg.setWordCount(l);
+		if (l != 0)
+			// choose a random value for word count metric among: 0=absolute value; 1=natural logarithm; 2=logarithm with base 10; 3=square root; 4=relative (to the max value)
+			alg.setWordCountMetric(r.nextInt(5));
 		
-		// choose a random value for no_siblings metric among: 0=absolute value; 1=natural logarithm; 2=logarithm with base 10; 3=square root
-		alg.setNoSiblingsMetric(r.nextInt(3));
-		
-		// choose a random value for no_children among: 0=not considered; 1=divide by no of children; 2=multiply with no of children			
-		alg.setNoChildren(r.nextInt(3));
-		
-		// choose a random value for no_children metric among: 0=absolute value; 1=natural logarithm; 2=logarithm with base 10; 3=square root
-		alg.setNoChildrenMetric(r.nextInt(3));
-		
-		// 0=none; 1=normalize to the resulting node weight (relative to the max value); 2=normalize each individual parameter
-		alg.setNodeWeightNormalization(r.nextInt(3));
+		if (i !=0 || j !=0 || k !=0 || l !=0) {
+			// 0=none; 1=normalize the total node weight (relative to the max value); 2=normalize the node weight for each parameter
+			alg.setNodeWeightNormalization(r.nextInt(3));
+			
+			// 0=add all; 1=multiply all; 2=keep max; 3=keep avg
+			alg.setNodeWeightComboScheme(r.nextInt(4));
+		}
 		
 		return alg;
 	}
 
 	public static Algorithm getDefault(Session session) {
-		return new Algorithm(session);
+		Algorithm alg = new Algorithm(session);
+		return alg;
 	}
 }
