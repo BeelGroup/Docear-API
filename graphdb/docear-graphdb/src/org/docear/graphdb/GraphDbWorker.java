@@ -238,7 +238,7 @@ public class GraphDbWorker {
 		}
 	}
 
-	public ArrayList<NodeInfo> getUserNodesInfo(int userId, AlgorithmArguments args, UserModel userModel, String pdfHash) {
+	public List<NodeInfo> getUserNodesInfo(int userId, AlgorithmArguments args, UserModel userModel, String pdfHash) {
 		return getUserNodesInfo(getRelevantNodes(userId, args, userModel, pdfHash), args);
 	}
 	
@@ -518,18 +518,15 @@ public class GraphDbWorker {
 	 * @param collection of nodes on the user mind map
 	 * @return arraylist of node info with information on each node
 	 */
-	private ArrayList<NodeInfo> getUserNodesInfo(Collection<Node> nodes, AlgorithmArguments args) {		
+	private List<NodeInfo> getUserNodesInfo(Collection<Node> nodes, AlgorithmArguments args) {		
 		if (nodes == null || nodes.size() == 0) {
 			return null;
 		}
 		
-		ArrayList<NodeInfo> nodeInfos = new ArrayList<NodeInfo>();		
+		List<NodeInfo> nodeInfos = new ArrayList<NodeInfo>();		
 		try {			
-			Iterator<Node> iter = nodes.iterator();
-			while (iter.hasNext()) {
-				Node node = iter.next();
+			for (Node node: nodes)
 				nodeInfos.add(extraxtNodeInfo(node, args));
-			}
 			return nodeInfos;
 		} catch (Exception e) {
 			e.printStackTrace();			
@@ -561,9 +558,10 @@ public class GraphDbWorker {
 	 */
 	private NodeInfo extraxtNodeInfo(Node node, AlgorithmArguments args) {
 		NodeInfo nodeInfo = new NodeInfo();
+		nodeInfo.setId(node.getProperty("ID").toString());
 		nodeInfo.setText(extractText(node));
 		
-		// make only the necessary node calculations
+		// make only the necessary node-related calculations
 		if (args.getArgument(AlgorithmArguments.NODE_DEPTH) != null 
 				&& !new Integer(0).equals(args.getArgument(AlgorithmArguments.NODE_DEPTH)))
 			nodeInfo.setDepth(calculateDepth(node));
@@ -573,7 +571,10 @@ public class GraphDbWorker {
 		if (args.getArgument(AlgorithmArguments.NO_CHILDREN) != null 
 				&& !new Integer(0).equals(args.getArgument(AlgorithmArguments.NO_CHILDREN))) 
 			nodeInfo.setNoOfChildren((calculateNoOfChildren(node)));;
-			
+		if (args.getArgument(AlgorithmArguments.WORD_COUNT) != null 
+				&& !new Integer(0).equals(args.getArgument(AlgorithmArguments.WORD_COUNT))) 
+			nodeInfo.setWordCount((calculateWordCount(node)));;
+				
 		return nodeInfo;
 	}
 	
@@ -638,6 +639,17 @@ public class GraphDbWorker {
 			noOfChildren++;
 		}
 		return noOfChildren;
+	}
+	
+	/**
+	 * @param node
+	 * @return the number of words on that node
+	 */
+	private Integer calculateWordCount(Node node) {
+		String text = extractText(node).trim();
+	   if (text.isEmpty()) 
+		   return 0;
+	   return text.split("\\s+").length; //separate string around spaces
 	}
 	
 	private String filterText(String text) {
