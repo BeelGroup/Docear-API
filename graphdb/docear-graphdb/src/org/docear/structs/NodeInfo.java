@@ -7,10 +7,20 @@ package org.docear.structs;
 
 public class NodeInfo {
 	
+	private String id; //the id of the node as stored in the graph database
 	private String text;
 	private Integer depth; //node depth on the mind map
 	private Integer noOfSiblings;
 	private Integer noOfChildren;
+	private Integer wordCount; //number of words on the node (including stopwords)
+	
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
+	}
 	
 	public String getText() {
 		return text;
@@ -42,6 +52,14 @@ public class NodeInfo {
 
 	public void setNoOfChildren(Integer noOfchildren) {
 		this.noOfChildren = noOfchildren;
+	}
+
+	public Integer getWordCount() {
+		return wordCount;
+	}
+
+	public void setWordCount(Integer wordCount) {
+		this.wordCount = wordCount;
 	}
 	
 }
