@@ -28,8 +28,11 @@ public class AlgorithmArguments {
 	public static final String NO_SIBLINGS = "noSiblings";
 	public static final String NO_SIBLINGS_METRIC = "noSiblingsMetric";
 	public static final String NO_CHILDREN = "noChildren";
-	public static final String NO_CHILDREN_METRIC = "noSiblingsMetric";
+	public static final String NO_CHILDREN_METRIC = "noChildrenMetric";
+	public static final String WORD_COUNT = "wordCount";
+	public static final String WORD_COUNT_METRIC = "wordCountMetric";
 	public static final String NODE_WEIGHT_NORMALIZATION = "nodeWeightNormalization";
+	public static final String NODE_WEIGHT_COMBO_SCHEME = "nodeWeightComboScheme";
 
 	private HashMap<String, Object> arguments = new HashMap<String, Object>(); 
 	
@@ -55,7 +58,10 @@ public class AlgorithmArguments {
 		this.arguments.put(NO_SIBLINGS_METRIC, 0);
 		this.arguments.put(NO_CHILDREN, 0);
 		this.arguments.put(NO_CHILDREN_METRIC, 0);
+		this.arguments.put(WORD_COUNT, 0);
+		this.arguments.put(WORD_COUNT_METRIC, 0);
 		this.arguments.put(NODE_WEIGHT_NORMALIZATION, 0);
+		this.arguments.put(NODE_WEIGHT_COMBO_SCHEME, 1);
 		
 		if(arguments == null || arguments.trim().length() == 0) {
 			return;
