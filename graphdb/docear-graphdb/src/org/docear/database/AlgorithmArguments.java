@@ -53,15 +53,10 @@ public class AlgorithmArguments {
 		this.arguments.put(DATA_ELEMENT_TYPE, 1);
 //		this.arguments.put(DATA_ELEMENT_TYPE_WEIGHTING, "1");
 		this.arguments.put(NODE_DEPTH, 0);
-		this.arguments.put(NODE_DEPTH_METRIC, 0);
 		this.arguments.put(NO_SIBLINGS, 0);
-		this.arguments.put(NO_SIBLINGS_METRIC, 0);
 		this.arguments.put(NO_CHILDREN, 0);
-		this.arguments.put(NO_CHILDREN_METRIC, 0);
 		this.arguments.put(WORD_COUNT, 0);
-		this.arguments.put(WORD_COUNT_METRIC, 0);
 		this.arguments.put(NODE_WEIGHT_NORMALIZATION, 0);
-		this.arguments.put(NODE_WEIGHT_COMBO_SCHEME, 1);
 		
 		if(arguments == null || arguments.trim().length() == 0) {
 			return;
