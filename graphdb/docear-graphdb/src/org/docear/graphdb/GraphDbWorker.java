@@ -139,7 +139,7 @@ public class GraphDbWorker {
 			
 		// get random number from size+1 --> amount==0 means take all, everything else means the size itself
 		int amount = new Random().nextInt(Math.min(nodeSet.size(), AlgorithmArguments.MAX_ELEMENT_AMOUNT)+1);
-				
+
 		if (amount > 0) {
 			if (amount > nodeSet.size()) {
 				// not enough nodes
