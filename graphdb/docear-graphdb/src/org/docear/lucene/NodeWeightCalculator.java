@@ -83,7 +83,7 @@ public class NodeWeightCalculator {
 		case ADD:
 			return value + parameterValue;
 		default: // covers case MULTIPLY
-			return parameterValue == 0 ? value : value * parameterValue;
+			return value * parameterValue;
 		}
 	}
 	
@@ -97,18 +97,15 @@ public class NodeWeightCalculator {
 	public static Double parameterFilter(Double parameterValue, ParameterMetric parameterMetric, Double maxValue) {
 		switch (parameterMetric) {
 		case LOG:
-			// calculate only got non zero values
-			return parameterValue == 0 ? 0 : Math.log(parameterValue);
+			return Math.log(parameterValue + 2); // add 2 to avoid getting infinite or zero as result
 		case LOG10:
-			// calculate only got non zero values
-			return parameterValue == 0 ? 0 : Math.log10(parameterValue);
+			return Math.log10(parameterValue + 2); // add 2 to avoid getting infinite or zero as result
 		case SQRT:
-			return Math.sqrt(parameterValue);
+			return Math.sqrt(parameterValue + 2); // add 2 to avoid getting zero as result and keep this in consistency with log and log10 cases
 		case RELATIVE:
-			// return the same value if max value is zero
-			return maxValue == 0 ? parameterValue : parameterValue / maxValue;
-		default:
-			return parameterValue; // for the ABSOLUTE case
+			return (parameterValue + 1) / (maxValue + 1); // add 1 to both to avoid getting infinite or zero as result
+		default: // for the ABSOLUTE case
+			return parameterValue + 1; // add 1 to avoid getting zero as result
 		}
 	}
 	
