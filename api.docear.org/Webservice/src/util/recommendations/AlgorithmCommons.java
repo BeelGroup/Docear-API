@@ -17,7 +17,7 @@ public class AlgorithmCommons {
 		Algorithm alg = new Algorithm(session);
 		
 		int i = r.nextInt(50); //p=0.02 for stereotype recommendations
-		if (i == 0 && firstTrial) {			
+		if (i == 0 && firstTrial) {		
 			alg.setChildNodes(null);
 			alg.setDataElement(null);
 			alg.setDataElementType(null);
@@ -152,14 +152,17 @@ public class AlgorithmCommons {
 		if (l != 0)
 			// choose a random value for word count metric among: 0=absolute value; 1=natural logarithm; 2=logarithm with base 10; 3=square root; 4=relative (to the max value)
 			alg.setWordCountMetric(r.nextInt(5));
-		
-		if (i !=0 || j !=0 || k !=0 || l !=0) {
+	
+		// if at least one parameter/factor is set
+		if (i !=0 || j !=0 || k !=0 || l !=0) 
 			// 0=none; 1=normalize the total node weight (relative to the max value); 2=normalize the node weight for each parameter
 			alg.setNodeWeightNormalization(r.nextInt(3));
-			
+
+		// if at least two parameters/factors are set
+		if ((i!=0 && (j!=0 || k!=0 || l!=0)) || (j!=0 && (i!=0 || k!=0 || l!=0)) || (k!=0 && (j!=0 || i!=0 || l!=0)) ||
+				(l!=0 && (j!=0 || k!=0 || i!=0)))
 			// 0=add all; 1=multiply all; 2=keep max; 3=keep avg
 			alg.setNodeWeightComboScheme(r.nextInt(4));
-		}
 		
 		return alg;
 	}
