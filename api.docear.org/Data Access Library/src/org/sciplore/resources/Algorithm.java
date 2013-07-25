@@ -117,6 +117,7 @@ public class Algorithm extends Resource {
     public final static Integer NODE_WEIGHT_COMBO_SCHEME_MULTIPLY_ALL = 1;
     public final static Integer NODE_WEIGHT_COMBO_SCHEME_MAX = 2;
     public final static Integer NODE_WEIGHT_COMBO_SCHEME_AVG = 3;
+    public final static Integer NODE_WEIGHT_COMBO_SCHEME_WEIGHTED_AVG = 4; // not used currently
     
     protected Algorithm() {
     	
