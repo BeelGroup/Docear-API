@@ -43,26 +43,25 @@ public class TFIDFKeywordGenerator extends TFKeywordGenerator {
 				try {
 					// get all documents that contain the term
 					TermDocs docs = tfReader.termDocs(term);
-					double frequency = 0;
+					double termNodeWeight = 0;
 					
-					while (docs.next()) { 
-							// get term frequencies for each field in the document
-							TermFreqVector[] tvf = tfReader.getTermFreqVectors(docs.doc());
-							for (int i=0; i<tvf.length; i++)
-							{
-								// if the term exists in this field
-								int termIndex = tvf[i].indexOf(termText);
-								if (termIndex > -1) {
-									// get the frequency of the term in the document field multiplied the node weight
-									Integer freq = tvf[i].getTermFrequencies()[termIndex];
-									frequency += freq * nodeWeightsTotal.get(tvf[i].getField());
-								}
-							
-							}
+					while (docs.next()) { 			
+						// get term frequencies for the field the term belongs to in the document
+						TermFreqVector tvf = tfReader.getTermFreqVector(docs.doc(), term.field());
+						Integer freqInField = tvf.getTermFrequencies()[tvf.indexOf(termText)];
+						termNodeWeight += freqInField * nodeWeightsTotal.get(tvf.getField());
 					}
 					docs.close();
-					userModel.getKeywords().addKeyword(termText, frequency);					
-				} catch (IOException ex) {
+					
+					Keywords keywds = userModel.getKeywords();
+					Keyword keywdForTerm = keywds.getKeywordByTerm(termText);		
+					// if the term already exists update its weight
+					if (keywdForTerm != null)
+						keywdForTerm.setWeight(keywdForTerm.getWeight() + termNodeWeight);
+					else
+						keywds.addKeyword(termText, termNodeWeight);					
+				} 
+				catch (IOException ex) {
 					ex.printStackTrace();
 				}
 			}
