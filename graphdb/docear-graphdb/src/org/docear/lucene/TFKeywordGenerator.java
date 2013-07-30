@@ -195,76 +195,85 @@ public class TFKeywordGenerator implements ResultGenerator {
 		
 		boolean noParamUsed = nodeWeightsPerNodeDepth.size()==0 && nodeWeightsPerNoSiblings.size()==0 && nodeWeightsPerNoChildren.size()==0 && nodeWeightsPerWordCount.size()==0;
 		
-		// calculate the node weights appropriately
-		for (Iterator<NodeInfo> iter = nodesInfo.iterator(); iter.hasNext();) {
-			NodeInfo nodeInfo = iter.next();
-			
-			Field fieldToAdd = new Field(nodeInfo.getId(), nodeInfo.getText(), Field.Store.YES, Field.Index.ANALYZED, Field.TermVector.YES);
-			Double fieldWeight = 0d;
-	
-			if (noParamUsed) 
-				nodeWeightsTotal.put(nodeInfo.getId(), 1d);
-			else { 
-				switch((Integer)args.getArgument(AlgorithmArguments.NODE_WEIGHT_COMBO_SCHEME)) {
-				case 1: // 1=multiply all 
-					fieldWeight = 1d; // in case we perform multiplications set the initial weight to one
-				case 0: // 0=add all
-					if (nodeInfo.getDepth() != null) 
-						fieldWeight = NodeWeightCalculator.applyParameter(fieldWeight, 
-								nodeWeightsPerNodeDepth.get(nodeInfo.getId()),
-								NodeWeightCalculator.ParameterOperator.get((Integer)args.getArgument(AlgorithmArguments.NODE_WEIGHT_COMBO_SCHEME)));
-					if (nodeInfo.getNoOfSiblings() != null) 
-						fieldWeight = NodeWeightCalculator.applyParameter(fieldWeight, 
-								nodeWeightsPerNoSiblings.get(nodeInfo.getId()),
-								NodeWeightCalculator.ParameterOperator.get((Integer)args.getArgument(AlgorithmArguments.NODE_WEIGHT_COMBO_SCHEME)));
-					if (nodeInfo.getNoOfChildren() != null) 
-						fieldWeight = NodeWeightCalculator.applyParameter(fieldWeight, 
-								nodeWeightsPerNoChildren.get(nodeInfo.getId()),
-								NodeWeightCalculator.ParameterOperator.get((Integer)args.getArgument(AlgorithmArguments.NODE_WEIGHT_COMBO_SCHEME)));
-					if (nodeInfo.getWordCount() != null) 
-						fieldWeight = NodeWeightCalculator.applyParameter(fieldWeight, 
-								nodeWeightsPerWordCount.get(nodeInfo.getId()),
-								NodeWeightCalculator.ParameterOperator.get((Integer)args.getArgument(AlgorithmArguments.NODE_WEIGHT_COMBO_SCHEME)));
-					break;
-				case 2: // 2=keep max
-					if (nodeInfo.getDepth() != null) fieldWeight = nodeWeightsPerNodeDepth.get(nodeInfo.getId());
-					if (nodeInfo.getNoOfSiblings() != null) fieldWeight = Math.max(fieldWeight, nodeWeightsPerNoSiblings.get(nodeInfo.getId()));
-					if (nodeInfo.getNoOfChildren() != null) fieldWeight = Math.max(fieldWeight, nodeWeightsPerNoChildren.get(nodeInfo.getId()));
-					if (nodeInfo.getWordCount() != null) fieldWeight = Math.max(fieldWeight, nodeWeightsPerWordCount.get(nodeInfo.getId()));
-					break;
-				case 3: // 3=keep avg
-					int parametersNumber = 0;
-					if (nodeInfo.getDepth() != null) {
-						fieldWeight = nodeWeightsPerNodeDepth.get(nodeInfo.getId());
-						parametersNumber++;
+		if (args.getArgument(AlgorithmArguments.NODE_WEIGHT_COMBO_SCHEME) != null) { // combination of factors
+			// calculate the node weights appropriately
+			for (Iterator<NodeInfo> iter = nodesInfo.iterator(); iter.hasNext();) {
+				NodeInfo nodeInfo = iter.next();
+				
+				Field fieldToAdd = new Field(nodeInfo.getId(), nodeInfo.getText(), Field.Store.YES, Field.Index.ANALYZED, Field.TermVector.YES);
+				Double fieldWeight = 0d;
+		
+				if (noParamUsed) 
+					nodeWeightsTotal.put(nodeInfo.getId(), 1d);
+				else { 
+					switch((Integer)args.getArgument(AlgorithmArguments.NODE_WEIGHT_COMBO_SCHEME)) {
+					case 1: // 1=multiply all 
+						fieldWeight = 1d; // in case we perform multiplications set the initial weight to one
+					case 0: // 0=add all
+						if (nodeInfo.getDepth() != null) 
+							fieldWeight = NodeWeightCalculator.applyParameter(fieldWeight, 
+									nodeWeightsPerNodeDepth.get(nodeInfo.getId()),
+									NodeWeightCalculator.ParameterOperator.get((Integer)args.getArgument(AlgorithmArguments.NODE_WEIGHT_COMBO_SCHEME)));
+						if (nodeInfo.getNoOfSiblings() != null) 
+							fieldWeight = NodeWeightCalculator.applyParameter(fieldWeight, 
+									nodeWeightsPerNoSiblings.get(nodeInfo.getId()),
+									NodeWeightCalculator.ParameterOperator.get((Integer)args.getArgument(AlgorithmArguments.NODE_WEIGHT_COMBO_SCHEME)));
+						if (nodeInfo.getNoOfChildren() != null) 
+							fieldWeight = NodeWeightCalculator.applyParameter(fieldWeight, 
+									nodeWeightsPerNoChildren.get(nodeInfo.getId()),
+									NodeWeightCalculator.ParameterOperator.get((Integer)args.getArgument(AlgorithmArguments.NODE_WEIGHT_COMBO_SCHEME)));
+						if (nodeInfo.getWordCount() != null) 
+							fieldWeight = NodeWeightCalculator.applyParameter(fieldWeight, 
+									nodeWeightsPerWordCount.get(nodeInfo.getId()),
+									NodeWeightCalculator.ParameterOperator.get((Integer)args.getArgument(AlgorithmArguments.NODE_WEIGHT_COMBO_SCHEME)));
+						break;
+					case 2: // 2=keep max
+						if (nodeInfo.getDepth() != null) fieldWeight = nodeWeightsPerNodeDepth.get(nodeInfo.getId());
+						if (nodeInfo.getNoOfSiblings() != null) fieldWeight = Math.max(fieldWeight, nodeWeightsPerNoSiblings.get(nodeInfo.getId()));
+						if (nodeInfo.getNoOfChildren() != null) fieldWeight = Math.max(fieldWeight, nodeWeightsPerNoChildren.get(nodeInfo.getId()));
+						if (nodeInfo.getWordCount() != null) fieldWeight = Math.max(fieldWeight, nodeWeightsPerWordCount.get(nodeInfo.getId()));
+						break;
+					case 3: // 3=keep avg
+						int parametersNumber = 0;
+						if (nodeInfo.getDepth() != null) {
+							fieldWeight = nodeWeightsPerNodeDepth.get(nodeInfo.getId());
+							parametersNumber++;
+						}
+						if (nodeInfo.getNoOfSiblings() != null) {
+							fieldWeight += nodeWeightsPerNoSiblings.get(nodeInfo.getId());
+							parametersNumber++;
+						}
+						if (nodeInfo.getNoOfChildren() != null) {
+							fieldWeight += nodeWeightsPerNoChildren.get(nodeInfo.getId());
+							parametersNumber++;
+						}
+						if (nodeInfo.getWordCount() != null) {
+							fieldWeight += nodeWeightsPerWordCount.get(nodeInfo.getId());
+							parametersNumber++;
+						}
+						fieldWeight /= parametersNumber;
 					}
-					if (nodeInfo.getNoOfSiblings() != null) {
-						fieldWeight += nodeWeightsPerNoSiblings.get(nodeInfo.getId());
-						parametersNumber++;
-					}
-					if (nodeInfo.getNoOfChildren() != null) {
-						fieldWeight += nodeWeightsPerNoChildren.get(nodeInfo.getId());
-						parametersNumber++;
-					}
-					if (nodeInfo.getWordCount() != null) {
-						fieldWeight += nodeWeightsPerWordCount.get(nodeInfo.getId());
-						parametersNumber++;
-					}
-					fieldWeight /= parametersNumber;
+					nodeWeightsTotal.put(nodeInfo.getId(), fieldWeight);			
 				}
-				nodeWeightsTotal.put(nodeInfo.getId(), fieldWeight);
+				
+				// compare with max node weight (if node weight normalization is set)
+				// check that at least one parameter is considered (although normalization should not be set otherwise)
+				if (new Integer(1).equals(args.getArgument(AlgorithmArguments.NODE_WEIGHT_NORMALIZATION)) && !noParamUsed) 
+					maxFieldWeight = fieldWeight > maxFieldWeight ? fieldWeight : maxFieldWeight;
+				
+				doc.add(fieldToAdd);
 			}
-					
-			// compare with max node weight (if node weight normalization is set)
-			// check that at least one parameter is considered (although normalization should not be set otherwise)
-			if (new Integer(1).equals(args.getArgument(AlgorithmArguments.NODE_WEIGHT_NORMALIZATION)) && !noParamUsed) 
-				maxFieldWeight = fieldWeight > maxFieldWeight ? fieldWeight : maxFieldWeight;
-			
-			doc.add(fieldToAdd);
+		}
+		else { // if only one parameter is set replace the total weights with the parameter values for all nodes
+			if (nodeWeightsPerNodeDepth != null && nodeWeightsPerNodeDepth.size() > 0) nodeWeightsTotal = nodeWeightsPerNodeDepth;
+			if (nodeWeightsPerNoSiblings != null && nodeWeightsPerNoSiblings.size() > 0) nodeWeightsTotal = nodeWeightsPerNoSiblings;
+			if (nodeWeightsPerNoChildren != null && nodeWeightsPerNoChildren.size() > 0) nodeWeightsTotal = nodeWeightsPerNoChildren;
+			if (nodeWeightsPerWordCount != null && nodeWeightsPerWordCount.size() > 0) nodeWeightsTotal = nodeWeightsPerWordCount;
 		}
 
 		// replace absolute weight with its normalized value
-		if (new Integer(1).equals(args.getArgument(AlgorithmArguments.NODE_WEIGHT_NORMALIZATION)) && !noParamUsed && maxFieldWeight != 1) 
+		if (args.getArgument(AlgorithmArguments.NODE_WEIGHT_NORMALIZATION) != null &&
+				new Integer(1).equals(args.getArgument(AlgorithmArguments.NODE_WEIGHT_NORMALIZATION)) && !noParamUsed && maxFieldWeight != 1) 
 				for (Map.Entry<String, Double> entry : nodeWeightsTotal.entrySet()) 
 					entry.setValue(entry.getValue() / maxFieldWeight);
 		
