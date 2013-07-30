@@ -187,7 +187,7 @@ public class GraphDbWorker {
 		Integer method = (Integer) args.getArgument(AlgorithmArguments.ELEMENT_SELECTION_METHOD); 
 		if (method != null && method > 0) 
 			// get randomly the number of last days for which the nodes will be considered
-			nodes = GraphDBUtil.filterByDaysSinceLastForNodes(nodes, args, userModel);
+			nodes = GraphDbHelper.filterByDaysSinceLastForNodes(nodes, args, userModel);
 
 		userModel.addVariable("node_count_before_expanded", String.valueOf(amount));
 		userModel.addVariable("node_count_expanded", String.valueOf(nodes.size()));
@@ -946,7 +946,7 @@ public class GraphDbWorker {
 			
 			if (method != null && method > 0) 
 				// get randomly the number of last days for which the mindmaps will be considered
-				allMaps = GraphDBUtil.filterByDaysSinceLastForMaps(allMaps, args, userModel);
+				allMaps = GraphDbHelper.filterByDaysSinceLastForMaps(allMaps, args, userModel);
 
 			// get random number from size+1 --> amount==0 means take all, everything else means the size itself
 			int amount = new Random().nextInt(Math.min(allMaps.size(), AlgorithmArguments.MAX_ELEMENT_AMOUNT)+1);
