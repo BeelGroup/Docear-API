@@ -139,7 +139,7 @@ public class GraphDbWorker {
 			
 		// get random number from size+1 --> amount==0 means take all, everything else means the size itself
 		int amount = new Random().nextInt(Math.min(nodeSet.size(), AlgorithmArguments.MAX_ELEMENT_AMOUNT)+1);
-
+				
 		if (amount > 0) {
 			if (amount > nodeSet.size()) {
 				// not enough nodes
@@ -184,7 +184,11 @@ public class GraphDbWorker {
 		}
 		System.out.println("demo-nodes: "+foundDemoNodes.size()+" of "+nodes.size());
 		
-		userModel.addVariable("element_amount_nodes", String.valueOf(amount));
+		Integer method = (Integer) args.getArgument(AlgorithmArguments.ELEMENT_SELECTION_METHOD); 
+		if (method != null && method > 0) 
+			// get randomly the number of last days for which the nodes will be considered
+			nodes = GraphDBUtil.filterByDaysSinceLastForNodes(nodes, args, userModel);
+
 		userModel.addVariable("node_count_before_expanded", String.valueOf(amount));
 		userModel.addVariable("node_count_expanded", String.valueOf(nodes.size()));
 		
@@ -314,6 +318,7 @@ public class GraphDbWorker {
 		
 		Collection<NodeRevision> nodeSet = null;
 		
+		// 2 = mind map nodes are considered
 		if (new Integer(2).equals(args.getArgument(AlgorithmArguments.DATA_ELEMENT))) {
 			final Integer method = (Integer) args.getArgument(AlgorithmArguments.ELEMENT_SELECTION_METHOD); 			
 						
@@ -506,10 +511,23 @@ public class GraphDbWorker {
 			traverser = getUserLatestRevisionsTraversal(mapRoot, mapType, args, minExludeDate);
 		}
 		final String revisionKey = mapRoot.getProperty("ID").toString();
+		
 		for (Node n : traverser.nodes()) {
 			//take 'public' nodes only into account
 			if(!n.hasProperty("DCR_PRIVACY_LEVEL") || "PUBLIC".equals(n.getProperty("DCR_PRIVACY_LEVEL"))) {
-				nodes.add(new NodeRevision(n, revisionKey, mapType));
+				// ignore folded or unfolded nodes based on the algorithm parameter value
+				switch((Integer)args.getArgument(AlgorithmArguments.NODE_VISIBILITY)) {
+					case 1:
+						if (!n.hasProperty("FOLDED") || (n.hasProperty("FOLDED") && !"true".equals(n.getProperty("FOLDED").toString())))
+							nodes.add(new NodeRevision(n, revisionKey, mapType));		
+						break;
+					case 2:
+						if (n.hasProperty("FOLDED") && "true".equals(n.getProperty("FOLDED").toString()))
+							nodes.add(new NodeRevision(n, revisionKey, mapType));	
+						break;
+					default: //use all, case 0
+						nodes.add(new NodeRevision(n, revisionKey, mapType));
+				}
 			}
 		}
 	}
@@ -569,8 +587,15 @@ public class GraphDbWorker {
 				&& !new Integer(0).equals(args.getArgument(AlgorithmArguments.NO_SIBLINGS))) 
 			nodeInfo.setNoOfSiblings(calculateNoOfSiblings(node));
 		if (args.getArgument(AlgorithmArguments.NO_CHILDREN) != null 
-				&& !new Integer(0).equals(args.getArgument(AlgorithmArguments.NO_CHILDREN))) 
-			nodeInfo.setNoOfChildren((calculateNoOfChildren(node)));;
+				&& !new Integer(0).equals(args.getArgument(AlgorithmArguments.NO_CHILDREN))) {
+			switch ((Integer)args.getArgument(AlgorithmArguments.NO_CHILDREN_LEVEL)) {
+				case 1:
+					nodeInfo.setNoOfChildren((calculateNoOfChildren(node)));;
+					break;
+				case 2:
+					nodeInfo.setNoOfChildren((calculateNoOfSubtreeNodes(node)));;
+			}
+		}
 		if (args.getArgument(AlgorithmArguments.WORD_COUNT) != null 
 				&& !new Integer(0).equals(args.getArgument(AlgorithmArguments.WORD_COUNT))) 
 			nodeInfo.setWordCount((calculateWordCount(node)));;
@@ -637,6 +662,22 @@ public class GraphDbWorker {
 		while(it.hasNext()) {
 			it.next(); 
 			noOfChildren++;
+		}
+		return noOfChildren;
+	}
+	
+	/**
+	 * @param node
+	 * @return the number of nodes for the tree that has as root the node used as parameter
+	 */
+	private Integer calculateNoOfSubtreeNodes(Node node) {
+		Integer noOfChildren = 0;
+		Iterator<Relationship> it = node.getRelationships(Type.CHILD, Direction.OUTGOING).iterator();
+		
+		while(it.hasNext()) {
+			Relationship relation = it.next(); 
+			noOfChildren++;
+			noOfChildren += calculateNoOfSubtreeNodes(relation.getEndNode());
 		}
 		return noOfChildren;
 	}
@@ -877,22 +918,21 @@ public class GraphDbWorker {
 			return null;
 		}
 		
-		
 		// if data_element is mind maps: order the mind maps
 		if (new Integer(1).equals(args.getArgument(AlgorithmArguments.DATA_ELEMENT))) {			
-			final Integer method = (Integer) args.getArgument(AlgorithmArguments.ELEMENT_SELECTION_METHOD); // 1:edited;
+			final Integer method = (Integer) args.getArgument(AlgorithmArguments.ELEMENT_SELECTION_METHOD); 
 
 			if (method != null && method > 0) {
 				Collections.sort(allMaps, new Comparator<Node>() {
 					@Override
 					public int compare(Node o1, Node o2) {
 						switch (method) {
-						case 1:
+						case 1: // 1=edited
 							String created1 = o1.getProperty("CREATED").toString(); //'created' on a revision node indicates the time when it was saved
 							String created2 = o2.getProperty("CREATED").toString();
 							int comp1 = created2.compareTo(created1);
 							return (comp1);
-						case 2:
+						case 2: // 2=created
 							String str1 = o1.getProperty("dcr_id").toString();
 							String str2 = o2.getProperty("dcr_id").toString();
 							int comp2 = str2.compareTo(str1);
@@ -903,6 +943,10 @@ public class GraphDbWorker {
 					}
 				});
 			}
+			
+			if (method != null && method > 0) 
+				// get randomly the number of last days for which the mindmaps will be considered
+				allMaps = GraphDBUtil.filterByDaysSinceLastForMaps(allMaps, args, userModel);
 
 			// get random number from size+1 --> amount==0 means take all, everything else means the size itself
 			int amount = new Random().nextInt(Math.min(allMaps.size(), AlgorithmArguments.MAX_ELEMENT_AMOUNT)+1);
@@ -914,9 +958,8 @@ public class GraphDbWorker {
 		}
 
 		return allMaps;
-
 	}
-
+	
 	private List<Node> getLatestMapsForUser(int userId, AlgorithmArguments args) {
 		Map<String, Node> latestRev = getLatestMapsForUser(userId);
 
@@ -948,6 +991,7 @@ public class GraphDbWorker {
 	
 	/**
 	 * @param userId
+	 * @param applyFilter
 	 * @return
 	 */
 	public Map<String, Node> getLatestMapsForUser(int userId, boolean applyFilter) {
