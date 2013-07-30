@@ -69,6 +69,10 @@ public class Algorithm extends Resource {
     public final static Integer APPROACH_STEREOTYPE = 2;
     public final static Integer APPROACH_COLLABORATIVE_FILTERING = 3;    
     
+    public final static Integer NODE_VISIBILITY_ALL = 0;
+    public final static Integer NODE_VISIBILITY_VISIBLE = 1;
+    public final static Integer NODE_VISIBILITY_INVISIBLE = 1;
+    
     public final static Integer NODE_DEPTH_DISABLED = 0;
     public final static Integer NODE_DEPTH = 1;
     public final static Integer NODE_DEPTH_REVERSE = 2;
@@ -77,7 +81,6 @@ public class Algorithm extends Resource {
     public final static Integer NODE_DEPTH_METRIC_LOG = 1;
     public final static Integer NODE_DEPTH_METRIC_LOG10 = 2;
     public final static Integer NODE_DEPTH_METRIC_SQRT = 3;
-    public final static Integer NODE_DEPTH_METRIC_REL = 4;
     
     public final static Integer NO_SIBLINGS_DISABLED = 0;
     public final static Integer NO_SIBLINGS = 1;
@@ -87,17 +90,18 @@ public class Algorithm extends Resource {
     public final static Integer NO_SIBLINGS_METRIC_LOG = 1;
     public final static Integer NO_SIBLINGS_METRIC_LOG10 = 2;
     public final static Integer NO_SIBLINGS_METRIC_SQRT = 3;
-    public final static Integer NO_SIBLINGS_METRIC_REL = 4;
     
     public final static Integer NO_CHILDREN_DISABLED = 0;
     public final static Integer NO_CHILDREN = 1;
     public final static Integer NO_CHILDREN_REVERSE = 2;
     
+    public final static Integer NO_CHILDREN_ONE_LEVEL = 1;
+    public final static Integer NO_CHILDREN_ALL_SUBTREE = 2;
+    
     public final static Integer NO_CHILDREN_METRIC_ABS = 0;
     public final static Integer NO_CHILDREN_METRIC_LOG = 1;
     public final static Integer NO_CHILDREN_METRIC_LOG10 = 2;
     public final static Integer NO_CHILDREN_METRIC_SQRT = 3;
-    public final static Integer NO_CHILDREN_METRIC_REL = 4;
     
     public final static Integer WORD_COUNT_DISABLED = 0;
     public final static Integer WORD_COUNT = 1;
@@ -107,7 +111,6 @@ public class Algorithm extends Resource {
     public final static Integer WORD_COUNT_METRIC_LOG = 1;
     public final static Integer WORD_COUNT_METRIC_LOG10 = 2;
     public final static Integer WORD_COUNT_METRIC_SQRT = 3;
-    public final static Integer WORD_COUNT_METRIC_REL = 4;
     
     public final static Integer NODE_WEIGHT_NORMALIZATION_DISABLED = 0;
     public final static Integer NODE_WEIGHT_NORMALIZATION_ON_TOTAL = 1;
@@ -149,6 +152,9 @@ public class Algorithm extends Resource {
     @Column()
     private Integer element_amount = 0;
     
+    @Column()
+    private Integer no_days_since = 1;
+    
 	@Column(nullable = true)
     private Integer root_path = ROOT_PATH_NO;
     
@@ -186,34 +192,40 @@ public class Algorithm extends Resource {
     private Boolean featureWeightSubmission;
     
     @Column()
+    private Integer node_visibility = NODE_VISIBILITY_ALL;
+    
+    @Column()
     private Integer node_depth = NODE_DEPTH_DISABLED;
+    
+    @Column()
+    private Integer node_depth_metric;
     
     @Column()
     private Integer no_siblings = NO_SIBLINGS_DISABLED;
     
     @Column()
+    private Integer no_siblings_metric;
+    
+    @Column()
     private Integer no_children = NO_CHILDREN_DISABLED;
     
     @Column()
-    private Integer node_depth_metric = NODE_DEPTH_METRIC_ABS;
+    private Integer no_children_level;
     
     @Column()
-    private Integer no_siblings_metric = NO_SIBLINGS_METRIC_ABS;
-    
-    @Column()
-    private Integer no_children_metric = NO_CHILDREN_METRIC_ABS;
+    private Integer no_children_metric;
     
     @Column()
     private Integer word_count = WORD_COUNT_DISABLED;
     
     @Column()
-    private Integer word_count_metric = WORD_COUNT_METRIC_ABS;   
+    private Integer word_count_metric;   
     
     @Column()
-    private Integer node_weight_normalization = NODE_WEIGHT_NORMALIZATION_DISABLED;
+    private Integer node_weight_normalization;
     
     @Column()
-    private Integer node_weight_combo_scheme = NODE_WEIGHT_COMBO_SCHEME_MULTIPLY_ALL;
+    private Integer node_weight_combo_scheme;
     
     public Integer getDataSource() {
 		return data_source;
@@ -298,6 +310,15 @@ public class Algorithm extends Resource {
 	}
 
 
+	public Integer getNoDaysSince() {
+		return no_days_since;
+	}
+
+
+	public void setNoDaysSince(Integer noDaysSince) {
+		this.no_days_since = noDaysSince;
+	}
+	
 
 	public Integer getRootPath() {
 		return root_path;
@@ -423,6 +444,14 @@ public class Algorithm extends Resource {
 		this.featureWeightSubmission = featureWeightSubmission;
 	}
 	
+	public Integer getNodeVisibility() {
+		return node_visibility;
+	}
+
+	public void setNodeVisibility(Integer nodeVisibility) {
+		this.node_visibility = nodeVisibility;
+	}
+	
 	public Integer getNodeDepth() {
 		return node_depth;
 	}
@@ -461,6 +490,14 @@ public class Algorithm extends Resource {
 
 	public void setNoChildren(Integer noChildren) {
 		this.no_children = noChildren;
+	}
+	
+	public Integer getNoChildrenLevel() {
+		return no_children_level;
+	}
+
+	public void setNoChildrenLevel(Integer noChildrenLevel) {
+		this.no_children_level = noChildrenLevel;
 	}
 	
 	public Integer getNoChildrenMetric() {
@@ -505,10 +542,11 @@ public class Algorithm extends Resource {
 	
 	
 	public Algorithm getAlgorithm(Integer useStemming, Integer useStopWordRemoval, Integer useSiblingNodes, Integer childNodes
-			, Integer timeFrame, Integer useRootPath, Integer elementAmount, Integer elementSelectionMethod, Integer dataElementType, String dataElementTypeWeighting, Integer dataElement
-			, Integer dataSourceLimitation, Integer dataSource, Integer resultAmount, Integer approach, Integer weightingScheme, Integer weightTF, Integer weightIDF
-			, Integer nodeDepth, Integer nodeDepthMetric, Integer noSiblings, Integer noSiblingsMetric, Integer noChildren, Integer noChildrenMetric
-			, Integer wordCount, Integer wordCountMetric, Integer nodeWeightNormalization, Integer nodeWeightComboScheme) {
+			, Integer timeFrame, Integer useRootPath, Integer elementAmount, Integer noDaysSince, Integer elementSelectionMethod, Integer dataElementType
+			, String dataElementTypeWeighting, Integer dataElement, Integer dataSourceLimitation, Integer dataSource, Integer resultAmount, Integer approach 
+			, Integer weightingScheme, Integer weightTF, Integer weightIDF, Integer nodeVisibility, Integer nodeDepth, Integer nodeDepthMetric, Integer noSiblings
+			, Integer noSiblingsMetric, Integer noChildren, Integer noChildrenLevel, Integer noChildrenMetric, Integer wordCount, Integer wordCountMetric, Integer nodeWeightNormalization
+			, Integer nodeWeightComboScheme) {
 		
 		return (Algorithm)this.getSession().createCriteria(Algorithm.class)
 		.add(SimpleRestrictions.eq("stemming", useStemming))
@@ -518,6 +556,7 @@ public class Algorithm extends Resource {
 		.add(SimpleRestrictions.eq("time_frame", timeFrame))
 		.add(SimpleRestrictions.eq("root_path", useRootPath))
 		.add(SimpleRestrictions.eq("element_amount", elementAmount))
+		.add(SimpleRestrictions.eq("no_days_since", noDaysSince))
 		.add(SimpleRestrictions.eq("element_selection_method", elementSelectionMethod))
 		.add(SimpleRestrictions.eq("data_element_type", dataElementType))
 		.add(SimpleRestrictions.eq("data_element_type_weighting", dataElementTypeWeighting))
@@ -529,11 +568,13 @@ public class Algorithm extends Resource {
 		.add(SimpleRestrictions.eq("weightingScheme", weightingScheme))
 		.add(SimpleRestrictions.eq("weightTF", weightTF))
 		.add(SimpleRestrictions.eq("weightIDF", weightIDF))
+		.add(SimpleRestrictions.eq("node_visibility", nodeVisibility))
 		.add(SimpleRestrictions.eq("node_depth", nodeDepth))
 		.add(SimpleRestrictions.eq("node_depth_metric", nodeDepthMetric))
 		.add(SimpleRestrictions.eq("no_siblings", noSiblings))
 	    .add(SimpleRestrictions.eq("no_siblings_metric", noSiblingsMetric))
 		.add(SimpleRestrictions.eq("no_children", noChildren))
+		.add(SimpleRestrictions.eq("no_children_level", noChildrenLevel))
 	    .add(SimpleRestrictions.eq("no_children_metric", noChildrenMetric))
 	    .add(SimpleRestrictions.eq("word_count", wordCount))
 	    .add(SimpleRestrictions.eq("word_count_metric", wordCountMetric))
@@ -549,11 +590,12 @@ public class Algorithm extends Resource {
     	if (this.getId() != null) {
 			return this.getAlgorithm(this.getId());
 		} else {
-			return this.getAlgorithm(getStemming(), getStopWordRemoval(), getSiblingNodes(), getChildNodes()
-					, getTimeFrame(), getRootPath(), getElementAmount(), getElementSelectionMethod(), getDataElementType(), getDataElementTypeWeighting(), getDataElement()
-					, getDataSourceLimitation(), getDataSource(), getResultAmount(), getApproach(), getWeightingScheme(), getWeightTF(), getWeightIDF()
-					, getNodeDepth(), getNodeDepthMetric(), getNoSiblings(), getNoSiblingsMetric(), getNoChildren(), getNoChildrenMetric(), getWordCount(), getWordCountMetric()
-					, getNodeWeightNormalization(), getNodeWeightComboScheme());
+			return this.getAlgorithm(getStemming(), getStopWordRemoval(), getSiblingNodes(), getChildNodes(), getTimeFrame(), getRootPath()
+					, getElementAmount(), getNoDaysSince(), getElementSelectionMethod(), getDataElementType(), getDataElementTypeWeighting()
+					, getDataElement(), getDataSourceLimitation(), getDataSource(), getResultAmount(), getApproach(), getWeightingScheme()
+					, getWeightTF(), getWeightIDF(), getNodeVisibility(), getNodeDepth(), getNodeDepthMetric(), getNoSiblings(), getNoSiblingsMetric()
+					, getNoChildren(), getNoChildrenLevel(), getNoChildrenMetric(), getWordCount(), getWordCountMetric(), getNodeWeightNormalization()
+					, getNodeWeightComboScheme());
 		}
     }
     
@@ -570,17 +612,20 @@ public class Algorithm extends Resource {
     			+"timeframe="+getTimeFrame()+";"
     			+"rootpath="+getRootPath()+";"
     			+"amount="+getElementAmount()+";"
+    			+"noDaysSince="+getNoDaysSince()+";"
     			+"method="+getElementSelectionMethod()+";"
     			+"type="+getDataElementType()+";"
     			+"typeWeighting="+getDataElementTypeWeighting()+";"
     			+"element="+getDataElement()+";"
     			+"limitation="+getDataSourceLimitation()+";"
     			+"source="+getDataSource()+";"
+    			+"nodeVisibility="+getNodeVisibility()+";"
     			+"nodeDepth="+getNodeDepth()+";"
     			+"nodeDepthMetric="+getNodeDepthMetric()+";"
     			+"noSiblings="+getNoSiblings()+";"
     			+"noSiblingsMetric="+getNoSiblingsMetric()+";"    			
     			+"noChildren="+getNoChildren()+";" 
+    			+"noChildrenLevel="+getNoChildrenLevel()+";" 
 				+"noChildrenMetric="+getNoChildrenMetric()+";"
 				+"wordCount="+getWordCount()+";" 
 				+"wordCountMetric="+getWordCountMetric()+";"
