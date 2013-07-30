@@ -40,10 +40,8 @@ public class NodeWeightCalculator {
 			case WORD_COUNT:
 				value = (double)node.getWordCount();
 			}
-			
-			if (parameterMetric.equals(ParameterMetric.RELATIVE)) 
-				nodeWeights.put(node.getId(), parameterFilter(value, parameterMetric, (double)getMaxParameterValue(forNodes, parameterType)));
-			else nodeWeights.put(node.getId(), parameterFilter(value, parameterMetric, null));
+						
+			nodeWeights.put(node.getId(), parameterFilter(value, parameterMetric));
 		}
 		return nodeWeights;
 	}
@@ -91,10 +89,9 @@ public class NodeWeightCalculator {
 	 * 
 	 * @param parameterValue the value that needs to be adapted
 	 * @param parameterMetric the metric to be used that can be either the absolute value of the parameter or its log, log10, sqrt or relative to the max value
-	 * @param maxValue used only when calculating the relative value (relative = absolute / max value from the map)
 	 * @return the modified value
 	 */
-	public static Double parameterFilter(Double parameterValue, ParameterMetric parameterMetric, Double maxValue) {
+	public static Double parameterFilter(Double parameterValue, ParameterMetric parameterMetric) {
 		switch (parameterMetric) {
 		case LOG:
 			return Math.log(parameterValue + 2); // add 2 to avoid getting infinite or zero as result
@@ -102,40 +99,11 @@ public class NodeWeightCalculator {
 			return Math.log10(parameterValue + 2); // add 2 to avoid getting infinite or zero as result
 		case SQRT:
 			return Math.sqrt(parameterValue + 2); // add 2 to avoid getting zero as result and keep this in consistency with log and log10 cases
-		case RELATIVE:
-			return (parameterValue + 1) / (maxValue + 1); // add 1 to both to avoid getting infinite or zero as result
 		default: // for the ABSOLUTE case
 			return parameterValue + 1; // add 1 to avoid getting zero as result
 		}
 	}
-	
-	/**
-	 * @param forNodes
-	 * @param parameterType
-	 * @return the maximum value in the nodes list for the parameter type (e.g. node depth) used as input
-	 */
-	public static Integer getMaxParameterValue(List<NodeInfo> forNodes, ParameterType parameterType) {
-		Integer maxValue = 0;
-		Integer value = 0;
-		for (NodeInfo nodeInfo : forNodes) {
-			switch (parameterType) {
-			case NODE_DEPTH:
-				value = nodeInfo.getDepth();
-				break;
-			case NO_SIBLINGS:
-				value = nodeInfo.getNoOfSiblings();
-				break;
-			case NO_CHILDREN:
-				value = nodeInfo.getNoOfChildren();
-				break;
-			case WORD_COUNT:
-				value = nodeInfo.getWordCount();
-			}
-		    if (value.compareTo(maxValue) > 0) maxValue = value;
-		}
-		return maxValue;
-	}
-	
+
 	/**
 	 * @param nodesWithWeights
 	 * @return the max value in the map
