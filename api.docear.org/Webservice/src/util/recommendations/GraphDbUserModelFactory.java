@@ -105,10 +105,13 @@ public class GraphDbUserModelFactory {
 
 		if (model.getAlgorithm().getDataElement() == Algorithm.DATA_ELEMENT_MAPS) {
 			model.getAlgorithm().setElementAmount(parser.getMeta("element_amount_maps"));
+			model.getAlgorithm().setNoDaysSince(parser.getMeta("no_days_since_maps"));
 		}
 		else if (model.getAlgorithm().getDataElement() == Algorithm.DATA_ELEMENT_NODES) {
 			model.getAlgorithm().setElementAmount(parser.getMeta("element_amount_nodes"));
+			model.getAlgorithm().setNoDaysSince(parser.getMeta("no_days_since_nodes"));
 		}
+		
 		userModelItems = userModelItems.subList(0, resultAmount);
 		model.setModel(getModelString());
 		addUserModelVariables(parser);
