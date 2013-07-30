@@ -153,7 +153,7 @@ public class Algorithm extends Resource {
     private Integer element_amount = 0;
     
     @Column()
-    private Integer no_days_since = 1;
+    private Integer no_days_since = 5;
     
 	@Column(nullable = true)
     private Integer root_path = ROOT_PATH_NO;
