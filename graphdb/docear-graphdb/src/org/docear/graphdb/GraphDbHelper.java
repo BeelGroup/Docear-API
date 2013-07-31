@@ -36,6 +36,7 @@ public class GraphDbHelper {
 				    
 				Integer method = (Integer) args.getArgument(AlgorithmArguments.ELEMENT_SELECTION_METHOD);
 				
+				long firstNodeDate = 0;
 				int indexOfLastNode = maps.size() == 1 ? 0 : maps.size()-1;
 				long lastNodeDate = 0;
 				long nodeDate = 0;
@@ -44,10 +45,12 @@ public class GraphDbHelper {
 				switch (method) {
 					case 1: // 1=edited 
 						// date is given in the format yyyy-MM-dd HH:mm:ss
-						if (maps.get(indexOfLastNode).hasProperty("CREATED"))
+						firstNodeDate = GraphDbHelper.stringToMilliseconds(maps.get(0).getProperty("CREATED").toString(), new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
+						if (maps.get(indexOfLastNode).hasProperty("CREATED")) 
 							lastNodeDate = GraphDbHelper.stringToMilliseconds(maps.get(indexOfLastNode).getProperty("CREATED").toString(), new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
-							break;
+						break;
 					case 2: // 2=created 
+						firstNodeDate = Long.valueOf(maps.get(0).getProperty("dcr_id").toString().split("_")[0]);
 						if (maps.get(indexOfLastNode).hasProperty("dcr_id"))
 							// date is given in milliseconds along with a hash value
 							lastNodeDate = Long.valueOf(maps.get(indexOfLastNode).getProperty("dcr_id").toString().split("_")[0]); 
@@ -64,7 +67,7 @@ public class GraphDbHelper {
 								nodeDate = Long.valueOf(node.getProperty("dcr_id").toString().split("_")[0]); 	
 					}
 					// the time difference from the oldest mindmap in the list
-					daysElapsedFromOldest = (int)TimeUnit.DAYS.convert(nodeDate - lastNodeDate, TimeUnit.MILLISECONDS);
+					daysElapsedFromOldest = (int)TimeUnit.DAYS.convert(firstNodeDate - nodeDate, TimeUnit.MILLISECONDS);
 					daysSinceOldest.put(node.getProperty("ID").toString(), daysElapsedFromOldest);
 					daysSet.add(daysElapsedFromOldest);
 				}
@@ -74,15 +77,17 @@ public class GraphDbHelper {
 				int indexOfnumberOfDaysSinceLast = new Random().nextInt(valueSetAsArray.length);
 				int numberOfDaysSinceLast = valueSetAsArray.length == 0 ? 0 : valueSetAsArray[indexOfnumberOfDaysSinceLast];
 				
-				// filter the nodes only if the restuned value is lower than the size of the distinct days set
-				if (indexOfnumberOfDaysSinceLast < valueSetAsArray.length - 1) 
+				int daysSinceMax = (int)TimeUnit.DAYS.convert(firstNodeDate - lastNodeDate, TimeUnit.MILLISECONDS);
+				// filter the nodes only if the returned value is lower than the maximum days since value
+				if (numberOfDaysSinceLast < daysSinceMax) 
 					for (Iterator<Node> it = maps.iterator(); it.hasNext();) {
 						Node node = it.next();
 						if ((Integer)daysSinceOldest.get(node.getProperty("ID").toString()) > numberOfDaysSinceLast)
 							it.remove();
 					}
 				
-				userModel.addVariable("no_days_since_maps", String.valueOf(numberOfDaysSinceLast)); 
+				userModel.addVariable("no_days_since_max_maps", String.valueOf(daysSinceMax)); 
+				userModel.addVariable("no_days_since_chosen_maps", String.valueOf(numberOfDaysSinceLast)); 
 		 }
 	
 		return maps;
@@ -102,6 +107,7 @@ public class GraphDbHelper {
 				
 				Integer method = (Integer) args.getArgument(AlgorithmArguments.ELEMENT_SELECTION_METHOD);
 				
+				long firstNodeDate = 0;
 				int indexOfLastNode = nodes.size() == 1 ? 0 : nodes.size()-1;
 				long lastNodeDate;
 				String propertyName = "MODIFIED"; // to cover the case 1=edited
@@ -117,12 +123,13 @@ public class GraphDbHelper {
 						propertyName = "MOVED";
 				}
 				
+				firstNodeDate = Long.valueOf(nodesArray[0].getProperty(propertyName).toString());
 				lastNodeDate = Long.valueOf(nodesArray[indexOfLastNode].getProperty(propertyName).toString());
 				
 				for (Node node: nodesArray) {
 					if (node.hasProperty(propertyName)) {
 						// the time difference from the oldest mindmap in the list
-						daysElapsedFromOldest = (int)TimeUnit.DAYS.convert(Long.valueOf(node.getProperty(propertyName).toString()) - lastNodeDate, TimeUnit.MILLISECONDS);
+						daysElapsedFromOldest = (int)TimeUnit.DAYS.convert(firstNodeDate - Long.valueOf(node.getProperty(propertyName).toString()), TimeUnit.MILLISECONDS);
 					    daysSinceOldest.put(node.getProperty("ID").toString(), daysElapsedFromOldest);
 						daysSet.add(daysElapsedFromOldest);
 					}
@@ -133,15 +140,17 @@ public class GraphDbHelper {
 				int indexOfnumberOfDaysSinceLast = new Random().nextInt(valueSetAsArray.length);
 				int numberOfDaysSinceLast = valueSetAsArray.length == 0 ? 0 : valueSetAsArray[indexOfnumberOfDaysSinceLast];
 				
-				// filter the nodes only if the restuned value is lower than the size of the distinct days set
-				if (indexOfnumberOfDaysSinceLast < valueSetAsArray.length - 1) 
+				int daysSinceMax = (int)TimeUnit.DAYS.convert(firstNodeDate - lastNodeDate, TimeUnit.MILLISECONDS);
+				// filter the nodes only if the returned value is lower than the maximum days since value
+				if (numberOfDaysSinceLast < daysSinceMax) 
 					for (Iterator<Node> it = nodes.iterator(); it.hasNext();) {
 						Node node = it.next();
 						if ((Integer)daysSinceOldest.get(node.getProperty("ID").toString()) > numberOfDaysSinceLast)
 							it.remove();
 					}
 				
-				userModel.addVariable("no_days_since_nodes", String.valueOf(numberOfDaysSinceLast));
+				userModel.addVariable("no_days_since_max_nodes", String.valueOf(daysSinceMax)); 
+				userModel.addVariable("no_days_since_chosen_nodes", String.valueOf(numberOfDaysSinceLast));
 		 }
 		
 		return nodes;
