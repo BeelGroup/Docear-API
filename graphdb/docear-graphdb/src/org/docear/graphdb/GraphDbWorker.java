@@ -525,7 +525,7 @@ public class GraphDbWorker {
 						if (n.hasProperty("FOLDED") && "true".equals(n.getProperty("FOLDED").toString()))
 							nodes.add(new NodeRevision(n, revisionKey, mapType));	
 						break;
-					default: //use all, case 0
+					default: //use all, case 0 or NULL
 						nodes.add(new NodeRevision(n, revisionKey, mapType));
 				}
 			}
