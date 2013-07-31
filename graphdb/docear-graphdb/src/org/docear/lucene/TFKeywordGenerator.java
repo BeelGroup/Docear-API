@@ -252,13 +252,18 @@ public class TFKeywordGenerator implements ResultGenerator {
 				}
 				nodeWeightsTotal.put(nodeInfo.getId(), fieldWeight);			
 			}
-			else if (noParamUsed) //uf no parameter is used, the node weight is set to one for all nodes
+			else if (noParamUsed) //if no parameter is used, the node weight is set to one for all nodes
 				nodeWeightsTotal.put(nodeInfo.getId(), 1d);
 			else { // if only one parameter is set replace the total weights with the parameter values for all nodes
-				if (nodeWeightsPerNodeDepth != null && nodeWeightsPerNodeDepth.size() > 0) nodeWeightsTotal = nodeWeightsPerNodeDepth;
-				if (nodeWeightsPerNoSiblings != null && nodeWeightsPerNoSiblings.size() > 0) nodeWeightsTotal = nodeWeightsPerNoSiblings;
-				if (nodeWeightsPerNoChildren != null && nodeWeightsPerNoChildren.size() > 0) nodeWeightsTotal = nodeWeightsPerNoChildren;
-				if (nodeWeightsPerWordCount != null && nodeWeightsPerWordCount.size() > 0) nodeWeightsTotal = nodeWeightsPerWordCount;
+				if (nodeWeightsPerNodeDepth.size() > 0) 
+					fieldWeight = nodeWeightsPerNodeDepth.get(nodeInfo.getId());
+				else if (nodeWeightsPerNoSiblings.size() > 0) 
+					fieldWeight = nodeWeightsPerNoSiblings.get(nodeInfo.getId());
+				else if (nodeWeightsPerNoChildren.size() > 0) 
+					fieldWeight = nodeWeightsPerNoChildren.get(nodeInfo.getId());
+				else 
+					fieldWeight = nodeWeightsPerWordCount.get(nodeInfo.getId());
+				nodeWeightsTotal.put(nodeInfo.getId(), fieldWeight);	
 			}
 				
 			// compare with max node weight (if node weight normalization is set)
