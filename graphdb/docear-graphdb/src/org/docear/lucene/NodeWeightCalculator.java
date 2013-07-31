@@ -52,8 +52,7 @@ public class NodeWeightCalculator {
 	 */
 	public static Map<String, Double> reverseWeights(Map<String, Double> nodesWithParameterWeights) {
 		for (Map.Entry<String, Double> entry : nodesWithParameterWeights.entrySet()) 
-		   // reverse only non zero values
-		   if (entry.getValue() != 0) entry.setValue(1 / entry.getValue());
+			entry.setValue(1 / entry.getValue());
 		return nodesWithParameterWeights;
 	}
 	
