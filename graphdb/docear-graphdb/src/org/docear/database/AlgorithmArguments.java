@@ -59,7 +59,6 @@ public class AlgorithmArguments {
 		this.arguments.put(NO_SIBLINGS, 0);
 		this.arguments.put(NO_CHILDREN, 0);
 		this.arguments.put(WORD_COUNT, 0);
-		this.arguments.put(NODE_WEIGHT_NORMALIZATION, 0);
 		
 		if(arguments == null || arguments.trim().length() == 0) {
 			return;
