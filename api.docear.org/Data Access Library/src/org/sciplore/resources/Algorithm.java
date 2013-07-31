@@ -153,7 +153,10 @@ public class Algorithm extends Resource {
     private Integer element_amount = 0;
     
     @Column()
-    private Integer no_days_since = 5;
+    private Integer no_days_since_max;
+    
+    @Column()
+    private Integer no_days_since_chosen;
     
 	@Column(nullable = true)
     private Integer root_path = ROOT_PATH_NO;
@@ -310,13 +313,22 @@ public class Algorithm extends Resource {
 	}
 
 
-	public Integer getNoDaysSince() {
-		return no_days_since;
+	public Integer getNoDaysSinceMax() {
+		return no_days_since_max;
 	}
 
 
-	public void setNoDaysSince(Integer noDaysSince) {
-		this.no_days_since = noDaysSince;
+	public void setNoDaysSinceMax(Integer noDaysSinceMax) {
+		this.no_days_since_max = noDaysSinceMax;
+	}
+	
+	public Integer getNoDaysSinceChosen() {
+		return no_days_since_chosen;
+	}
+
+
+	public void setNoDaysSinceChosen(Integer noDaysSinceChosen) {
+		this.no_days_since_chosen = noDaysSinceChosen;
 	}
 	
 
@@ -542,11 +554,11 @@ public class Algorithm extends Resource {
 	
 	
 	public Algorithm getAlgorithm(Integer useStemming, Integer useStopWordRemoval, Integer useSiblingNodes, Integer childNodes
-			, Integer timeFrame, Integer useRootPath, Integer elementAmount, Integer noDaysSince, Integer elementSelectionMethod, Integer dataElementType
-			, String dataElementTypeWeighting, Integer dataElement, Integer dataSourceLimitation, Integer dataSource, Integer resultAmount, Integer approach 
-			, Integer weightingScheme, Integer weightTF, Integer weightIDF, Integer nodeVisibility, Integer nodeDepth, Integer nodeDepthMetric, Integer noSiblings
-			, Integer noSiblingsMetric, Integer noChildren, Integer noChildrenLevel, Integer noChildrenMetric, Integer wordCount, Integer wordCountMetric, Integer nodeWeightNormalization
-			, Integer nodeWeightComboScheme) {
+			, Integer timeFrame, Integer useRootPath, Integer elementAmount, Integer noDaysSinceMax, Integer noDaysSinceChosen, Integer elementSelectionMethod
+			, Integer dataElementType, String dataElementTypeWeighting, Integer dataElement, Integer dataSourceLimitation, Integer dataSource, Integer resultAmount
+			, Integer approach, Integer weightingScheme, Integer weightTF, Integer weightIDF, Integer nodeVisibility, Integer nodeDepth, Integer nodeDepthMetric
+			, Integer noSiblings, Integer noSiblingsMetric, Integer noChildren, Integer noChildrenLevel, Integer noChildrenMetric, Integer wordCount
+			, Integer wordCountMetric, Integer nodeWeightNormalization, Integer nodeWeightComboScheme) {
 		
 		return (Algorithm)this.getSession().createCriteria(Algorithm.class)
 		.add(SimpleRestrictions.eq("stemming", useStemming))
@@ -556,7 +568,8 @@ public class Algorithm extends Resource {
 		.add(SimpleRestrictions.eq("time_frame", timeFrame))
 		.add(SimpleRestrictions.eq("root_path", useRootPath))
 		.add(SimpleRestrictions.eq("element_amount", elementAmount))
-		.add(SimpleRestrictions.eq("no_days_since", noDaysSince))
+		.add(SimpleRestrictions.eq("no_days_since_max", noDaysSinceMax))
+		.add(SimpleRestrictions.eq("no_days_since_chosen", noDaysSinceChosen))
 		.add(SimpleRestrictions.eq("element_selection_method", elementSelectionMethod))
 		.add(SimpleRestrictions.eq("data_element_type", dataElementType))
 		.add(SimpleRestrictions.eq("data_element_type_weighting", dataElementTypeWeighting))
@@ -591,11 +604,11 @@ public class Algorithm extends Resource {
 			return this.getAlgorithm(this.getId());
 		} else {
 			return this.getAlgorithm(getStemming(), getStopWordRemoval(), getSiblingNodes(), getChildNodes(), getTimeFrame(), getRootPath()
-					, getElementAmount(), getNoDaysSince(), getElementSelectionMethod(), getDataElementType(), getDataElementTypeWeighting()
-					, getDataElement(), getDataSourceLimitation(), getDataSource(), getResultAmount(), getApproach(), getWeightingScheme()
-					, getWeightTF(), getWeightIDF(), getNodeVisibility(), getNodeDepth(), getNodeDepthMetric(), getNoSiblings(), getNoSiblingsMetric()
-					, getNoChildren(), getNoChildrenLevel(), getNoChildrenMetric(), getWordCount(), getWordCountMetric(), getNodeWeightNormalization()
-					, getNodeWeightComboScheme());
+					, getElementAmount(), getNoDaysSinceMax(), getNoDaysSinceChosen(), getElementSelectionMethod(), getDataElementType()
+					, getDataElementTypeWeighting(), getDataElement(), getDataSourceLimitation(), getDataSource(), getResultAmount(), getApproach()
+					, getWeightingScheme(), getWeightTF(), getWeightIDF(), getNodeVisibility(), getNodeDepth(), getNodeDepthMetric(), getNoSiblings()
+					, getNoSiblingsMetric(), getNoChildren(), getNoChildrenLevel(), getNoChildrenMetric(), getWordCount(), getWordCountMetric()
+					, getNodeWeightNormalization(), getNodeWeightComboScheme());
 		}
     }
     
@@ -612,7 +625,8 @@ public class Algorithm extends Resource {
     			+"timeframe="+getTimeFrame()+";"
     			+"rootpath="+getRootPath()+";"
     			+"amount="+getElementAmount()+";"
-    			+"noDaysSince="+getNoDaysSince()+";"
+    			+"noDaysSinceMax="+getNoDaysSinceMax()+";"
+    			+"noDaysSinceChosen="+getNoDaysSinceChosen()+";"
     			+"method="+getElementSelectionMethod()+";"
     			+"type="+getDataElementType()+";"
     			+"typeWeighting="+getDataElementTypeWeighting()+";"
