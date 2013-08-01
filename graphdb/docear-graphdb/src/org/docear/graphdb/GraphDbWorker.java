@@ -29,6 +29,7 @@ import org.docear.graphdb.relationship.UserRelationship;
 import org.docear.graphdb.threading.GraphCreatorJob;
 import org.docear.query.HashReferenceItem;
 import org.docear.structs.NodeInfo;
+import org.docear.structs.ReferenceInfo;
 import org.docear.xml.UserModel;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
@@ -189,6 +190,7 @@ public class GraphDbWorker {
 			// get randomly the number of last days for which the nodes will be considered
 			nodes = GraphDbHelper.filterByDaysSinceLastForNodes(nodes, args, userModel);
 
+		userModel.addVariable("element_amount_nodes", String.valueOf(amount));
 		userModel.addVariable("node_count_before_expanded", String.valueOf(amount));
 		userModel.addVariable("node_count_expanded", String.valueOf(nodes.size()));
 		
@@ -599,7 +601,6 @@ public class GraphDbWorker {
 		if (args.getArgument(AlgorithmArguments.WORD_COUNT) != null 
 				&& !new Integer(0).equals(args.getArgument(AlgorithmArguments.WORD_COUNT))) 
 			nodeInfo.setWordCount((calculateWordCount(node)));;
-				
 		return nodeInfo;
 	}
 	
