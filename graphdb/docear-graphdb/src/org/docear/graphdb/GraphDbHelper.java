@@ -28,7 +28,7 @@ public class GraphDbHelper {
 	/**
 	 * @param nodes
 	 * @param args
-	 * @return a map with each entry containing the mindmap node id mapped to the number of days since the mindmap was edited for the last time or created
+	 * @param userModel
 	 */
 	 static void filterByDaysSinceLastForMaps(List<Node> maps, AlgorithmArguments args, UserModel userModel) {		 		 
 		 // do not filter the mindmap, if there is only one
@@ -97,7 +97,7 @@ public class GraphDbHelper {
 	 * 
 	 * @param nodes
 	 * @param args
-	 * @return a map with each entry containing the node id mapped to  the number of days since the node was edited for the last time or created or moved
+	 * @param userModel
 	 */	 
 	static void filterByDaysSinceLastForNodes(Collection<NodeRevision> nodes, AlgorithmArguments args, UserModel userModel) {		
 		 // do not filter the nodes, if there is only one
