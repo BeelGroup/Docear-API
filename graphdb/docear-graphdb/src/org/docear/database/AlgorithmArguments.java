@@ -22,7 +22,8 @@ public class AlgorithmArguments {
 //	public static final String RESULT_AMOUNT = "resultAmount";
 	public static final String WEIGHTING_SCHEME = "weightingScheme";
 	public static final String WEIGHT_TF = "weightTF";
-	public static final String WEIGHT_IDF = "weightIDF";	
+	public static final String WEIGHT_IDF = "weightIDF";
+	public static final String NODE_INFO_SOURCE = "nodeInfoSource";
 	public static final String NODE_VISIBILITY = "nodeVisibility";
 	public static final String NODE_DEPTH = "nodeDepth";
 	public static final String NODE_DEPTH_METRIC = "nodeDepthMetric";
@@ -54,6 +55,7 @@ public class AlgorithmArguments {
 		this.arguments.put(WEIGHT_TF, 1);
 		this.arguments.put(DATA_ELEMENT_TYPE, 1);
 //		this.arguments.put(DATA_ELEMENT_TYPE_WEIGHTING, "1");
+		this.arguments.put(NODE_INFO_SOURCE, 0);
 		this.arguments.put(NODE_VISIBILITY, 0);
 		this.arguments.put(NODE_DEPTH, 0);
 		this.arguments.put(NO_SIBLINGS, 0);
