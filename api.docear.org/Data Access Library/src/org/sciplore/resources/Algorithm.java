@@ -12,8 +12,8 @@ import org.sciplore.tools.SimpleRestrictions;
 public class Algorithm extends Resource {
 
 	public final static Integer DATA_SOURCE_MAP = 1;
-    public final static Integer DATA_SOURCE_PDF = 2;
-    public final static Integer DATA_SOURCE_BIBTEX = 3;
+    public final static Integer DATA_SOURCE_PDF = 2; 
+    public final static Integer DATA_SOURCE_BIBTEX = 3; 
     
     public final static Integer DATA_SOURCE_LIMITATION_ALL = 0;
     public final static Integer DATA_SOURCE_LIMITATION_LIBRARY = 1;    
@@ -69,9 +69,17 @@ public class Algorithm extends Resource {
     public final static Integer APPROACH_STEREOTYPE = 2;
     public final static Integer APPROACH_COLLABORATIVE_FILTERING = 3;    
     
+	public final static Integer NODE_INFO_SOURCE_ALL = 0;
+	public final static Integer NODE_INFO_SOURCE_MAP = 1;
+	public final static Integer NODE_INFO_SOURCE_REFERENCE = 2;
+	public final static Integer NODE_INFO_SOURCE_PDF = 3;
+	public final static Integer NODE_INFO_SOURCE_MAP_REFERENCE = 4;
+	public final static Integer NODE_INFO_SOURCE_MAP_PDF = 5;
+	public final static Integer NODE_INFO_SOURCE_REFERENCE_PDF = 6;
+	
     public final static Integer NODE_VISIBILITY_ALL = 0;
     public final static Integer NODE_VISIBILITY_VISIBLE = 1;
-    public final static Integer NODE_VISIBILITY_INVISIBLE = 1;
+    public final static Integer NODE_VISIBILITY_INVISIBLE = 2;
     
     public final static Integer NODE_DEPTH_DISABLED = 0;
     public final static Integer NODE_DEPTH = 1;
@@ -153,10 +161,13 @@ public class Algorithm extends Resource {
     private Integer element_amount = 0;
     
     @Column()
-    private Integer no_days_since_max;
+    private Integer node_info_source = NODE_INFO_SOURCE_MAP;
     
     @Column()
-    private Integer no_days_since_chosen;
+    private Integer no_days_since_max = -1; // initialization
+    
+    @Column()
+    private Integer no_days_since_chosen = -1; // initialization
     
 	@Column(nullable = true)
     private Integer root_path = ROOT_PATH_NO;
@@ -311,8 +322,17 @@ public class Algorithm extends Resource {
 	public void setElementAmount(Integer element_amount) {
 		this.element_amount = element_amount;
 	}
+	
+	
+	public Integer getNodeInfoSource() {
+		return node_info_source;
+	}
 
 
+	public void setNodeInfoSource(Integer nodeInfoSource) {
+		this.node_info_source = nodeInfoSource;
+	}
+	
 	public Integer getNoDaysSinceMax() {
 		return no_days_since_max;
 	}
@@ -556,8 +576,8 @@ public class Algorithm extends Resource {
 	public Algorithm getAlgorithm(Integer useStemming, Integer useStopWordRemoval, Integer useSiblingNodes, Integer childNodes
 			, Integer timeFrame, Integer useRootPath, Integer elementAmount, Integer noDaysSinceMax, Integer noDaysSinceChosen, Integer elementSelectionMethod
 			, Integer dataElementType, String dataElementTypeWeighting, Integer dataElement, Integer dataSourceLimitation, Integer dataSource, Integer resultAmount
-			, Integer approach, Integer weightingScheme, Integer weightTF, Integer weightIDF, Integer nodeVisibility, Integer nodeDepth, Integer nodeDepthMetric
-			, Integer noSiblings, Integer noSiblingsMetric, Integer noChildren, Integer noChildrenLevel, Integer noChildrenMetric, Integer wordCount
+			, Integer approach, Integer weightingScheme, Integer weightTF, Integer weightIDF, Integer nodeInfoSource, Integer nodeVisibility, Integer nodeDepth
+			, Integer nodeDepthMetric, Integer noSiblings, Integer noSiblingsMetric, Integer noChildren, Integer noChildrenLevel, Integer noChildrenMetric, Integer wordCount
 			, Integer wordCountMetric, Integer nodeWeightNormalization, Integer nodeWeightComboScheme) {
 		
 		return (Algorithm)this.getSession().createCriteria(Algorithm.class)
@@ -581,6 +601,7 @@ public class Algorithm extends Resource {
 		.add(SimpleRestrictions.eq("weightingScheme", weightingScheme))
 		.add(SimpleRestrictions.eq("weightTF", weightTF))
 		.add(SimpleRestrictions.eq("weightIDF", weightIDF))
+		.add(SimpleRestrictions.eq("node_info_source", nodeInfoSource))
 		.add(SimpleRestrictions.eq("node_visibility", nodeVisibility))
 		.add(SimpleRestrictions.eq("node_depth", nodeDepth))
 		.add(SimpleRestrictions.eq("node_depth_metric", nodeDepthMetric))
@@ -606,8 +627,8 @@ public class Algorithm extends Resource {
 			return this.getAlgorithm(getStemming(), getStopWordRemoval(), getSiblingNodes(), getChildNodes(), getTimeFrame(), getRootPath()
 					, getElementAmount(), getNoDaysSinceMax(), getNoDaysSinceChosen(), getElementSelectionMethod(), getDataElementType()
 					, getDataElementTypeWeighting(), getDataElement(), getDataSourceLimitation(), getDataSource(), getResultAmount(), getApproach()
-					, getWeightingScheme(), getWeightTF(), getWeightIDF(), getNodeVisibility(), getNodeDepth(), getNodeDepthMetric(), getNoSiblings()
-					, getNoSiblingsMetric(), getNoChildren(), getNoChildrenLevel(), getNoChildrenMetric(), getWordCount(), getWordCountMetric()
+					, getWeightingScheme(), getWeightTF(), getWeightIDF(), getNodeInfoSource(), getNodeVisibility(), getNodeDepth(), getNodeDepthMetric()
+					, getNoSiblings(), getNoSiblingsMetric(), getNoChildren(), getNoChildrenLevel(), getNoChildrenMetric(), getWordCount(), getWordCountMetric()
 					, getNodeWeightNormalization(), getNodeWeightComboScheme());
 		}
     }
@@ -633,6 +654,7 @@ public class Algorithm extends Resource {
     			+"element="+getDataElement()+";"
     			+"limitation="+getDataSourceLimitation()+";"
     			+"source="+getDataSource()+";"
+    			+"nodeInfoSource="+getNodeInfoSource()+";"
     			+"nodeVisibility="+getNodeVisibility()+";"
     			+"nodeDepth="+getNodeDepth()+";"
     			+"nodeDepthMetric="+getNodeDepthMetric()+";"
