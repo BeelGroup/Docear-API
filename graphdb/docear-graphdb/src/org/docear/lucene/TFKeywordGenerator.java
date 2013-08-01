@@ -199,7 +199,32 @@ public class TFKeywordGenerator implements ResultGenerator {
 		for (Iterator<NodeInfo> iter = nodesInfo.iterator(); iter.hasNext();) {
 			NodeInfo nodeInfo = iter.next();
 			
-			Field fieldToAdd = new Field(nodeInfo.getId(), nodeInfo.getText(), Field.Store.YES, Field.Index.ANALYZED, Field.TermVector.YES);
+			StringBuffer textForField = new StringBuffer();
+			switch((Integer)args.getArgument(AlgorithmArguments.NODE_INFO_SOURCE)) {
+				case 6: // 6=references and pdfs
+					if (nodeInfo.getPdfTitle() != null) textForField.append(nodeInfo.getPdfTitle());
+				case 2: // 2=references
+					if (nodeInfo.getReference() != null && nodeInfo.getReference().getTitle() != null) textForField.append(nodeInfo.getReference().getTitle());
+					break;
+				case 3: // 3=pdfs
+					if (nodeInfo.getPdfTitle() != null) textForField.append(nodeInfo.getPdfTitle());
+					break;
+				case 4: // 4=mind maps and references
+					if (nodeInfo.getReference() != null && nodeInfo.getReference().getTitle() != null) textForField.append(nodeInfo.getReference().getTitle());
+				case 1: // 1=mind maps
+					if (nodeInfo.getText() != null) textForField.append(nodeInfo.getText());
+					break;
+				case 5: // 5=mind maps and pdfs
+					if (nodeInfo.getText() != null) textForField.append(nodeInfo.getText());
+					if (nodeInfo.getPdfTitle() != null) textForField.append(nodeInfo.getPdfTitle());
+					break;
+				default: // 0=all;
+					if (nodeInfo.getText() != null) textForField.append(nodeInfo.getText());
+					if (nodeInfo.getPdfTitle() != null) textForField.append(nodeInfo.getPdfTitle());
+					if (nodeInfo.getReference() != null && nodeInfo.getReference().getTitle() != null) textForField.append(nodeInfo.getReference().getTitle());
+			}
+
+			Field fieldToAdd = new Field(nodeInfo.getId(), textForField.toString(), Field.Store.YES, Field.Index.ANALYZED, Field.TermVector.YES);
 			Double fieldWeight = 0d;
 	
 			if (args.getArgument(AlgorithmArguments.NODE_WEIGHT_COMBO_SCHEME) != null) { // combination of factors{ 			
