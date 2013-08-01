@@ -3,6 +3,7 @@ package org.docear.graphdb;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.HashSet;
@@ -13,6 +14,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.docear.database.AlgorithmArguments;
+import org.docear.graphdb.GraphDbWorker.NodeRevision;
 import org.docear.xml.UserModel;
 import org.neo4j.graphdb.Node;
 
@@ -28,7 +30,7 @@ public class GraphDbHelper {
 	 * @param args
 	 * @return a map with each entry containing the mindmap node id mapped to the number of days since the mindmap was edited for the last time or created
 	 */
-	 static List<Node> filterByDaysSinceLastForMaps(List<Node> maps, AlgorithmArguments args, UserModel userModel) {		 
+	 static void filterByDaysSinceLastForMaps(List<Node> maps, AlgorithmArguments args, UserModel userModel) {		 		 
 		 // do not filter the mindmap, if there is only one
 		 if (maps != null && maps.size() > 0) {
 				Map<String, Integer> daysSinceOldest = new HashMap<String, Integer>(); 
@@ -89,8 +91,6 @@ public class GraphDbHelper {
 				userModel.addVariable("no_days_since_max_maps", String.valueOf(daysSinceMax)); 
 				userModel.addVariable("no_days_since_chosen_maps", String.valueOf(numberOfDaysSinceLast)); 
 		 }
-	
-		return maps;
 	}
 	 
 	/**
@@ -99,7 +99,7 @@ public class GraphDbHelper {
 	 * @param args
 	 * @return a map with each entry containing the node id mapped to  the number of days since the node was edited for the last time or created or moved
 	 */	 
-	static Set<Node> filterByDaysSinceLastForNodes(Set<Node> nodes, AlgorithmArguments args, UserModel userModel) {	
+	static void filterByDaysSinceLastForNodes(Collection<NodeRevision> nodes, AlgorithmArguments args, UserModel userModel) {		
 		 // do not filter the nodes, if there is only one
 		 if (nodes != null && nodes.size() > 0) {
 				Map<String, Integer> daysSinceOldest = new HashMap<String, Integer>(); 
@@ -113,7 +113,7 @@ public class GraphDbHelper {
 				String propertyName = "MODIFIED"; // to cover the case 1=edited
 				Integer daysElapsedFromOldest = 0;
 				
-				Node[] nodesArray = nodes.toArray(new Node[nodes.size()]);
+				NodeRevision[] nodesArray = nodes.toArray(new NodeRevision[nodes.size()]);
 				
 				switch (method) {
 					case 2: // 2=created 
@@ -123,14 +123,14 @@ public class GraphDbHelper {
 						propertyName = "MOVED";
 				}
 				
-				firstNodeDate = Long.valueOf(nodesArray[0].getProperty(propertyName).toString());
-				lastNodeDate = Long.valueOf(nodesArray[indexOfLastNode].getProperty(propertyName).toString());
+				firstNodeDate = Long.valueOf(nodesArray[0].getNode().getProperty(propertyName).toString());
+				lastNodeDate = Long.valueOf(nodesArray[indexOfLastNode].getNode().getProperty(propertyName).toString());
 				
-				for (Node node: nodesArray) {
-					if (node.hasProperty(propertyName)) {
+				for (NodeRevision node: nodesArray) {
+					if (node.getNode().hasProperty(propertyName)) {
 						// the time difference from the oldest mindmap in the list
-						daysElapsedFromOldest = (int)TimeUnit.DAYS.convert(firstNodeDate - Long.valueOf(node.getProperty(propertyName).toString()), TimeUnit.MILLISECONDS);
-					    daysSinceOldest.put(node.getProperty("ID").toString(), daysElapsedFromOldest);
+						daysElapsedFromOldest = (int)TimeUnit.DAYS.convert(firstNodeDate - Long.valueOf(node.getNode().getProperty(propertyName).toString()), TimeUnit.MILLISECONDS);
+					    daysSinceOldest.put(node.getNode().getProperty("ID").toString(), daysElapsedFromOldest);
 						daysSet.add(daysElapsedFromOldest);
 					}
 				}
@@ -143,17 +143,15 @@ public class GraphDbHelper {
 				int daysSinceMax = (int)TimeUnit.DAYS.convert(firstNodeDate - lastNodeDate, TimeUnit.MILLISECONDS);
 				// filter the nodes only if the returned value is lower than the maximum days since value
 				if (numberOfDaysSinceLast < daysSinceMax) 
-					for (Iterator<Node> it = nodes.iterator(); it.hasNext();) {
-						Node node = it.next();
-						if ((Integer)daysSinceOldest.get(node.getProperty("ID").toString()) > numberOfDaysSinceLast)
+					for (Iterator<NodeRevision> it = nodes.iterator(); it.hasNext();) {
+						NodeRevision nodeRev = it.next();
+						if ((Integer)daysSinceOldest.get(nodeRev.getNode().getProperty("ID").toString()) > numberOfDaysSinceLast)
 							it.remove();
 					}
 				
 				userModel.addVariable("no_days_since_max_nodes", String.valueOf(daysSinceMax)); 
 				userModel.addVariable("no_days_since_chosen_nodes", String.valueOf(numberOfDaysSinceLast));
 		 }
-		
-		return nodes;
 	}
 	
 	static long stringToMilliseconds(String dateString, DateFormat dateFormat) {
