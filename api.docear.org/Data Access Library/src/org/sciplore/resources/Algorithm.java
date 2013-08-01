@@ -164,10 +164,10 @@ public class Algorithm extends Resource {
     private Integer node_info_source = NODE_INFO_SOURCE_MAP;
     
     @Column()
-    private Integer no_days_since_max = -1; // initialization
+    private Integer no_days_since_max;
     
     @Column()
-    private Integer no_days_since_chosen = -1; // initialization
+    private Integer no_days_since_chosen;
     
 	@Column(nullable = true)
     private Integer root_path = ROOT_PATH_NO;
