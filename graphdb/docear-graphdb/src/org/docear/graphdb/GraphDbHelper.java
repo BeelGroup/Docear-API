@@ -76,8 +76,7 @@ public class GraphDbHelper {
 				
 				// get randomly the number of last days for which the mindmaps will be considered
 				Integer[] valueSetAsArray = daysSet.toArray(new Integer[daysSet.size()]);
-				int indexOfnumberOfDaysSinceLast = new Random().nextInt(valueSetAsArray.length);
-				int numberOfDaysSinceLast = valueSetAsArray.length == 0 ? 0 : valueSetAsArray[indexOfnumberOfDaysSinceLast];
+				int numberOfDaysSinceLast = valueSetAsArray[new Random().nextInt(valueSetAsArray.length)];
 				
 				int daysSinceMax = (int)TimeUnit.DAYS.convert(firstNodeDate - lastNodeDate, TimeUnit.MILLISECONDS);
 				// filter the nodes only if the returned value is lower than the maximum days since value
@@ -94,26 +93,17 @@ public class GraphDbHelper {
 	}
 	 
 	/**
-	 * 
 	 * @param nodes
 	 * @param args
-	 * @param userModel
-	 */	 
-	static void filterByDaysSinceLastForNodes(Collection<NodeRevision> nodes, AlgorithmArguments args, UserModel userModel) {		
+	 * @param userModelt
+	 */
+	static void filterByDaysSinceLastForNodes(Set<Node> nodes, AlgorithmArguments args, UserModel userModel) {		
+		Integer method = (Integer) args.getArgument(AlgorithmArguments.ELEMENT_SELECTION_METHOD);
+		
 		 // do not filter the nodes, if there is only one
 		 if (nodes != null && nodes.size() > 0) {
-				Map<String, Integer> daysSinceOldest = new HashMap<String, Integer>(); 
-				Set<Integer> daysSet = new HashSet<Integer>();
-				
-				Integer method = (Integer) args.getArgument(AlgorithmArguments.ELEMENT_SELECTION_METHOD);
-				
-				long firstNodeDate = 0;
-				int indexOfLastNode = nodes.size() == 1 ? 0 : nodes.size()-1;
-				long lastNodeDate;
-				String propertyName = "MODIFIED"; // to cover the case 1=edited
-				Integer daysElapsedFromOldest = 0;
-				
-				NodeRevision[] nodesArray = nodes.toArray(new NodeRevision[nodes.size()]);
+				String propertyName = "MODIFIED"; // to cover the case 1=edited	
+				Node[] nodesArray = nodes.toArray(new Node[nodes.size()]);
 				
 				switch (method) {
 					case 2: // 2=created 
@@ -122,36 +112,81 @@ public class GraphDbHelper {
 					case 3: // 3=moved 
 						propertyName = "MOVED";
 				}
+				// get the date for teh newest (firstNodeDate) and the oldest (lastNodeDate) created node
+				long mostRecentNodeDate = getMaxDate(nodes, method);
+				long oldestNodeDate = getMinDate(nodes, method);
 				
-				firstNodeDate = Long.valueOf(nodesArray[0].getNode().getProperty(propertyName).toString());
-				lastNodeDate = Long.valueOf(nodesArray[indexOfLastNode].getNode().getProperty(propertyName).toString());
+				Map<String, Integer> daysSinceOldest = new HashMap<String, Integer>(); 
+				Set<Integer> daysSet = new HashSet<Integer>();
 				
-				for (NodeRevision node: nodesArray) {
-					if (node.getNode().hasProperty(propertyName)) {
+				int daysSinceMax = (int)TimeUnit.DAYS.convert(mostRecentNodeDate - oldestNodeDate, TimeUnit.MILLISECONDS);
+				
+				Integer daysElapsedFromOldest = 0;
+				
+				for (Node node: nodesArray) {
+					if (node.hasProperty(propertyName)) {
 						// the time difference from the oldest mindmap in the list
-						daysElapsedFromOldest = (int)TimeUnit.DAYS.convert(firstNodeDate - Long.valueOf(node.getNode().getProperty(propertyName).toString()), TimeUnit.MILLISECONDS);
-					    daysSinceOldest.put(node.getNode().getProperty("ID").toString(), daysElapsedFromOldest);
+						daysElapsedFromOldest = (int)TimeUnit.DAYS.convert(mostRecentNodeDate - Long.valueOf(node.getProperty(propertyName).toString()), TimeUnit.MILLISECONDS);
+					    daysSinceOldest.put(node.getProperty("ID").toString(), daysElapsedFromOldest);
 						daysSet.add(daysElapsedFromOldest);
 					}
 				}
 				
 				// get randomly the number of last days for which the mindmaps will be considered
 				Integer[] valueSetAsArray = daysSet.toArray(new Integer[daysSet.size()]);
-				int indexOfnumberOfDaysSinceLast = new Random().nextInt(valueSetAsArray.length);
-				int numberOfDaysSinceLast = valueSetAsArray.length == 0 ? 0 : valueSetAsArray[indexOfnumberOfDaysSinceLast];
+				int numberOfDaysSinceLast = valueSetAsArray[new Random().nextInt(valueSetAsArray.length)];
 				
-				int daysSinceMax = (int)TimeUnit.DAYS.convert(firstNodeDate - lastNodeDate, TimeUnit.MILLISECONDS);
 				// filter the nodes only if the returned value is lower than the maximum days since value
 				if (numberOfDaysSinceLast < daysSinceMax) 
-					for (Iterator<NodeRevision> it = nodes.iterator(); it.hasNext();) {
-						NodeRevision nodeRev = it.next();
-						if ((Integer)daysSinceOldest.get(nodeRev.getNode().getProperty("ID").toString()) > numberOfDaysSinceLast)
+					for (Iterator<Node> it = nodes.iterator(); it.hasNext();) {
+						Node node = it.next();
+						if ((Integer)daysSinceOldest.get(node.getProperty("ID").toString()) > numberOfDaysSinceLast)
 							it.remove();
 					}
 				
 				userModel.addVariable("no_days_since_max_nodes", String.valueOf(daysSinceMax)); 
 				userModel.addVariable("no_days_since_chosen_nodes", String.valueOf(numberOfDaysSinceLast));
 		 }
+	}
+	
+	static long getMaxDate(Set<Node> nodes, Integer method) {
+		long maxDate = -1;
+		String propertyName = "MODIFIED"; // to cover the case 1=edited	
+		
+		switch (method) {
+		case 2: // 2=created 
+			propertyName = "CREATED";
+			break;
+		case 3: // 3=moved 
+			propertyName = "MOVED";
+		}
+		
+		for (Iterator<Node> it = nodes.iterator(); it.hasNext(); ) {
+			Long nodeDate = Long.valueOf(it.next().getProperty(propertyName).toString());
+			if (nodeDate > maxDate)
+				maxDate = nodeDate;
+		}
+		return maxDate;
+	}
+	
+	static long getMinDate(Set<Node> nodes, Integer method) {
+		long minDate = Long.MAX_VALUE;
+		String propertyName = "MODIFIED"; // to cover the case 1=edited	
+		
+		switch (method) {
+		case 2: // 2=created 
+			propertyName = "CREATED";
+			break;
+		case 3: // 3=moved 
+			propertyName = "MOVED";
+		}
+		
+		for (Iterator<Node> it = nodes.iterator(); it.hasNext(); ) {
+			Long nodeDate = Long.valueOf(it.next().getProperty(propertyName).toString());
+			if (nodeDate < minDate)
+				minDate = nodeDate;
+		}
+		return minDate;
 	}
 	
 	static long stringToMilliseconds(String dateString, DateFormat dateFormat) {
