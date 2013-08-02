@@ -1,7 +1,9 @@
 package org.docear.graphdb;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -185,14 +187,14 @@ public class GraphDbWorker {
 		}
 		System.out.println("demo-nodes: "+foundDemoNodes.size()+" of "+nodes.size());
 		
-		Integer method = (Integer) args.getArgument(AlgorithmArguments.ELEMENT_SELECTION_METHOD); 
-		if (method != null && method > 0) 
-			// get randomly the number of last days for which the nodes will be considered
-			nodes = GraphDbHelper.filterByDaysSinceLastForNodes(nodes, args, userModel);
-
 		userModel.addVariable("element_amount_nodes", String.valueOf(amount));
 		userModel.addVariable("node_count_before_expanded", String.valueOf(amount));
 		userModel.addVariable("node_count_expanded", String.valueOf(nodes.size()));
+		
+		Integer method = (Integer) args.getArgument(AlgorithmArguments.ELEMENT_SELECTION_METHOD); 		
+		if (new Integer(2).equals(args.getArgument(AlgorithmArguments.DATA_ELEMENT)) && method != null && method > 0) 
+			// get randomly the number of last days for which the nodes will be considered
+			GraphDbHelper.filterByDaysSinceLastForNodes(nodes, args, userModel);
 		
 		return nodes;
 	}
@@ -429,6 +431,7 @@ public class GraphDbWorker {
 				t.printStackTrace();
 			}
 		}	
+		
 		return nodeSet;
 	}
 
@@ -579,15 +582,16 @@ public class GraphDbWorker {
 	private NodeInfo extraxtNodeInfo(Node node, AlgorithmArguments args) {
 		NodeInfo nodeInfo = new NodeInfo();
 		nodeInfo.setId(node.getProperty("ID").toString());
-		nodeInfo.setText(extractText(node));
 		
 		// make only the necessary node-related calculations
 		if (args.getArgument(AlgorithmArguments.NODE_DEPTH) != null 
 				&& !new Integer(0).equals(args.getArgument(AlgorithmArguments.NODE_DEPTH)))
 			nodeInfo.setDepth(calculateDepth(node));
+		
 		if (args.getArgument(AlgorithmArguments.NO_SIBLINGS) != null 
 				&& !new Integer(0).equals(args.getArgument(AlgorithmArguments.NO_SIBLINGS))) 
 			nodeInfo.setNoOfSiblings(calculateNoOfSiblings(node));
+		
 		if (args.getArgument(AlgorithmArguments.NO_CHILDREN) != null 
 				&& !new Integer(0).equals(args.getArgument(AlgorithmArguments.NO_CHILDREN))) {
 			switch ((Integer)args.getArgument(AlgorithmArguments.NO_CHILDREN_LEVEL)) {
@@ -598,9 +602,16 @@ public class GraphDbWorker {
 					nodeInfo.setNoOfChildren((calculateNoOfSubtreeNodes(node)));;
 			}
 		}
+
 		if (args.getArgument(AlgorithmArguments.WORD_COUNT) != null 
 				&& !new Integer(0).equals(args.getArgument(AlgorithmArguments.WORD_COUNT))) 
 			nodeInfo.setWordCount((calculateWordCount(node)));;
+
+		if (args.getArgument(AlgorithmArguments.NODE_INFO_SOURCE) != null) {
+			nodeInfo.setText(extractText(node));
+			nodeInfo.setReference(extractReference(node));
+			nodeInfo.setPdfTitle(extractPdfTitle(node));
+		}		
 		return nodeInfo;
 	}
 	
@@ -620,6 +631,35 @@ public class GraphDbWorker {
 		}
 
 		return filterText(text.toString());
+	}
+	
+	private ReferenceInfo extractReference(Node node) {			
+		if (node.hasProperty("LINK") && node.hasProperty("attribute_title")) {
+			ReferenceInfo refInfo = new ReferenceInfo();
+			refInfo.setTitle(node.getProperty("attribute_title").toString());
+			if (node.hasProperty("attribute_journal")) 
+				refInfo.setJournal(node.getProperty("attribute_journal").toString());
+			if (node.hasProperty("attribute_authors")) 
+				refInfo.setAuthors(node.getProperty("attribute_authors").toString());
+			if (node.hasProperty("attribute_year")) 
+				refInfo.setYear(Integer.valueOf(node.getProperty("attribute_year").toString()));
+			return refInfo;
+		}
+		return null;
+	}
+	
+	private String extractPdfTitle(Node node) {	
+		// add the field only if it has not already been added as a reference
+		if (node.hasProperty("LINK") && !node.hasProperty("attribute_title")) {
+			try {
+				String[] linkParts = java.net.URLDecoder.decode(node.getProperty("LINK").toString(), "UTF-8").trim().split(File.separator);
+				return linkParts[linkParts.length-1].split(".pdf")[0];
+			} catch (UnsupportedEncodingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		return null;
 	}
 	
 	/**
@@ -947,7 +987,7 @@ public class GraphDbWorker {
 			
 			if (method != null && method > 0) 
 				// get randomly the number of last days for which the mindmaps will be considered
-				allMaps = GraphDbHelper.filterByDaysSinceLastForMaps(allMaps, args, userModel);
+				GraphDbHelper.filterByDaysSinceLastForMaps(allMaps, args, userModel);
 
 			// get random number from size+1 --> amount==0 means take all, everything else means the size itself
 			int amount = new Random().nextInt(Math.min(allMaps.size(), AlgorithmArguments.MAX_ELEMENT_AMOUNT)+1);
