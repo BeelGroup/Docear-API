@@ -105,13 +105,13 @@ public class GraphDbUserModelFactory {
 
 		if (model.getAlgorithm().getDataElement() == Algorithm.DATA_ELEMENT_MAPS) {
 			model.getAlgorithm().setElementAmount(parser.getMeta("element_amount_maps"));
-			model.getAlgorithm().setNoDaysSinceMax(parser.getMeta("no_days_since_maps_max"));
-			model.getAlgorithm().setNoDaysSinceChosen(parser.getMeta("no_days_since_maps_chosen"));
+			model.getAlgorithm().setNoDaysSinceMax(parser.getMeta("no_days_since_max_maps"));
+			model.getAlgorithm().setNoDaysSinceChosen(parser.getMeta("no_days_since_chosen_maps"));
 		}
 		else if (model.getAlgorithm().getDataElement() == Algorithm.DATA_ELEMENT_NODES) {
 			model.getAlgorithm().setElementAmount(parser.getMeta("element_amount_nodes"));
-			model.getAlgorithm().setNoDaysSinceMax(parser.getMeta("no_days_since_nodes_max"));
-			model.getAlgorithm().setNoDaysSinceChosen(parser.getMeta("no_days_since_nodes_chosen"));
+			model.getAlgorithm().setNoDaysSinceMax(parser.getMeta("no_days_since_max_nodes"));
+			model.getAlgorithm().setNoDaysSinceChosen(parser.getMeta("no_days_since_chosen_nodes"));
 		}
 		
 		userModelItems = userModelItems.subList(0, resultAmount);
