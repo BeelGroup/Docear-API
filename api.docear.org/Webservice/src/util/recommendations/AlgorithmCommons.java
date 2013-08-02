@@ -130,6 +130,9 @@ public class AlgorithmCommons {
 //			alg.setApproach(Algorithm.APPROACH_CONTENT_BASED);
 //		}
 		
+        // 0=all; 1=mind maps; 2=references; 3=pdfs; 4=mind maps and references; 5=mind maps and pdfs; 6=references and pdfs
+		alg.setNodeInfoSource(r.nextInt(7));
+		
 		//0=all; 1=consider only unfolded nodes; 2=consider only folded nodes
 		alg.setNodeVisibility(r.nextInt(3));
 		
