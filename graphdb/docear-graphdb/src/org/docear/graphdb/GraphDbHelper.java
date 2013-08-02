@@ -3,7 +3,6 @@ package org.docear.graphdb;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.HashSet;
@@ -14,7 +13,6 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.docear.database.AlgorithmArguments;
-import org.docear.graphdb.GraphDbWorker.NodeRevision;
 import org.docear.xml.UserModel;
 import org.neo4j.graphdb.Node;
 
