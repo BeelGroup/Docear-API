@@ -15,6 +15,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.Properties;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLOutputFactory;
@@ -23,6 +27,7 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
 
+import org.hibernate.bytecode.buildtime.ExecutionException;
 import org.sciplore.beans.Document;
 import org.sciplore.beans.References;
 import org.sciplore.beans.Title;
@@ -97,7 +102,12 @@ public class Xtract {
 	}
 	
 	public String xtract(File pdf) throws Exception {
-		return xtractDocument(pdf).toXML();
+		Document doc = xtractDocument(pdf);
+		if (doc == null) {
+			return null;
+		}
+		
+		return doc.toXML();
 	}
 	
 	public Document xtractDocument(File pdf) throws Exception {
@@ -135,11 +145,15 @@ public class Xtract {
 	
 	public Document xtractDocumentFromTxt(File txt, File parsedXml, String title) throws Exception {
 		Document doc = extractHeader(txt);
-		if (title != null && !title.isEmpty()) {
-			doc.addActiveElement(new Title(title));
+		if (doc != null) {
+			if (title != null && !title.isEmpty()) {
+    			doc.addActiveElement(new Title(title));
+    		}
+    		References r = extractCitations(txt, parsedXml);
+    		if (r != null) {
+    			doc.addActiveElement(r);
+    		}
 		}
-		References r = extractCitations(txt, parsedXml);
-		doc.addActiveElement(r);
 		return doc;
 	}
 	
@@ -180,89 +194,121 @@ public class Xtract {
 		return dtdFile.getAbsolutePath();
 	}
 
-	private void execCommand(File dir, String... cmd) throws Exception {
-		String cache;
-		String stdout = "";
-		String stderr = "";
-		ProcessBuilder pb = new ProcessBuilder(cmd);
-		pb.directory(dir);
-		logger.debug("Command: {}", pb.command());
-		Process p = pb.start();
-		BufferedReader outReader = new BufferedReader(new InputStreamReader(p.getInputStream()));
-		BufferedReader errReader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
-	
-		while ((cache = outReader.readLine()) != null) {
-			stdout += cache + "\n";
-		}
-	
-		while ((cache = errReader.readLine()) != null) {
-			stderr += cache + "\n";
-		}
+	private boolean execCommand(final File dir, final String... cmd) throws Exception {	
+		ADestroyableExecutor destroyableExecutor = null;
+		try {
+    		ExecutorService executor = Executors.newSingleThreadExecutor();
+    		destroyableExecutor = new ADestroyableExecutor() {			
+				
+    			@Override
+    			public void run() {    				
+    				try {
+    					String cache;
+    					String stdout = "";
+    					String stderr = "";
+    					ProcessBuilder pb = new ProcessBuilder(cmd);
+    					pb.directory(dir);
+    					logger.debug("Command: {}", pb.command());		
+    					process = pb.start();
+    					
+    					BufferedReader outReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+    					BufferedReader errReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+    				
+    					while ((cache = outReader.readLine()) != null) {
+    						stdout += cache + "\n";
+    					}
+    				
+    					while ((cache = errReader.readLine()) != null) {
+    						stderr += cache + "\n";
+    					}
+    					
+    					cache = null;
+    					outReader.close();
+    					errReader.close();
+    					logger.trace("stderr: {}", stderr);
+    					logger.trace("stdout: {}", stdout);		
+    					if (process.waitFor() != 0) {
+    						logger.debug("stderr: {}", stderr);
+    						logger.debug("stdout: {}", stdout);
+    						stdout = null;
+    						stderr = null;
+    						p = null;
+    						pb = null;
+    						throw new Exception("Error executing command.");
+    					}
+    					stdout = null;
+    					stderr = null;
+    					p = null;
+    					pb = null;
+					}
+					catch (Exception e) {
+						throw new ExecutionException(e.getMessage());
+					}    				
+    			}
+    		};
+    		
+    		Future<?> future = executor.submit(destroyableExecutor);
+    		future.get(300, TimeUnit.SECONDS);
+    	} 
+		catch (Throwable e) {
+			System.out.println("org.sciplore.xtract.Xtract.execCommand(dir, cmd): "+e.getMessage());			
+			destroyableExecutor.destroy();
+			return false;
+    	}
 		
-		cache = null;
-		outReader.close();
-		errReader.close();
-		logger.trace("stderr: {}", stderr);
-		logger.trace("stdout: {}", stdout);		
-		if (p.waitFor() != 0) {
-			logger.debug("stderr: {}", stderr);
-			logger.debug("stdout: {}", stdout);
-			stdout = null;
-			stderr = null;
-			p = null;
-			pb = null;
-			throw new Exception("Error executing command.");
-		}
-		stdout = null;
-		stderr = null;
-		p = null;
-		pb = null;
+		return true;
 	}
 
 	// Header Analyse
-	private Document extractHeader(File txt) throws Exception {
-		File xml = File.createTempFile(basename(txt.getName(), ".xml"), "_headerParseService.xml", tmpDir);
-		execCommand(null, "perl", "-CSD", p.getProperty("headerParseServicePath") + File.separator + "bin/extractHeader.pl", txt.getAbsolutePath(), xml.getAbsolutePath());
-		// parse the XML reults
-		HeaderResultParser hrp = new HeaderResultParser();
-		// return Document object containing the obtained information
-		Document d = hrp.parse(xml);
-		xml.delete();
-		return d;
+	private Document extractHeader(final File txt) throws Exception {
+		final File xml = File.createTempFile(basename(txt.getName(), ".xml"), "_headerParseService.xml", tmpDir);		
+    	if (execCommand(null, "perl", "-CSD", p.getProperty("headerParseServicePath") + File.separator + "bin/extractHeader.pl", txt.getAbsolutePath(), xml.getAbsolutePath())) {				
+    		// parse the XML reults
+    		HeaderResultParser hrp = new HeaderResultParser();
+    		// return Document object containing the obtained information
+    		Document d = hrp.parse(xml);
+    		xml.delete();
+    		return d;
+    	}
+    	
+    	return null;
 	}
 
 	// Reference analysis
 	private References extractCitations(File txt, File xmlText) throws Exception {
 		File xmlParsCit = File.createTempFile(basename(txt.getName(), ".xml"), "_ParsCit.xml", tmpDir);
 		
-		execCommand(txt.getParentFile(), "perl", "-CSD", p.getProperty("parsCitPath") + File.separator + "bin/citeExtract.pl", txt.getAbsolutePath(), xmlParsCit.getAbsolutePath());
+		if (execCommand(txt.getParentFile(), "perl", "-CSD", p.getProperty("parsCitPath") + File.separator + "bin/citeExtract.pl", txt.getAbsolutePath(), xmlParsCit.getAbsolutePath())) {
 
-		new File(basename(txt.getAbsolutePath(), ".txt") + ".cite").delete();
-		new File(basename(txt.getAbsolutePath(), ".txt") + ".body").delete();
+    		new File(basename(txt.getAbsolutePath(), ".txt") + ".cite").delete();
+    		new File(basename(txt.getAbsolutePath(), ".txt") + ".body").delete();
+    		
+    		// Parsen der Ergebnisse um Wörter, etc. zu zählen
+    		File xmlPos = xmlParsCit;
+    		try {
+    			try {
+    				xmlPos = addCitationPositions(xmlText, xmlParsCit);				
+    			} catch (FileNotFoundException e) {
+    				e.printStackTrace();
+    			} catch (XMLStreamException e) {
+    				e.printStackTrace();
+    			}
+    	
+    			// Ergebnis von ParsCit mit hinzugefügten Counts parsen
+    			ReferenceResultParser rpp = new ReferenceResultParser();
+    			
+    			// Liste von Referenzen
+    			References r = rpp.parse(xmlPos);
+    			
+    			return r;
+    		}
+    		finally {
+    			xmlParsCit.delete();
+    			xmlPos.delete();
+    		}
+		}
 		
-		// Parsen der Ergebnisse um Wörter, etc. zu zählen
-		File xmlPos = xmlParsCit;
-		try {
-			try {
-				xmlPos = addCitationPositions(xmlText, xmlParsCit);				
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-			} catch (XMLStreamException e) {
-				e.printStackTrace();
-			}
-	
-			// Ergebnis von ParsCit mit hinzugefügten Counts parsen
-			ReferenceResultParser rpp = new ReferenceResultParser();
-			
-			// Liste von Referenzen
-			References r = rpp.parse(xmlPos);
-			
-			return r;
-		}
-		finally {
-			xmlParsCit.delete();
-			xmlPos.delete();
-		}
+		return null;
 	}
 
 	private String extractTitleAndParseXml(File xml, File parsedXml, String dtdPath) {

@@ -10,4 +10,4 @@ graphdb/docear_mindmap_parser/bin/
 PdfSpider/DocearPdfSpider/bin/
 api.docear.org/Serialization/bin/
 api.docear.org/Webservice/build/
-
+PdfSpider/Xtract/bin
