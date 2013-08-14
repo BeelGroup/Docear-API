@@ -1,0 +1,13 @@
+api.docear.org/Webservice/.classpath
+api.docear.org/Data Access Library/bin/
+api.docear.org/SciPlore Serialization API/bin/
+api.docear.org/Utilities/bin/
+api.docear.org/Webservice/.settings/org.eclipse.wst.ws.service.policy.prefs
+api.docear.org/Webservice/WebContent/WEB-INF/lib/sciploreDBaccess.jar
+google_scholar/GoogleScholarParser/GoogleScholar Parser/bin/
+graphdb/docear-graphdb/bin/
+graphdb/docear_mindmap_parser/bin/
+PdfSpider/DocearPdfSpider/bin/
+api.docear.org/Serialization/bin/
+api.docear.org/Webservice/build/
+

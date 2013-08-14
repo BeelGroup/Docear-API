@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/DB Access Library"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/Utilities"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/Serialization API"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Sciplore Libraries"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/mrdlib-serialization"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

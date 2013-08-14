@@ -1,0 +1,4 @@
+headerParseServicePath = /tmp/HeaderParseService
+parsCitPath = /tmp/ParsCit
+pdfToHtml = /usr/local/bin/pdftohtml
+tmpPath = /tmp

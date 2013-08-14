@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="jar" name="Create JAR for SciPlore Xtract">
+    <target name="jar">
+        <jar destfile="dist/SciPlore Xtract.jar">
+            <manifest>
+                <attribute name="Main-Class" value="org.sciplore.xtract.Xtract"/>
+                <attribute name="Class-Path" value="."/>
+            </manifest>
+            <fileset dir="bin" excludes="log4j.properties" />
+        </jar>
+    </target>
+</project>
