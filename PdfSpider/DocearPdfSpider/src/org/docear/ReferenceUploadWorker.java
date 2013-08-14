@@ -37,7 +37,7 @@ public class ReferenceUploadWorker {
 				formDataMultiPart.field("referencesData", referenceData.getBytes(), MediaType.MULTIPART_FORM_DATA_TYPE);
 			}
 			
-			WebResource webResource = client.resource(PdfSpider.DOCEAR_SERVICES + "/documents/" + docId	+ "/references/?format=xml");
+			WebResource webResource = client.resource(Main.DOCEAR_SERVICES + "/documents/" + docId	+ "/references/?format=xml");
 			Builder builder = webResource.header("accessToken", "AEF7AA6612CF44B92012982C6C8A0333").type(MediaType.MULTIPART_FORM_DATA_TYPE);
 
 			ClientResponse response = builder.post(ClientResponse.class, formDataMultiPart);
@@ -71,7 +71,7 @@ public class ReferenceUploadWorker {
 				formDataMultiPart.field("referencesData", referenceData.getBytes(), MediaType.MULTIPART_FORM_DATA_TYPE);
 			}
 			
-			WebResource webResource = client.resource(PdfSpider.DOCEAR_SERVICES + "/internal/document/"+docHash+"/references/?format=xml");
+			WebResource webResource = client.resource(Main.DOCEAR_SERVICES + "/internal/document/"+docHash+"/references/?format=xml");
 			Builder builder = webResource.header("accessToken", "AEF7AA6612CF44B92012982C6C8A0333").type(MediaType.MULTIPART_FORM_DATA_TYPE);
 
 			ClientResponse response = builder.post(ClientResponse.class, formDataMultiPart);

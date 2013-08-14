@@ -15,7 +15,7 @@ import org.sciplore.resources.Document;
 import org.sciplore.utilities.config.Config;
 import org.sciplore.xtract.Xtract;
 
-public class PdfSpider {
+public class Main {
 	
 	private static int NUMBER_OF_THREADS = 2;
 	private static int NUMBER_OF_FILES = 100;
@@ -25,7 +25,7 @@ public class PdfSpider {
 	private LinkedList<Document> docs;
 	private LinkedList<Document> docsInProcess;
 
-	public PdfSpider() {
+	public Main() {
 		
 	}
 
@@ -54,7 +54,7 @@ public class PdfSpider {
 		}
 		
 		
-		PdfSpider pdfSpider = new PdfSpider();
+		Main pdfSpider = new Main();
 		pdfSpider.setDocsInProcess(new LinkedList<Document>());
 		pdfSpider.setDocs(new LinkedList<Document>());
 

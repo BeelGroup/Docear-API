@@ -29,7 +29,7 @@ public class FullTextUploadWorker extends ReferenceUploadWorker {
 			formDataMultiPart.field("hash", hash);
 			formDataMultiPart.field("file", data, MediaType.MULTIPART_FORM_DATA_TYPE);
 						
-			WebResource webResource = client.resource(PdfSpider.DOCEAR_SERVICES + "/documents/" + docId	+ "/fulltexts/?format=txt");
+			WebResource webResource = client.resource(Main.DOCEAR_SERVICES + "/documents/" + docId	+ "/fulltexts/?format=txt");
 			Builder builder = webResource.header("accessToken", "AEF7AA6612CF44B92012982C6C8A0333").type(MediaType.MULTIPART_FORM_DATA_TYPE);
 
 			ClientResponse response = builder.post(ClientResponse.class, formDataMultiPart);

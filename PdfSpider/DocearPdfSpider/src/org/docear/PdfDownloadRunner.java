@@ -21,10 +21,10 @@ import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.WebResource.Builder;
 
 public class PdfDownloadRunner extends Thread {
-	private PdfSpider pdfSpider;
+	private Main pdfSpider;
 	protected File tmpDir = new File(System.getProperty("java.io.tmpdir"));
 
-	public PdfDownloadRunner(PdfSpider spider) {
+	public PdfDownloadRunner(Main spider) {
 		super.setName("PdfDownloadRunner@" + hashCode());
 		pdfSpider = spider;
 	}
@@ -172,7 +172,7 @@ public class PdfDownloadRunner extends Thread {
 			Client client = Client.create(); // expensive operation, so change
 												// so that this is created as
 												// few times as possible
-			WebResource webResource = client.resource(PdfSpider.DOCEAR_SERVICES + "/documents/" + String.valueOf(xref.getDocument().getId()) + "/xrefs/"
+			WebResource webResource = client.resource(Main.DOCEAR_SERVICES + "/documents/" + String.valueOf(xref.getDocument().getId()) + "/xrefs/"
 					+ String.valueOf(xref.getId()) + "/?dl_attempt=true");
 			Builder builder = webResource.header("accessToken", "AEF7AA6612CF44B92012982C6C8A0333");
 
