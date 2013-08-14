@@ -41,7 +41,13 @@ public class PdfFileWorker extends FullTextUploadWorker implements Worker {
 	}
 
 	public void exec() throws IOException, RejectedExecutionException {
-		PdfDataExtractor extractor = new PdfDataExtractor(file);
+		PdfDataExtractor extractor = null;
+		try {	
+			extractor = new PdfDataExtractor(file);
+		}
+		catch(Exception e) {
+			System.err.println("org.docear.PdfFileWorker.exec(): "+e.getMessage());
+		}
 		final String hash = extractor.getUniqueHashCode();
 		if (hash == null) {
 			throw new RejectedExecutionException("skipping file (hash==null): "+file.getAbsolutePath());
@@ -70,7 +76,7 @@ public class PdfFileWorker extends FullTextUploadWorker implements Worker {
 			task.run();
 		}
 		catch(Exception e) {
-			e.printStackTrace();
+			System.err.println("org.docear.PdfFileWorker.exec(): "+e.getMessage());
 		}
 		
 		if(!uploadFullText(xRefId, documentId, text.getBytes(), (url==null?"offline":url.toString()), hash)) {

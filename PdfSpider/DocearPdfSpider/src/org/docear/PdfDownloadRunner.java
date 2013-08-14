@@ -141,7 +141,7 @@ public class PdfDownloadRunner extends Thread {
 							pdfWorker.exec();
 
 						} catch (Throwable e) {
-							e.printStackTrace();
+							System.err.println("org.docear.PdfDownloadRunner.downloadDocuments(...).new Runnable() {...}.run(): "+e.getMessage());
 							System.out.println("[" + Thread.currentThread().getName() + "] xrefid: " + xref.getId() + ", " + e
 									+ ". Skipping and set indexed=null.");
 						} finally {
