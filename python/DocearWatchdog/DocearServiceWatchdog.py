@@ -48,7 +48,7 @@ def _test_recommendations():
                     50,
                     'recommendation sets delivered')
     except:
-        email_lines.append('Unexpected error:', sys.exc_info()[0])
+        email_lines.append('Unexpected error: ' + sys.exc_info()[0])
         
 @timeout(2, os.strerror(errno.ETIMEDOUT))
 def _test_pdf_downloader():
@@ -65,7 +65,7 @@ def _test_pdf_downloader():
                     1000,
                     'pdf files indexed')
     except:
-        email_lines.append('Unexpected error:', sys.exc_info()[0])
+        email_lines.append('Unexpected error: ' + sys.exc_info()[0])
         
     
 def _test_query(query, lower_bound, email_line_prefix):
