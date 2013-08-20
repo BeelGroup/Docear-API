@@ -7,5 +7,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/Serialization API"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Sciplore Libraries"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/mrdlib-serialization"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/Docear Xtract"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

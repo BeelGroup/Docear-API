@@ -231,14 +231,12 @@ public class Xtract {
     						logger.debug("stderr: {}", stderr);
     						logger.debug("stdout: {}", stdout);
     						stdout = null;
-    						stderr = null;
-    						p = null;
+    						stderr = null;    						
     						pb = null;
     						throw new Exception("Error executing command.");
     					}
     					stdout = null;
-    					stderr = null;
-    					p = null;
+    					stderr = null;    					
     					pb = null;
 					}
 					catch (Exception e) {
@@ -252,7 +250,10 @@ public class Xtract {
     	} 
 		catch (Throwable e) {
 			System.out.println("org.sciplore.xtract.Xtract.execCommand(dir, cmd): "+e.getMessage());			
-			destroyableExecutor.destroy();
+//			destroyableExecutor.destroy();
+			System.err.println("killing perl process for: "+cmd[cmd.length-1]);
+			String killCommand[] = {"pkill", "-9", "-f", cmd[cmd.length-1]};
+			Runtime.getRuntime().exec(killCommand);
 			return false;
     	}
 		
@@ -261,7 +262,14 @@ public class Xtract {
 
 	// Header Analyse
 	private Document extractHeader(final File txt) throws Exception {
-		final File xml = File.createTempFile(basename(txt.getName(), ".xml"), "_headerParseService.xml", tmpDir);		
+		final File xml = File.createTempFile(basename(txt.getName(), ".xml"), "_headerParseService.xml", tmpDir);
+		
+		if (p==null) {
+			System.err.println("org.sciplore.xtract.Xtract.extractCitations(txt, xmlText): properties is null!");
+			return null;
+		}		
+		
+		
     	if (execCommand(null, "perl", "-CSD", p.getProperty("headerParseServicePath") + File.separator + "bin/extractHeader.pl", txt.getAbsolutePath(), xml.getAbsolutePath())) {				
     		// parse the XML reults
     		HeaderResultParser hrp = new HeaderResultParser();
@@ -277,6 +285,15 @@ public class Xtract {
 	// Reference analysis
 	private References extractCitations(File txt, File xmlText) throws Exception {
 		File xmlParsCit = File.createTempFile(basename(txt.getName(), ".xml"), "_ParsCit.xml", tmpDir);
+		
+		if (p==null) {
+			System.err.println("org.sciplore.xtract.Xtract.extractCitations(txt, xmlText): properties is null!");
+			return null;
+		}		
+		else if (xmlParsCit==null) {
+			System.err.println("org.sciplore.xtract.Xtract.extractCitations(txt, xmlText): xmlParsCit is null!");
+			return null;
+		}
 		
 		if (execCommand(txt.getParentFile(), "perl", "-CSD", p.getProperty("parsCitPath") + File.separator + "bin/citeExtract.pl", txt.getAbsolutePath(), xmlParsCit.getAbsolutePath())) {
 
