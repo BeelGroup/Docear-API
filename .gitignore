@@ -10,4 +10,8 @@ graphdb/docear_mindmap_parser/bin/
 PdfSpider/DocearPdfSpider/bin/
 api.docear.org/Serialization/bin/
 api.docear.org/Webservice/build/
-PdfSpider/Xtract/bin
+PdfSpider/Xtract/bin/
+Desktop/flamingo/bin/
+Desktop/flamingo/drop/
+Desktop/flamingo/www/webstart/
+

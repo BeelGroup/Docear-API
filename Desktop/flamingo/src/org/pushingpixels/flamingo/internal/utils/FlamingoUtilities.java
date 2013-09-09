@@ -32,6 +32,7 @@ package org.pushingpixels.flamingo.internal.utils;
 import java.awt.*;
 import java.awt.geom.GeneralPath;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.*;
@@ -543,6 +544,47 @@ public class FlamingoUtilities {
 
 	public static void checkResizePoliciesConsistency(
 			AbstractRibbonBand ribbonBand) {
+//		Insets ins = ribbonBand.getInsets();
+//		AbstractBandControlPanel controlPanel = ribbonBand.getControlPanel();
+//		if (controlPanel == null)
+//			return;
+//		int height = controlPanel.getPreferredSize().height
+//				+ ribbonBand.getUI().getBandTitleHeight() + ins.top
+//				+ ins.bottom;
+//		List<RibbonBandResizePolicy> resizePolicies = ribbonBand
+//				.getResizePolicies();
+//		checkResizePoliciesConsistencyBase(ribbonBand);
+//		for (int i = 0; i < (resizePolicies.size() - 1); i++) {
+//			RibbonBandResizePolicy policy1 = resizePolicies.get(i);
+//			RibbonBandResizePolicy policy2 = resizePolicies.get(i + 1);
+//			int width1 = policy1.getPreferredWidth(height, 4);
+//			int width2 = policy2.getPreferredWidth(height, 4);
+//			if (width1 < width2) {
+//				// create the trace message
+//				StringBuilder builder = new StringBuilder();
+//				builder.append("Inconsistent preferred widths\n");
+//				builder.append("Ribbon band '" + ribbonBand.getTitle()
+//						+ "' has the following resize policies\n");
+//				for (int j = 0; j < resizePolicies.size(); j++) {
+//					RibbonBandResizePolicy policy = resizePolicies.get(j);
+//					int width = policy.getPreferredWidth(height, 4);
+//					builder.append("\t" + policy.getClass().getName()
+//							+ " with preferred width " + width + "\n");
+//				}
+//				builder.append(policy1.getClass().getName()
+//						+ " with pref width " + width1
+//						+ " is followed by resize policy "
+//						+ policy2.getClass().getName()
+//						+ " with larger pref width\n");
+//
+//				throw new IllegalStateException(builder.toString());
+//			}
+//		}
+		checkResizePoliciesConsistency(ribbonBand, true);
+	}
+	
+	public static void checkResizePoliciesConsistency(
+			AbstractRibbonBand ribbonBand, boolean tolerateExceptions) {
 		Insets ins = ribbonBand.getInsets();
 		AbstractBandControlPanel controlPanel = ribbonBand.getControlPanel();
 		if (controlPanel == null)
@@ -553,32 +595,66 @@ public class FlamingoUtilities {
 		List<RibbonBandResizePolicy> resizePolicies = ribbonBand
 				.getResizePolicies();
 		checkResizePoliciesConsistencyBase(ribbonBand);
+		int index = -1;
+		while((index = checkPolicies(ribbonBand, height, resizePolicies)) > -1) {
+			if(tolerateExceptions) {
+				ribbonBand.setResizePolicies(buildNewList(resizePolicies, index));
+				break;
+			}
+			else {
+				throw new IllegalStateException(getExceptionMessage(ribbonBand, height, resizePolicies, index));
+			}
+			
+		}
+	}
+
+	private static List buildNewList(List<RibbonBandResizePolicy> resizePolicies, int index) {
+		ArrayList<RibbonBandResizePolicy> newList = new ArrayList<RibbonBandResizePolicy>();
+		for (int i = 0; i < resizePolicies.size(); i++) {
+			if(i == index) {
+				continue;
+			}
+			newList.add(resizePolicies.get(i));
+		}
+		return newList;
+	}
+
+	private static int checkPolicies(AbstractRibbonBand ribbonBand, int height, List<RibbonBandResizePolicy> resizePolicies) {
 		for (int i = 0; i < (resizePolicies.size() - 1); i++) {
 			RibbonBandResizePolicy policy1 = resizePolicies.get(i);
 			RibbonBandResizePolicy policy2 = resizePolicies.get(i + 1);
 			int width1 = policy1.getPreferredWidth(height, 4);
 			int width2 = policy2.getPreferredWidth(height, 4);
 			if (width1 < width2) {
-				// create the trace message
-				StringBuilder builder = new StringBuilder();
-				builder.append("Inconsistent preferred widths\n");
-				builder.append("Ribbon band '" + ribbonBand.getTitle()
-						+ "' has the following resize policies\n");
-				for (int j = 0; j < resizePolicies.size(); j++) {
-					RibbonBandResizePolicy policy = resizePolicies.get(j);
-					int width = policy.getPreferredWidth(height, 4);
-					builder.append("\t" + policy.getClass().getName()
-							+ " with preferred width " + width + "\n");
-				}
-				builder.append(policy1.getClass().getName()
-						+ " with pref width " + width1
-						+ " is followed by resize policy "
-						+ policy2.getClass().getName()
-						+ " with larger pref width\n");
-
-				throw new IllegalStateException(builder.toString());
+				return i+1;
 			}
 		}
+		return -1;
+	}
+
+	private static String getExceptionMessage(AbstractRibbonBand ribbonBand, int height, List<RibbonBandResizePolicy> resizePolicies,
+			int errorIndex) {
+		RibbonBandResizePolicy policy1 = resizePolicies.get(errorIndex-1);
+		RibbonBandResizePolicy policy2 = resizePolicies.get(errorIndex);
+		int width1 = policy1.getPreferredWidth(height, 4);
+		// create the trace message
+		StringBuilder builder = new StringBuilder();
+		builder.append("Inconsistent preferred widths\n");
+		builder.append("Ribbon band '" + ribbonBand.getTitle()
+				+ "' has the following resize policies\n");
+		for (int j = 0; j < resizePolicies.size(); j++) {
+			RibbonBandResizePolicy policy = resizePolicies.get(j);
+			int width = policy.getPreferredWidth(height, 4);
+			builder.append("\t" + policy.getClass().getName()
+					+ " with preferred width " + width + "\n");
+		}
+		builder.append(policy1.getClass().getName()
+				+ " with pref width " + width1
+				+ " is followed by resize policy "
+				+ policy2.getClass().getName()
+				+ " with larger pref width\n");
+
+		return builder.toString();
 	}
 
 	public static void checkResizePoliciesConsistencyBase(
