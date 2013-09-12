@@ -44,6 +44,7 @@ import org.sciplore.queries.RecommendationsDocumentsQueries;
 import org.sciplore.queries.RecommendationsDocumentsSetQueries;
 import org.sciplore.resources.Application;
 import org.sciplore.resources.Citation;
+import org.sciplore.resources.Contact;
 import org.sciplore.resources.Document;
 import org.sciplore.resources.FulltextUrl;
 import org.sciplore.resources.Mindmap;
@@ -51,6 +52,7 @@ import org.sciplore.resources.RecommendationsDocuments;
 import org.sciplore.resources.RecommendationsDocumentsSet;
 import org.sciplore.resources.RecommendationsUsersSettings;
 import org.sciplore.resources.User;
+import org.sciplore.resources.UserPasswordRequest;
 import org.sciplore.tools.SciploreResponseCode;
 
 import util.RecommendationCommons;
@@ -73,6 +75,7 @@ public class UserRessource {
 	public static final File PARSER_WORKING_PATH = new File(PARSER_BASE, "new");
 
 	private final static String SEP = "|#|";
+	private static final long EXPIRATION_TIME_MILLIS = 3600*24;
 
 	@GET
 	@Path("/{username}/recommendations/")
@@ -625,6 +628,93 @@ public class UserRessource {
 			catch (Exception ex) {
 				// do nth.
 			}
+		}
+	}
+	
+	
+	@GET
+	@Path("/{email}/password")
+	public Response resetPasswordRequest(@PathParam("email") String email, @Context HttpServletRequest request) {
+		final Session session = SessionProvider.sessionFactory.openSession();
+		
+		final User user = new User(session).getUserByEmail(email);
+		try {
+			if(user == null) {
+				return UserCommons.getHTTPStatusResponse(Status.NOT_FOUND, "no user found for "+email);
+			}
+			UserPasswordRequest pwRequest = UserPasswordRequest.create(user);
+			pwRequest.setSession(session);
+			session.save(pwRequest);
+			
+			Contact contact = user.getPerson().getContacts().iterator().next();			
+			rest.Tools.mail(contact.getUri(), "Docear Password Request", UserCommons.getPasswordRequestMailText(pwRequest, contact.getUri()));
+			
+			return UserCommons.getHTTPStatusResponse(Status.OK, "an email with further instructions has been sent to your email address.");
+		}
+		catch (Throwable e) {
+			e.printStackTrace();
+			return UserCommons.getHTTPStatusResponse(Status.INTERNAL_SERVER_ERROR, "sth went wrong.");
+		}
+		finally {
+			Tools.tolerantClose(session);
+		}
+	}
+	
+	@POST
+	@Path("/{email}/password")
+	public Response newPasswordRequest(@PathParam("email") String email, @FormParam("token") String token,  @FormParam("password") String password, @FormParam("password_retype") String password_retype, @Context HttpServletRequest request) {
+		final Session session = SessionProvider.sessionFactory.openSession();
+		Transaction transaction = session.beginTransaction();
+		try {
+			if(password == null || !password.equals(password_retype) || password.trim().length() <= 0) {
+				return UserCommons.getHTTPStatusResponse(Status.BAD_REQUEST, "The passwords you have entered are not identical.");
+			}
+			
+			final User user = new User(session).getUserByEmail(email);
+			if(user == null) {
+				return UserCommons.getHTTPStatusResponse(Status.NOT_FOUND, "no user found for "+email);
+			}
+			UserPasswordRequest resetRequest = UserPasswordRequest.getUserPasswordRequest(session, token);
+			if(resetRequest == null) {
+				return UserCommons.getHTTPStatusResponse(Status.BAD_REQUEST, "password reset token does not exist.");
+			}
+			resetRequest.setSession(session);
+			if(resetRequest.isExpired(EXPIRATION_TIME_MILLIS) || resetRequest.isUsed()) {
+				return UserCommons.getHTTPStatusResponse(Status.BAD_REQUEST, "this operation is not valid anymore.");
+			}
+			if(user.getUsername().equals(resetRequest.getUser().getUsername())) {
+					
+				//update user credentials
+				user.setPassword(password, true);
+				user.setAccessToken(null);
+				session.update(user);
+				session.flush();
+					
+				//update rquest -> set as used
+				resetRequest.setUsed();
+				session.update(resetRequest);
+				session.flush();
+					
+				// send confirmation mail
+				Contact contact = user.getPerson().getContacts().iterator().next();
+				rest.Tools.mail(contact.getUri(), "Docear Password Reset Confirmation", UserCommons.getUserResetConfirmationMail(user.getUsername(), password, contact.getUri()));
+				transaction.commit();	
+				return UserCommons.getHTTPStatusResponse(Status.OK, "your new password has been set.");
+			}
+			else {
+				return UserCommons.getHTTPStatusResponse(Status.BAD_REQUEST, "user email and password reset Token don't match.");
+			}
+		}
+		catch (Throwable e) {
+			if(transaction.isActive()) {
+				transaction.rollback();
+			}
+			e.printStackTrace();
+			return UserCommons.getHTTPStatusResponse(Status.INTERNAL_SERVER_ERROR, "sth went wrong.");
+		}
+		finally {
+			
+			Tools.tolerantClose(session);
 		}
 	}
 

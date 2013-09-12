@@ -3,5 +3,6 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Sciplore Libraries"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/DB Access Library"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

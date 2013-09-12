@@ -244,7 +244,7 @@ public class User extends Resource {
 			return new SciploreResponseCode(SciploreResponseCode.PASSWORD_TOO_SHORT, "Please use a password with a minimum length of 6 characters.");
 		
 		if (!password.equals(retypedPassword)) 
-			return new SciploreResponseCode(SciploreResponseCode.PASSWORDS_NOT_IDENTICAL, "Twe passwords you have entered are not identical. Please try again.");
+			return new SciploreResponseCode(SciploreResponseCode.PASSWORDS_NOT_IDENTICAL, "The passwords you have entered are not identical. Please try again.");
 		
 		if(new Contact(this.getSession()).getContact(eMail) != null)
 			return new SciploreResponseCode(SciploreResponseCode.EMAIL_ALREADY_EXISTS, "This email address is already used by a user to register. Please use another one.");

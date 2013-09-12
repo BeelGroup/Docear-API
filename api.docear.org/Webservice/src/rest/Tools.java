@@ -4,13 +4,11 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.Properties;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipInputStream;
 
@@ -164,31 +162,25 @@ public class Tools {
 	      }
 	  }
 	  
-	  
-	  public static String getConfig(String property){
-          try {
-        	  //Todo path hard coded
-        	  File config = new File("C:\\Users\\Christoph Arbeit\\Documents\\Arbeit\\Hiwi\\Workspace\\Rest Webservice\\src\\config.properties");
-        	  //File config = new File("/opt/tomcat/webapps/config.properties");
-        	  InputStream stream  = new FileInputStream(config);
-        	  Properties buildNumberPros = new Properties();
-        	  buildNumberPros.load(stream);
-        	  String result = buildNumberPros.getProperty(property);
-        	  stream.close();
-              return result;
-          } catch(Exception e){        	  
-        	  System.out.println(Tools.getStackTraceAsString(e));
-        	  return null;
-          }
-      }
-	  
-	  public static boolean getBoolProperty(String property){
-		  String prop = Tools.getConfig(property);
-		  if(prop == null || prop.equalsIgnoreCase("1")){
+	  public static boolean mail(String address, String subject, String message, String... headers) {
+//		  function confirmationEmail( $address,$username,$password )
+//		  {
+//		  	$subject  = 'Docear Account Signup Confirmation';
+//		  	$headers  = 'From: noreply@docear.org'."\r\n";
+//		  	$headers .= 'X-Mailer: docear.org'."\r\n";
+//
+//		  	@mail( $address,$subject,$message,$headers );
+//		  } 
+		  try {
+			  System.out.println("Headers: "+headers);
+			  System.out.println("MailTo: "+ address);
+			  System.out.println("Subject: "+ subject);
+			  System.out.println("Message: "+ message);
 			  return true;
 		  }
-		  else{
-			  return false;
+		  catch (Exception e) {
+			e.printStackTrace();
 		  }
+		  return false;
 	  }
 }

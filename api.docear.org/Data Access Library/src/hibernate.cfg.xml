@@ -59,6 +59,7 @@
         <mapping class="org.sciplore.resources.MindmapsPdfHash"/>
         <mapping class="org.sciplore.resources.UsersApplications"/>
         <mapping class="org.sciplore.resources.RecommendationsUsersSettings"/>
-        <mapping class="org.sciplore.resources.RecommendationsLabel"/>        
+        <mapping class="org.sciplore.resources.RecommendationsLabel"/>
+        <mapping class="org.sciplore.resources.UserPasswordRequest"/>        
 	</session-factory>
 </hibernate-configuration>

@@ -35,6 +35,7 @@ import org.sciplore.resources.GoogleDocumentQuery;
 import org.sciplore.resources.RecommendationsLabel;
 import org.sciplore.resources.RecommendationsUsersSettings;
 import org.sciplore.resources.User;
+import org.sciplore.resources.UserPasswordRequest;
 import org.sciplore.resources.UsersApplications;
 
 
@@ -524,4 +525,86 @@ public class UserCommons {
 		return settings;
 		
 	}
+
+	public static String getPasswordRequestMailText(UserPasswordRequest pwRequest, String email) {
+		StringBuilder message = new StringBuilder();
+
+		try {
+			email = URLEncoder.encode(email, "UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		} 
+		message.append("Hello,\n");
+		message.append("\n");
+		message.append("You recieve this email message because you want to reset your password.\n");
+		message.append("\n");
+		message.append("Please use the link below and follow the instructions on the site.\n");
+		message.append("\n");
+		message.append("http://www.docear.org/forgotten-password?token="+pwRequest.getToken()+"&mail="+email+"\n");
+		message.append("\n");
+		message.append("\n");		
+		message.append("Yours,\n");
+		message.append("The Docear Team.\n");
+		return message.toString();
+	}
+
+	public static String getUserRegistrationMail(String username, String password, String email) {
+		StringBuilder message = new StringBuilder();
+
+		message.append("Hello,\n");
+		message.append("\n");
+		message.append("This email message is to confirm your newly created Docear account.\n");
+		message.append("\n");
+		message.append("Please note that the account is already activated.\n");
+		message.append("\n");
+		message.append("Your information are as follows:\n");
+		message.append("\n");
+		message.append("Email: "+email+"\n");
+		message.append("User: "+username+"\n");
+		message.append("Password: "+maskedPassword(password, false)+"\n");
+		message.append("\n");
+		message.append("\n");		
+		message.append("Yours,\n");
+		message.append("The Docear Team.\n");
+		return message.toString();
+	}
+	
+	public static String getUserResetConfirmationMail(String username, String password, String email) {
+		StringBuilder message = new StringBuilder();
+
+		message.append("Hello,\n");
+		message.append("\n");
+		message.append("This email message is to confirm your newly set password.\n");
+		message.append("\n");
+		message.append("Your information are as follows:\n");
+		message.append("\n");
+		message.append("Email: "+email+"\n");
+		message.append("User: "+username+"\n");
+		message.append("Password: "+maskedPassword(password, false)+"\n");
+		message.append("\n");
+		message.append("\n");
+		message.append("Please note that all stored sessions with your old docear account credentials are invalid from now on.\n");
+		message.append("\n");
+		message.append("\n");		
+		message.append("Yours,\n");
+		message.append("The Docear Team.\n");
+		return message.toString();
+	}
+
+	public static String maskedPassword(String password, boolean showFirstLetters) {
+		int len = password.length();
+		StringBuilder maskedString = new StringBuilder();
+		if(showFirstLetters) {
+			maskedString.append(password.substring(0,3));
+		}
+		for(int i = 3; i < len; i++) {
+			maskedString.append("*");
+		}
+		if(!showFirstLetters) {
+			maskedString.append(password.substring(len-3));
+		}
+		return maskedString.toString();	
+	}
+
+	
 }
