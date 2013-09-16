@@ -1,5 +1,7 @@
 package org.sciplore.resources;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -150,6 +152,16 @@ public class Person extends Resource {
 	 */
 	public Date getDob() {
 		return dob;
+	}
+	
+	public String getDocIdxToken() {
+		//TODO: implement 
+		return null;
+	}
+	
+	public List<Document> getDocumentsIndexed() {
+		//TODO: implement 
+		return Collections.emptyList();
 	}
 
 	/**
