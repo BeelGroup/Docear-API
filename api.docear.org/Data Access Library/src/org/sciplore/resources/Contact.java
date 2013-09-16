@@ -81,7 +81,7 @@ public class Contact extends Resource {
 		if(c.getId() != null) {
 			return getContact(c.getId());
 		} else {
-			return getContact(c.getPerson(), c.getUri());
+			return getContact(c.getUri());
 		}
 	}
 	
