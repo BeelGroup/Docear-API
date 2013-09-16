@@ -30,55 +30,6 @@ public class DocumentPerson extends Resource {
 	 */
 	public final static short DOCUMENTPERSON_TYPE_EDITOR = 2;
 	
-	public  DocumentPerson getDocumentPerson(DocumentPerson dp) {
-		if(dp.getId() != null) {
-			dp.load(dp.getId());
-			return dp;
-		} else {
-			return getDocumentPerson(dp.getDocument(), dp.getPersonHomonym());
-		}
-	}
-	
-	public  DocumentPerson getDocumentPerson(Integer id) {
-		return (DocumentPerson)this.getSession().get(DocumentPerson.class, id);
-	}
-	
-	public DocumentPerson getDocumentPerson(Document d, PersonHomonym p) {
-		if(d != null && p != null && d.getId() != null && p.getId() != null) {
-			return (DocumentPerson)this.getSession().createCriteria(DocumentPerson.class)
-				.add(Restrictions.eq("document", d))
-				.add(Restrictions.eq("personHomonym", p))
-				.setMaxResults(1)
-				.uniqueResult();
-		}		
-		return null;
-	}
-	
-	@ManyToOne
-	@Fetch(FetchMode.JOIN) // FIXME
-	@JoinColumn(name = "document_id")
-	@Required
-	private Document document;
-	
-	@ManyToOne
-	@Fetch(FetchMode.JOIN) // FIXME
-	@JoinColumn(name = "person_homonym_id")
-	@Required
-	private PersonHomonym personHomonym;
-	
-	@ManyToOne
-	@Fetch(FetchMode.JOIN) // FIXME
-	@JoinColumn(name = "person_id")
-	@Required
-	private Person personMain;
-
-	@Column(nullable = false)
-	private Short rank = 0;
-	@Column(nullable = false)
-	private Short type = 1;
-	@Column(nullable = false)
-	private Short valid = 1;
-	
 	/**
 	 * Constructs an empty {@code DocumentPerson} object. 
 	 */
@@ -125,7 +76,59 @@ public class DocumentPerson extends Resource {
 		this.type = type;
 		this.rank = rank;
 	}
+	
+	@ManyToOne
+	@Fetch(FetchMode.JOIN) // FIXME
+	@JoinColumn(name = "document_id")
+	@Required
+	private Document document;
+	
+	@ManyToOne
+	@Fetch(FetchMode.JOIN) // FIXME
+	@JoinColumn(name = "person_homonym_id")
+	@Required
+	private PersonHomonym personHomonym;
+	
+	@ManyToOne
+	@Fetch(FetchMode.JOIN) // FIXME
+	@JoinColumn(name = "person_id")
+	@Required
+	private Person personMain;
 
+	@Column(nullable = false)
+	private Short rank = 0;
+	@Column(nullable = false)
+	private Short type = 1;
+	@Column(nullable = false)
+	private Short valid = 1;
+	
+	private Boolean docidxAllow;
+	
+	
+	public DocumentPerson getDocumentPerson(DocumentPerson dp) {
+		if(dp.getId() != null) {
+			dp.load(dp.getId());
+			return dp;
+		} else {
+			return getDocumentPerson(dp.getDocument(), dp.getPersonHomonym());
+		}
+	}
+	
+	public DocumentPerson getDocumentPerson(Integer id) {
+		return (DocumentPerson)this.getSession().get(DocumentPerson.class, id);
+	}
+	
+	public DocumentPerson getDocumentPerson(Document d, PersonHomonym p) {
+		if(d != null && p != null && d.getId() != null && p.getId() != null) {
+			return (DocumentPerson)this.getSession().createCriteria(DocumentPerson.class)
+				.add(Restrictions.eq("document", d))
+				.add(Restrictions.eq("personHomonym", p))
+				.setMaxResults(1)
+				.uniqueResult();
+		}		
+		return null;
+	}
+	
 	/**
 	 * Returns the {@link Document}.
 	 * 
@@ -138,9 +141,7 @@ public class DocumentPerson extends Resource {
 	
 	public Resource getPersistentIdentity() {
 		return getDocumentPerson(this);
-	}
-
-	
+	}	
 
 	/**
 	 * Returns the {@link Person}.
@@ -227,6 +228,14 @@ public class DocumentPerson extends Resource {
 		this.valid = valid;
 	}
 	
+	public boolean getDocidxAllow() {
+		return docidxAllow==null ? Person.DEFAULT_ALLOW : docidxAllow;
+	}
+
+	public void setDocidxAllow(Boolean docidxAllow) {
+		this.docidxAllow = docidxAllow;
+	}	
+
 	public Person getPersonMain() {
 		return personMain;
 	}

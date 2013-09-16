@@ -28,15 +28,16 @@ import org.hibernate.criterion.Restrictions;
 @Table(name = "persons")
 @Inheritance(strategy = InheritanceType.JOINED)
 public class Person extends Resource {
+	public static boolean DEFAULT_ALLOW = true;
+	public static boolean DEFAULT_NOTIFY = true;
 	
 	public Resource getPersistentIdentity() {
-		return getPerson(this);
+		return getPerson(getSession(), this);
 	}
 	
-	public Person getPerson(Person person) {
-		if (person.getId() != null) {
-			person.load();
-			return person;
+	public static Person getPerson(Session session, Person person) {
+		if (person.getId() != null) {			
+			return (Person) session.get(Person.class, person.getId());
 		} 
 		else {
 			// try to find the persistent person using the person's contact uri (email)  
@@ -44,7 +45,7 @@ public class Person extends Resource {
 			if (contacts != null) {
 				Person p = null;
 				for (Contact c : contacts) {
-					Contact persistentContact = c.getContact(c.getUri());
+					Contact persistentContact = Contact.getContact(session, c.getUri());
 					if (persistentContact != null) {
 						//found a persistent person --> return it
 						p = persistentContact.getPerson();
@@ -57,7 +58,7 @@ public class Person extends Resource {
 			String nameComplete = person.createNameComplete();
 			System.out.println("Person Name Complete: '" + nameComplete+"'");
 			//Session session = SessionProvider.sessionFactory.openSession();
-			person = (Person)getSession().createCriteria(PersonHomonym.class)														   
+			person = (Person)session.createCriteria(PersonHomonym.class)														   
 										       .add(Restrictions.eq("nameComparable", nameComplete))
 										       .setProjection(Projections.property("person"))
 										       .setMaxResults(1).uniqueResult();
@@ -111,6 +112,13 @@ public class Person extends Resource {
 	@OneToMany(mappedBy = "person", fetch = FetchType.LAZY)
 	@Cascade(CascadeType.SAVE_UPDATE)
 	private Set<PersonXref> xrefs = new HashSet<PersonXref>();
+	
+	private Date docidxLastDisplayed;
+	private Date docidxLastNotified;
+	private Integer docidxNotificationCount;
+	private String docidxIdToken;
+	private Boolean docidxAllow;
+	private Boolean docidxNotify;
 	
 	public Person() {
 	}
@@ -170,13 +178,57 @@ public class Person extends Resource {
 		return dob;
 	}
 	
-	public String getDocIdxToken() {
-		//TODO: implement 
-		return null;
+	
+	
+	public Date getDocidxLastDisplayed() {
+		return docidxLastDisplayed;
+	}
+
+	public void setDocidxLastDisplayed(Date docidxLastDisplayed) {
+		this.docidxLastDisplayed = docidxLastDisplayed;
+	}
+
+	public Date getDocidxLastNotified() {
+		return docidxLastNotified;
+	}
+
+	public void setDocidxLastNotified(Date docidxLastNotified) {
+		this.docidxLastNotified = docidxLastNotified;
+	}
+
+	public Integer getDocidxNotificationCount() {
+		return docidxNotificationCount;
+	}
+
+	public void setDocidxNotificationCount(Integer docidxNotificationCount) {
+		this.docidxNotificationCount = docidxNotificationCount;
+	}
+
+	public String getDocidxIdToken() {
+		return docidxIdToken;
+	}
+
+	public void setDocidxIdToken(String docidxIdToken) {
+		this.docidxIdToken = docidxIdToken;
+	}
+
+	public boolean getDocidxAllow() {
+		return docidxAllow==null ? DEFAULT_ALLOW : docidxAllow;
+	}
+
+	public void setDocidxAllow(Boolean docidxAllow) {
+		this.docidxAllow = docidxAllow;
+	}
+
+	public boolean getDocidxNotify() {
+		return docidxNotify==null ? DEFAULT_NOTIFY : docidxNotify;
+	}
+
+	public void setDocidxNotify(Boolean docidxNotify) {
+		this.docidxNotify = docidxNotify;
 	}
 	
 	public List<DocumentPerson> getDocumentsIndexed() {
-		//TODO: implement 
 		return Collections.emptyList();
 	}
 

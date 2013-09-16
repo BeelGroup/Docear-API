@@ -79,9 +79,9 @@ public class Contact extends Resource {
 	 */
 	public  Contact getContact(Contact c) {
 		if(c.getId() != null) {
-			return getContact(c.getId());
+			return getContact(getSession(), c.getId());
 		} else {
-			return getContact(c.getUri());
+			return getContact(getSession(), c.getUri());
 		}
 	}
 	
@@ -91,8 +91,8 @@ public class Contact extends Resource {
 	 * @param id the identifier
 	 * @return the Contact object from the database or null if not found
 	 */
-	public  Contact getContact(Integer id) {
-		return (Contact) this.getSession().get(Contact.class, id);
+	public static Contact getContact(Session session, Integer id) {
+		return (Contact) session.get(Contact.class, id);
 	}
 	
 	/**
@@ -102,8 +102,8 @@ public class Contact extends Resource {
 	 * @return the Contact object from the database or null if not found
 	 * @see Person
 	 */
-	public  Contact getContact(String uri){
-		return (Contact) this.getSession().createCriteria(Contact.class)		
+	public static Contact getContact(Session session, String uri){
+		return (Contact) session.createCriteria(Contact.class)		
 		.add(Restrictions.eq("uri", uri))
 		.setMaxResults(1)
 		.uniqueResult();
@@ -117,13 +117,13 @@ public class Contact extends Resource {
 	 * @return the Contact object from the database or null if not found
 	 * @see Person
 	 */
-	public  Contact getContact(Person p, String uri) {
-		return (Contact) this.getSession().createCriteria(Contact.class)
-			.add(Restrictions.eq("person", p))
-			.add(Restrictions.eq("uri", uri))
-			.setMaxResults(1)
-			.uniqueResult();
-	}
+//	public  Contact getContact(Person p, String uri) {
+//		return (Contact) this.getSession().createCriteria(Contact.class)
+//			.add(Restrictions.eq("person", p))
+//			.add(Restrictions.eq("uri", uri))
+//			.setMaxResults(1)
+//			.uniqueResult();
+//	}
 	
 	/**
 	 * Synchronizes a Contact object with a record from the database. If the 
