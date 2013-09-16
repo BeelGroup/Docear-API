@@ -1,6 +1,5 @@
 package org.sciplore.resources;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
@@ -34,18 +33,35 @@ public class Person extends Resource {
 		return getPerson(this);
 	}
 	
-	public Person getPerson(Person p) {
-		if (p.getId() != null) {
-			p.load();
-			return p;
-		} else {
-			String nameComplete = p.createNameComplete();
+	public Person getPerson(Person person) {
+		if (person.getId() != null) {
+			person.load();
+			return person;
+		} 
+		else {
+			// try to find the persistent person using the person's contact uri (email)  
+			Set<Contact> contacts = person.getContacts();
+			if (contacts != null) {
+				Person p = null;
+				for (Contact c : contacts) {
+					Contact persistentContact = c.getContact(c.getUri());
+					if (persistentContact != null) {
+						//found a persistent person --> return it
+						p = persistentContact.getPerson();
+						return p;
+					}
+				}				
+			}
+			
+			// no persons found using contact uri (no email, or not found in DB) --> search using name
+			String nameComplete = person.createNameComplete();
 			System.out.println("Person Name Complete: '" + nameComplete+"'");
 			//Session session = SessionProvider.sessionFactory.openSession();
-			Person person = (Person)getSession().createCriteria(PersonHomonym.class)														   
+			person = (Person)getSession().createCriteria(PersonHomonym.class)														   
 										       .add(Restrictions.eq("nameComparable", nameComplete))
 										       .setProjection(Projections.property("person"))
 										       .setMaxResults(1).uniqueResult();
+
 			//session.close();
 			return person;
 		}
@@ -159,7 +175,7 @@ public class Person extends Resource {
 		return null;
 	}
 	
-	public List<Document> getDocumentsIndexed() {
+	public List<DocumentPerson> getDocumentsIndexed() {
 		//TODO: implement 
 		return Collections.emptyList();
 	}
