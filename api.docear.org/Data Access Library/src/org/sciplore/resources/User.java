@@ -69,7 +69,7 @@ public class User extends Resource {
 	}
 	
 	public  User getUserByEmail(String email) {
-		Contact contact = new Contact(this.getSession()).getContact(email);
+		Contact contact = Contact.getContact(getSession(), email);
 		if(contact != null) {
 			return getUser(contact.getPerson());
 		}
@@ -246,7 +246,7 @@ public class User extends Resource {
 		if (!password.equals(retypedPassword)) 
 			return new SciploreResponseCode(SciploreResponseCode.PASSWORDS_NOT_IDENTICAL, "The passwords you have entered are not identical. Please try again.");
 		
-		if(new Contact(this.getSession()).getContact(eMail) != null)
+		if(Contact.getContact(getSession(), eMail) != null)
 			return new SciploreResponseCode(SciploreResponseCode.EMAIL_ALREADY_EXISTS, "This email address is already used by a user to register. Please use another one.");
 		
 		Person person = new Person(this.getSession());

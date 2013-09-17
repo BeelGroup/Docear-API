@@ -229,6 +229,7 @@ public class Person extends Resource {
 	}
 	
 	public List<DocumentPerson> getDocumentsIndexed() {
+		//TODO: implement this
 		return Collections.emptyList();
 	}
 
