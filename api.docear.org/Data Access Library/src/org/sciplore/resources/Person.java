@@ -22,6 +22,7 @@ import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.Formula;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
+import org.sciplore.queries.DocumentPersonQueries;
 
 
 @Entity
@@ -229,26 +230,23 @@ public class Person extends Resource {
 	}
 	
 	public List<DocumentPerson> getDocumentsIndexed() {
-		//TODO: implement this
-		return Collections.emptyList();
+		List<DocumentPerson> documentPersons = DocumentPersonQueries.getDocumentPersons(getSession(), this, true);
+		if (documentPersons != null) {
+			return documentPersons;
+		}
+		else {
+			return Collections.emptyList();
+		}
 	}
 
 	/**
 	 * @return the documents
 	 */
 	public List<DocumentPerson> getDocumentsFromSource(String source) {
-		
 		System.out.println("debug id: "+getId());
 		System.out.println("debug source: "+source);
-		@SuppressWarnings("unchecked")
-		List<DocumentPerson> documents = (List<DocumentPerson>) this.getSession().createCriteria(DocumentPerson.class)
-														.add(Restrictions.eq("person_id", this.getId()))
-														.setFetchMode("document_xref", org.hibernate.FetchMode.JOIN)
-														.createCriteria("document_xref")
-														.add(Restrictions.eq("source", source))
-														.list();
-								
-		return documents;
+				
+		return DocumentPersonQueries.getDocumentPersons(getSession(), this, source);		
 	}
 	
 	/**
