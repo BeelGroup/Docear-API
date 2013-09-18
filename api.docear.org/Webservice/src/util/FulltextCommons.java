@@ -131,12 +131,14 @@ public class FulltextCommons {
 						Tools.getLuceneIndexer().updateDocument(doc, hash).commit();
 	
 						// update the xref status: set indexed=1
-						for (DocumentXref xref : doc.getXrefs()) {
-							if (xref.getId().equals(xref_id)) {
-								xref.setIndexed(1);
-								session.saveOrUpdate(xref);
-								session.flush();
-								break;
+						if(xref_id != null) {
+							for (DocumentXref xref : doc.getXrefs()) {
+								if (xref.getId().equals(xref_id)) {
+									xref.setIndexed(1);
+									session.saveOrUpdate(xref);
+									session.flush();
+									break;
+								}
 							}
 						}
 						transaction.commit();

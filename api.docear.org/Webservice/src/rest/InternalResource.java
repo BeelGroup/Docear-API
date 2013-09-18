@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -42,6 +43,8 @@ import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.mrdlib.index.Searcher;
+import org.sciplore.data.NameSeparator;
+import org.sciplore.data.NameSeparator.NameComponents;
 import org.sciplore.database.SessionProvider;
 import org.sciplore.queries.DocumentQueries;
 import org.sciplore.queries.DocumentsBibtexPdfHashQueries;
@@ -50,7 +53,9 @@ import org.sciplore.queries.DocumentsBibtexUsersQueries;
 import org.sciplore.queries.DocumentsPdfHashQueries;
 import org.sciplore.queries.InternalQueries;
 import org.sciplore.queries.MindmapsPdfHashQueries;
+import org.sciplore.resources.Contact;
 import org.sciplore.resources.Document;
+import org.sciplore.resources.DocumentPerson;
 import org.sciplore.resources.DocumentXref;
 import org.sciplore.resources.DocumentsBibtex;
 import org.sciplore.resources.DocumentsBibtexPdfHash;
@@ -58,10 +63,13 @@ import org.sciplore.resources.DocumentsBibtexUsers;
 import org.sciplore.resources.DocumentsPdfHash;
 import org.sciplore.resources.GoogleDocumentQuery;
 import org.sciplore.resources.MindmapsPdfHash;
+import org.sciplore.resources.Person;
 import org.sciplore.resources.User;
+import org.sciplore.utilities.concurrent.AsynchUtilities;
 
 import util.BibtexCommons;
 import util.DocumentCommons;
+import util.FulltextCommons;
 import util.InternalCommons;
 import util.RecommendationCommons;
 import util.ResourceCommons;
@@ -856,5 +864,143 @@ public class InternalResource {
 		RecommendationCommons.offlineEvaluator.stop();
 		
 		return Tools.getHTTPStatusResponse(Status.OK, "OK");
+	}
+	
+	@GET
+	@Path("/docidx/{author_mail}")	
+	public Response getDocIdxList(@PathParam("author_mail") String mail, @QueryParam("token") String token, @Context UriInfo ui, @Context HttpServletRequest request) {
+		Session session = Tools.getSession();
+		session.setFlushMode(FlushMode.MANUAL);
+		try {
+			Contact contact = Contact.getContact(session, mail);
+			Person person = contact.getPerson();
+			
+			if (token == null || token.equals(person.getDocidxIdToken())) {
+				return UserCommons.getHTTPStatusResponse(com.sun.jersey.api.client.ClientResponse.Status.UNAUTHORIZED, "no valid token.");
+			}
+			
+			List<DocumentPerson> documentList = person.getDocumentsIndexed();
+			
+			person.setDocidxLastDisplayed(new Date());
+			
+			session.flush();
+			return Tools.getHTTPStatusResponse(Status.OK, InternalCommons.buildDocumentIndexListXML(documentList, person, contact));
+		}
+		catch (Exception e) {
+			return Tools.getHTTPStatusResponse(Status.INTERNAL_SERVER_ERROR, "Error: "+ e.getMessage());
+		}
+		finally {
+			Tools.tolerantClose(session);
+		}
+	}
+	
+	@POST
+	@Path("/docidx/{author_mail}")	
+	public Response postDocIdxListMail(@PathParam("author_mail") String mail, @FormParam("token") String token
+			, @FormParam("first_name") String firstName
+			, @FormParam("middle_name") String middleName
+			, @FormParam("last_name") String lastName
+			, @FormParam("forbidden_docs") List<String> forbiddenDocumentIds
+			, @FormParam("ignore_all") Boolean ignoreAll
+			, @FormParam("allowNotification") Boolean allowNotification
+			, @Context UriInfo ui, @Context HttpServletRequest request) {
+		Session session = Tools.getSession();
+		Transaction transaction = session.beginTransaction();
+		session.setFlushMode(FlushMode.MANUAL);
+		
+		try {
+			Contact contact = Contact.getContact(session, mail);
+			Person person = contact.getPerson();
+			
+			if (token == null || token.equals(person.getDocidxIdToken())) {
+				return UserCommons.getHTTPStatusResponse(com.sun.jersey.api.client.ClientResponse.Status.UNAUTHORIZED, "no valid token.");
+			}
+			
+			if(ignoreAll != null && ignoreAll) {
+				Collection<DocumentPerson> documents = person.getDocumentsIndexed();
+				for (DocumentPerson docPerson : documents) {
+					deleteFulltextFromIndex(session, docPerson);
+				}
+			}
+			else {
+				//docs
+				for (String docId : forbiddenDocumentIds) {
+					DocumentPerson docPerson = (DocumentPerson) session.load(DocumentPerson.class, Integer.parseInt(docId));
+					docPerson.setDocidxAllow(false);
+					session.update(docPerson);
+					session.flush();
+					deleteFulltextFromIndex(session, docPerson);					
+				}
+			}
+			
+			//TODO update person data
+			boolean dirty = false;
+			if(ignoreAll != null) {
+				person.setDocidxAllow(!ignoreAll);
+				dirty = true;
+			}
+			if(allowNotification != null) {
+				person.setDocidxNotify(allowNotification);
+				dirty = true;
+			}
+			NameSeparator nameSeparator = new NameSeparator();
+			String name = InternalCommons.normalizeStr(firstName) +" ";
+			name += InternalCommons.normalizeStr(middleName) + " ";
+			name += InternalCommons.normalizeStr(lastName);
+			NameComponents nameParts = nameSeparator.seperateName(InternalCommons.normalizeStr(name));
+			if(nameParts.getFirstName() != null && !nameParts.getFirstName().trim().isEmpty() && !nameParts.getFirstName().equals(person.getNameFirst())) {
+				person.setNameFirst(nameParts.getFirstName());
+				dirty = true;
+			}
+			if(nameParts.getMiddleName() != null && !nameParts.getMiddleName().trim().isEmpty() && !nameParts.getMiddleName().equals(person.getNameMiddle())) {
+				person.setNameMiddle(nameParts.getMiddleName());
+				dirty = true;
+			}
+			if(nameParts.getLastNamePrefix() != null && !nameParts.getLastNamePrefix().trim().isEmpty() && !nameParts.getLastNamePrefix().equals(person.getNameLastPrefix())) {
+				person.setNameLastPrefix(nameParts.getLastNamePrefix());
+				dirty = true;
+			}
+			if(nameParts.getLastName() != null && !nameParts.getLastName().trim().isEmpty() && !nameParts.getLastName().equals(person.getNameLast())) {
+				person.setNameLast(nameParts.getLastName());
+				dirty = true;
+			}
+			if(nameParts.getLastNameSuffix() != null && !nameParts.getLastNameSuffix().trim().isEmpty() && !nameParts.getLastNameSuffix().equals(person.getNameLastSuffix())) {
+				person.setNameLastSuffix(nameParts.getLastNameSuffix());
+				dirty = true;
+			}
+			if(dirty) {
+				session.update(person);
+				session.flush();
+			}
+			
+			return Tools.getHTTPStatusResponse(Status.OK, "OK");
+		}
+		catch (Exception e) {
+			try {
+				transaction.rollback();
+			} catch (Exception ex) {
+				ex.printStackTrace();
+			}
+			
+			return Tools.getHTTPStatusResponse(Status.INTERNAL_SERVER_ERROR, "Error: "+ e.getMessage());
+		}
+		finally {
+			if(transaction.isActive()) {
+				transaction.commit();
+			}
+			Tools.tolerantClose(session);
+		}
+	}
+
+	/**
+	 * @param session
+	 * @param docPerson
+	 */
+	private void deleteFulltextFromIndex(Session session, DocumentPerson docPerson) {
+		List<DocumentsPdfHash> pdfHashes = DocumentsPdfHashQueries.getPdfHashes(session, docPerson.getDocument());
+		for (DocumentsPdfHash documentsPdfHash : pdfHashes) {
+			//TODO
+			//FulltextCommons.requestPlainTextUpdate(docPerson.getDocument(), documentsPdfHash.getHash());
+		}
 	}
 }

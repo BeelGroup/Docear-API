@@ -8,6 +8,7 @@ google_scholar/GoogleScholarParser/GoogleScholar Parser/bin/
 graphdb/docear-graphdb/bin/
 graphdb/docear_mindmap_parser/bin/
 PdfSpider/DocearPdfSpider/bin/
+PdfSpider/Xtract/bin
 api.docear.org/Serialization/bin/
 api.docear.org/Webservice/build/
 PdfSpider/Xtract/bin/
