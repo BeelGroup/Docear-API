@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.StringWriter;
 import java.math.BigInteger;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -14,6 +15,18 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.TransformerFactoryConfigurationError;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 import org.apache.lucene.document.Fieldable;
 import org.apache.lucene.index.IndexReader;
@@ -31,9 +44,13 @@ import org.sciplore.database.SessionProvider;
 import org.sciplore.queries.DocumentQueries;
 import org.sciplore.queries.DocumentsPdfHashQueries;
 import org.sciplore.queries.GoogleDocumentQueryQueries;
+import org.sciplore.resources.Contact;
 import org.sciplore.resources.Document;
+import org.sciplore.resources.DocumentPerson;
 import org.sciplore.resources.DocumentsPdfHash;
 import org.sciplore.resources.GoogleDocumentQuery;
+import org.sciplore.resources.Person;
+import org.w3c.dom.Element;
 
 import rest.InternalResource;
 
@@ -389,5 +406,100 @@ public class InternalCommons {
 				}
 			}
 		}).start();
+	}
+
+	public static String buildDocumentIndexListXML(List<DocumentPerson> documentList, Person person, Contact contact) {
+
+		org.w3c.dom.Document dom = getNewXMLDocument();
+		if(dom != null) {
+			Element root = dom.createElement("document-index-settings");
+			dom.appendChild(root);
+			
+			Element author = dom.createElement("author");
+			author.setAttribute("email", contact.getUri());
+			author.setAttribute("token", person.getDocidxIdToken());
+			root.appendChild(author);
+			
+			Element nameFirst = dom.createElement("firstname");
+			nameFirst.setTextContent(normalizeStr(person.getNameFirst()));
+			author.appendChild(nameFirst);
+			
+			Element nameMiddle = dom.createElement("middlename");
+			nameMiddle.setTextContent(normalizeStr(person.getNameMiddle()));
+			author.appendChild(nameMiddle);
+			
+			Element nameLast = dom.createElement("lastname");
+			String lastName = normalizeStr(person.getNameLastPrefix()) +" ";
+			lastName += normalizeStr(person.getNameLast()) + " ";
+			lastName += normalizeStr(person.getNameLastSuffix());
+			nameLast.setTextContent(normalizeStr(lastName));
+			author.appendChild(nameLast);
+			
+			Element list = dom.createElement("documents");
+			for (DocumentPerson document : documentList) {
+				Element doc = dom.createElement("document");
+				doc.setAttribute("id", Integer.toString(document.getId()));
+				
+				Element title = dom.createElement("title");
+				title.setTextContent(document.getDocument().getTitle());
+				doc.appendChild(title);
+				
+				list.appendChild(doc);
+			}
+			root.appendChild(list);
+			
+			return getXMLStr(dom);
+		}
+		return "";
+	}
+	
+	public static org.w3c.dom.Document getNewXMLDocument() {
+		
+		// instance of a DocumentBuilderFactory
+	    DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+	    try {
+	        // use factory to get an instance of document builder
+	        DocumentBuilder db = dbf.newDocumentBuilder();
+	        // create instance of DOM
+	        return db.newDocument();	        
+	    } catch (ParserConfigurationException pce) {
+	        System.out.println("UsersXML: Error trying to instantiate DocumentBuilder " + pce);
+	    }
+	    return null;
+		
+	}
+
+	/**
+	 * @param dom
+	 */
+	public static String getXMLStr(org.w3c.dom.Document dom) {
+		StringWriter out = new StringWriter();
+		Transformer transf;
+		try {
+			transf = TransformerFactory.newInstance().newTransformer();
+			transf.setOutputProperty(OutputKeys.INDENT, "yes");
+			transf.setOutputProperty(OutputKeys.METHOD, "xml");
+		    transf.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+		    transf.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
+		    
+		    transf.transform(new DOMSource(dom), new StreamResult(out));
+		    
+		    return out.toString();
+		} catch (TransformerConfigurationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (TransformerFactoryConfigurationError e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (TransformerException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
+
+	public static String normalizeStr(String str) {
+		return str == null ? "" : str.trim();
 	}	
 }
