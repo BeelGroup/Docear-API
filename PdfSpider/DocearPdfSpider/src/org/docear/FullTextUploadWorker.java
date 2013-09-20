@@ -1,5 +1,8 @@
 package org.docear;
 
+import java.util.Collection;
+import java.util.Collections;
+
 import javax.ws.rs.core.MediaType;
 
 import com.sun.jersey.api.client.ClientResponse;
@@ -10,12 +13,13 @@ import com.sun.jersey.multipart.FormDataMultiPart;
 public class FullTextUploadWorker extends ReferenceUploadWorker {
 	
 	
-	protected final boolean uploadFullText(String xRefId, String docId, byte[] data, String pdfWebUrl, String hash) {		
+	protected final boolean uploadFullText(String xRefId, String docId, byte[] data, String pdfWebUrl, String hash, Collection<String> emails) {		
 		if (System.getProperty("docear.detailed") != null && System.getProperty("docear.detailed").equals("true")) {
 			System.out.println("["+Thread.currentThread().getName()+"] hash: "+hash);
 			System.out.println("["+Thread.currentThread().getName()+"] documentId: "+docId);
 			System.out.println("["+Thread.currentThread().getName()+"] xRefId: "+xRefId);
 			System.out.println("["+Thread.currentThread().getName()+"] url: "+pdfWebUrl);
+			System.out.println("["+Thread.currentThread().getName()+"] emails: "+emails);
 		}
 		if (System.getProperty("docear.debug") != null && System.getProperty("docear.debug").equals("true")) {
 			return true;
@@ -28,6 +32,11 @@ public class FullTextUploadWorker extends ReferenceUploadWorker {
 			formDataMultiPart.field("downloadAttempt", "true");
 			formDataMultiPart.field("hash", hash);
 			formDataMultiPart.field("file", data, MediaType.MULTIPART_FORM_DATA_TYPE);
+			if(emails != null) {
+				for (String email : emails) {
+					formDataMultiPart.field("email", email);
+				}			
+			}
 						
 			WebResource webResource = client.resource(Main.DOCEAR_SERVICES + "/documents/" + docId	+ "/fulltexts/?format=txt");
 			Builder builder = webResource.header("accessToken", "AEF7AA6612CF44B92012982C6C8A0333").type(MediaType.MULTIPART_FORM_DATA_TYPE);
