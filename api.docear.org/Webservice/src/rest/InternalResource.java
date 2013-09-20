@@ -61,6 +61,7 @@ import org.sciplore.resources.MindmapsPdfHash;
 import org.sciplore.resources.User;
 
 import util.BibtexCommons;
+import util.DocidxNotificationCommons;
 import util.DocumentCommons;
 import util.InternalCommons;
 import util.RecommendationCommons;
@@ -81,6 +82,14 @@ public class InternalResource {
 	private static Boolean RANDOM_MODEL_CREATION_IN_PROGRESS = false;
 	public static Integer HMA_GOOGLE_REQUESTS = 0;
 	private static String ipChani = "";
+	
+	@GET
+	@Path("/test")
+	public Response test(@Context UriInfo ui, @Context HttpServletRequest request) {
+		DocidxNotificationCommons commons = new DocidxNotificationCommons();
+		commons.getNotificationReceiverXMl();
+		return UserCommons.getHTTPStatusResponse(ClientResponse.Status.OK, "ok");
+	}
 	
 	@GET
 	@Path("/recommendations/compute")
@@ -653,7 +662,7 @@ public class InternalResource {
 			if (persistent != null) {
 				if (persistent.getRank() == null || persistent.getRank() > rank) {
 					persistent.setRank(rank);
-					persistent.save();
+					session.update(persistent);
 				}
 			}
 			else {

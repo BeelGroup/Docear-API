@@ -335,7 +335,7 @@ public class InternalCommons {
     			}
     		}
 		}
-		
+				
 		Session session = SessionProvider.sessionFactory.openSession();
 		session.setFlushMode(FlushMode.ALWAYS);
 		SQLQuery query = session.createSQLQuery("INSERT INTO tmp_lucene_removed_docs(document_id) VALUES (0)");
