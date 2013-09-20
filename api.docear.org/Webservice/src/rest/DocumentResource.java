@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.channels.AlreadyConnectedException;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -35,8 +37,11 @@ import javax.ws.rs.core.UriInfo;
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.jdbc.Work;
 import org.mrdlib.index.Indexer.DocumentHashItem;
 import org.sciplore.data.BeanFactory;
+import org.sciplore.database.AtomicOperation;
+import org.sciplore.database.AtomicOperationHandle;
 import org.sciplore.database.SessionProvider;
 import org.sciplore.formatter.Bean;
 import org.sciplore.queries.DocumentQueries;
@@ -387,8 +392,8 @@ public class DocumentResource {
 	@Path("/{id}/references")
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	public Response postReferences(@Context UriInfo ui, @Context HttpServletRequest request
-			, @PathParam(value = "id") int id, 
-			@FormDataParam("referencesData") InputStream xtractStream, @FormDataParam("xtract") FormDataContentDisposition xtractDetail,
+			, @PathParam(value = "id") final int id, 
+			@FormDataParam("referencesData") final InputStream xtractStream, @FormDataParam("xtract") FormDataContentDisposition xtractDetail,
 			@QueryParam("source") String source, @DefaultValue(Tools.DEFAULT_FORMAT) @QueryParam("format") String format,			
 			@QueryParam("stream") boolean stream) {
 			
@@ -399,29 +404,44 @@ public class DocumentResource {
 			return Tools.getHTTPStatusResponse(Status.UNAUTHORIZED, "not authorized.");
 		}
 	
+		
 		Document doc = DocumentQueries.getDocument(session, id);
 		if(doc == null) {
 			return Tools.getHTTPStatusResponse(Status.NOT_FOUND, "request document with id='"+id+"' does not exist.");
 		}
-				
+		
+		
 		try {
 			if("xml".equalsIgnoreCase(format)) {
-				Transaction transaction = session.beginTransaction();
-				try {
-					DocumentCommons.updateDocumentData(session, doc, xtractStream);
-										
-					transaction.commit();				
-					return Tools.getHTTPStatusResponse(Status.OK, "OK");
-				}
-				catch (Exception e) {
-					e.printStackTrace();
-					return Tools.getHTTPStatusResponse(Status.INTERNAL_SERVER_ERROR, "could not add references: "+e.getMessage());
-				}
-				finally {
-					if(transaction.isActive()) {
-						transaction.rollback();
-					}					
-				}		
+				
+				AtomicOperation<Response> op = new AtomicOperation<Response>() {
+					@Override
+					public Response exec(Session session) {
+						Document doc = DocumentQueries.getDocument(session, id);
+						if(doc == null) {
+							return Tools.getHTTPStatusResponse(Status.NOT_FOUND, "request document with id='"+id+"' does not exist.");
+						}
+						Transaction transaction = session.beginTransaction();
+						try {
+							DocumentCommons.updateDocumentData(session, doc, xtractStream);
+												
+							transaction.commit();				
+							return Tools.getHTTPStatusResponse(Status.OK, "OK");
+						}
+						catch (Exception e) {
+							e.printStackTrace();
+							return Tools.getHTTPStatusResponse(Status.INTERNAL_SERVER_ERROR, "could not add references: "+e.getMessage());
+						}
+						finally {
+							if(transaction.isActive()) {
+								transaction.rollback();
+							}					
+						}
+					}
+				};
+				
+				AtomicOperationHandle<Response> handle = SessionProvider.atomicManager.addOperation(op);
+				return Tools.getHTTPStatusResponse(Status.OK, "OK");
 			}
 		}
 		finally {

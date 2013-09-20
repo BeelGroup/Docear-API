@@ -20,6 +20,7 @@ public class SessionProvider {
 	public static final MrDLibConfiguration cfg;
 	public static final ResourceManager dependTable;
 	public static final ModificationRuleManager ruleManager;
+	public static final AtomicOperationManager atomicManager;
 	private static Indexer luceneIndexer;
 	
 	static {
@@ -44,6 +45,7 @@ public class SessionProvider {
         	dependTable = ResourceManager.buildNewIndex(cfg.getAnnotatedClasses());
         	ruleManager = XmlRuleConfiguration.getRuleManager("rules.xml");
         	sessionFactory = cfg.buildSessionFactory();
+        	atomicManager = AtomicOperationManager.newInstance();
         } catch (Throwable ex) {            
             System.err.println("Initial SessionFactory creation failed." + ex);
             throw new ExceptionInInitializerError(ex);
