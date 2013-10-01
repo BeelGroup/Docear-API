@@ -18,43 +18,25 @@ def resolveDuplicate(doc_id, cleantitle):
     row = cursor.fetch_row()
      
     min_doc_id = row[0][0]
-    try:      
-        while True:
-            row = cursor.fetch_row()
-            if not row:
-                break
-             
-            duplicate_doc_id = int(row[0][0])            
-             
-            db.query("UPDATE citations C SET C.cited_document_id="+str(min_doc_id)+" WHERE C.cited_document_id="+str(duplicate_doc_id))
-            db.query("DELETE FROM documents WHERE id="+str(duplicate_doc_id))
-            db.query("DELETE FROM tmp_duplicates WHERE document_id="+str(min_doc_id))
-    except:
-        sys.stderr.write("error for id: "+min_doc_id+"\n")
-
-
-# def resolveDuplicate(doc_id, cleantitle):
-#     db.query("""SELECT D.id, C.id, C.citing_document_id, C.cited_document_id FROM documents D JOIN citations C ON (C.cited_document_id=D.id) 
-#             WHERE D.cleantitle = '"""+cleantitle+"""' ORDER BY D.id;""")
-#     cursor = db.store_result()        
-#     row = cursor.fetch_row()
-#     
-#     min_doc_id = row[0][0]    
-#     try:      
-#         while True:
-#             row = cursor.fetch_row()
-#             if not row:
-#                 break
-#             
-#             duplicate_doc_id = int(row[0][0])
-#             citations_id = int(row[0][1])            
-#             
-#             db.query("UPDATE citations C SET C.cited_document_id="+str(min_doc_id)+" WHERE id="+str(citations_id))
-#             db.query("DELETE FROM documents WHERE id="+str(duplicate_doc_id))
-#             db.query("DELETE FROM tmp_duplicates WHERE document_id="+str(min_doc_id))
+#     try:
+    while True:
+        row = cursor.fetch_row()
+        if not row:
+            break
+         
+        duplicate_doc_id = int(row[0][0])            
+         
+        db.query("UPDATE citations C SET C.cited_document_id="+str(min_doc_id)+" WHERE C.cited_document_id="+str(duplicate_doc_id))
+        db.query("UPDATE documents_persons DP SET DP.document_id="+str(min_doc_id)+" WHERE DP.document_id="+str(duplicate_doc_id))
+        db.query("UPDATE documents_pdfhash DP SET DP.document_id="+str(min_doc_id)+" WHERE DP.document_id="+str(duplicate_doc_id))
+        db.query("DELETE FROM recommendations_documents WHERE document_id="+str(duplicate_doc_id))
+        db.query("DELETE FROM document_xref WHERE document_id="+str(duplicate_doc_id))
+        db.query("DELETE R FROM fulltext_url F JOIN recommendations_documents R ON (R.fulltext_url_id=F.id) WHERE F.document_id="+str(duplicate_doc_id))
+        db.query("DELETE FROM fulltext_url WHERE document_id="+str(duplicate_doc_id))
+        db.query("DELETE FROM documents WHERE id="+str(duplicate_doc_id))
+        db.query("DELETE FROM tmp_duplicates WHERE document_id="+str(min_doc_id))
 #     except:
-#         sys.stderr.write("error for id: "+min_doc_id+"\n")
-    
+#         sys.stderr.write("error for id: {0} --> {0}\n".format(min_doc_id, sys.exc_info()[0]))
 
 def Main():
     start_time = datetime.now()
