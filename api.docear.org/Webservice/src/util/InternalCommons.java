@@ -435,6 +435,8 @@ public class InternalCommons {
 			Element author = dom.createElement("author");
 			author.setAttribute("email", contact.getUri());
 			author.setAttribute("token", person.getDocidxIdToken());
+			author.setAttribute("ignoreAll", Boolean.toString(!person.getDocidxAllow()));
+			author.setAttribute("sendNotification", Boolean.toString(person.getDocidxNotify()));
 			root.appendChild(author);
 			
 			Element nameFirst = dom.createElement("firstname");
