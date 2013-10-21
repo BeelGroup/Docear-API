@@ -6,6 +6,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.AlreadyConnectedException;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -17,10 +20,14 @@ import org.sciplore.deserialize.reader.XmlResourceReader;
 import org.sciplore.queries.CitationsQueries;
 import org.sciplore.queries.DocumentQueries;
 import org.sciplore.resources.Citation;
+import org.sciplore.resources.Contact;
 import org.sciplore.resources.Document;
+import org.sciplore.resources.DocumentPerson;
 import org.sciplore.resources.DocumentXref;
 import org.sciplore.resources.DocumentsPdfHash;
 import org.sciplore.resources.FulltextUrl;
+import org.sciplore.resources.Person;
+import org.sciplore.resources.PersonHomonym;
 
 public class DocumentCommons {
 
@@ -143,6 +150,66 @@ public class DocumentCommons {
 		fulltext.setDocumentsPdfHash(pdfHash);
 		session.saveOrUpdate(fulltext);
 		session.flush();
+	}
+	
+	public static boolean updateDocumentPersons(Session session, Document doc, List<String> emails) {
+		if (session == null || doc == null || emails == null /*||  doc.getPersons().size() > 0/**/) {
+			return false;
+		}
+		boolean isDirty = false;
+		long time = System.currentTimeMillis();
+		Set<DocumentPerson> persons = doc.getPersons();
+		for (String email : emails) {
+			Contact contact = Contact.getContact(session, email);
+			//if no existing contact was found create new one
+			if(contact == null) {
+				contact = new Contact(session, email, Contact.CONTACT_TYPE_EMAIL);
+				contact.setPerson(new Person(""));
+				session.save(contact);
+			}
+			// if no author with this contact data is already attached, create and add a new
+			if(!containsContact(persons, contact)) {
+				PersonHomonym homonym = new PersonHomonym(session, "");
+				homonym.setPerson(contact.getPerson());
+				session.save(homonym);
+				
+				DocumentPerson docPerson = new DocumentPerson(session, homonym);
+				docPerson.setPersonMain(contact.getPerson());
+				session.save(docPerson);
+				
+				persons.add(docPerson);
+				isDirty = true;
+			}
+		}
+		if(isDirty) {
+			session.saveOrUpdate(doc);
+			session.flush();
+		}
+		
+		System.out.println("updating DocumentPersons time: " + (System.currentTimeMillis() - time));
+
+		return isDirty;		
+	}
+
+	private static boolean containsContact(Collection<DocumentPerson> persons, Contact contact) {
+		if(persons == null || contact == null || contact.getUri() == null) {
+			return false;
+		}
+		
+		for (DocumentPerson documentPerson : persons) {
+			try {
+				for (Contact c : documentPerson.getPersonMain().getContacts()) {
+					if(contact.getUri().equals(c.getUri())) {
+						return true;
+					}
+				}
+			} 
+			catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		
+		return false;
 	}
 
 	public static boolean updateDocumentData(Session session, Document doc, InputStream xmlStream) {

@@ -408,6 +408,23 @@ public class InternalCommons {
 		}).start();
 	}
 
+	/**
+	 * @param session
+	 * @param docPerson
+	 */
+	public static void removeFulltextFromIndex(Session session, DocumentPerson docPerson) {
+		List<DocumentsPdfHash> pdfHashes = DocumentsPdfHashQueries.getPdfHashes(session, docPerson.getDocument());
+		for (DocumentsPdfHash documentsPdfHash : pdfHashes) {
+			//TODO
+			// rename plaintext file
+			
+			//update index
+			//FulltextCommons.requestPlainTextUpdate(docPerson.getDocument(), documentsPdfHash.getHash());
+			
+			//atomic update xref with indexed state 2 or sth
+		}
+	}
+	
 	public static String buildDocumentIndexListXML(List<DocumentPerson> documentList, Person person, Contact contact) {
 
 		org.w3c.dom.Document dom = getNewXMLDocument();

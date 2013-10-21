@@ -256,6 +256,7 @@ public class DocumentResource {
 			@FormDataParam(value = "hash") String hash,
 			@FormDataParam("file") InputStream inputStream, @FormDataParam("file") FormDataContentDisposition fileDetail,
 			@FormDataParam("xtract") InputStream xtractStream, @FormDataParam("xtract") FormDataContentDisposition xtractDetail,
+			@FormDataParam("email") List<String> emails,
 			@QueryParam("source") String source, @DefaultValue(Tools.DEFAULT_FORMAT) @QueryParam("format") String format,			
 			@QueryParam("stream") boolean stream) {
 			
@@ -313,6 +314,7 @@ public class DocumentResource {
 					}
 					
 					DocumentCommons.createOrUpdateFulltextHash(hash, session, doc, fulltext);
+					DocumentCommons.updateDocumentPersons(session, doc, emails);
 					//@Deprecated: in future not used anymore 
 					DocumentCommons.updateDocumentData(session, doc, xtractStream);
 						
