@@ -43,8 +43,6 @@ public abstract class XtractTask {
 		try {
 			System.out.println("["+Thread.currentThread().getName()+"] running xtract on "+txt+"...");
 			
-			org.sciplore.beans.Document doc = xtrct.xtractDocumentFromTxt(txt, null, this.title);
-			
 			String text = loadPlainText(txt);
 			
     		//use the first 30% of the text only
@@ -52,7 +50,9 @@ public abstract class XtractTask {
 			
     		//search for emails in text
     		findEmailAddresses(text);
-    		
+			
+			org.sciplore.beans.Document doc = xtrct.xtractDocumentFromTxt(txt, null, this.title);
+			    		
 			xml = doc.toXML();
 		} catch (Exception e) {
 			e.printStackTrace();

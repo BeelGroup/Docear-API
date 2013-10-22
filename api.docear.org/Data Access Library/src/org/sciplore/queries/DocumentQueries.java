@@ -9,6 +9,7 @@ import java.util.Set;
 
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.criterion.CriteriaSpecification;
 import org.hibernate.criterion.Disjunction;
@@ -218,6 +219,34 @@ public class DocumentQueries {
 		}
 		return (Timestamp) criteria.setProjection(Projections.max("releaseDate")).uniqueResult();
 	}
+	
+	@SuppressWarnings("unchecked")
+	public static List<Object[]> getDocumentNotIndexedDownloadUrls(Session session, Integer maxResults, Integer maxRank) {
+		String sql = "SELECT x.id, x.document_id, x.sources_id FROM document_xref x WHERE x.dl_attempts<=5 AND x.rank<=:maxRank AND (indexed IS NULL OR indexed=0) AND last_attempt<:attemptDelay ORDER BY x.dl_attempts ASC, x.last_attempt ASC, x.id DESC";
+		Query query = session.createSQLQuery(sql);
+		
+		if (maxRank != null) {
+			query.setParameter("maxRank", maxRank);
+		}
+		else {
+			query.setParameter("maxRank", 100);
+		}
+		
+		Calendar cal = Calendar.getInstance();
+		cal.setTimeInMillis(System.currentTimeMillis() - 1000 * 60 * 60 * 24);
+		query.setParameter("attemptDelay", cal.getTime());
+		
+		
+		if (maxResults != null) {
+			query.setMaxResults(maxResults);
+		}
+		else {
+			query.setMaxResults(1000);
+		}
+		
+		return query.list();
+	}
+	
 	
 	@SuppressWarnings("unchecked")
 	public static List<Document> getDocumentsWithReferences(Session session, Person person, String source)

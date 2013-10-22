@@ -3,36 +3,44 @@ package org.docear;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Properties;
 
-import org.sciplore.deserialize.mapper.MrDlibXmlMapper;
-import org.sciplore.deserialize.reader.XmlResourceReader;
-import org.sciplore.resources.Document;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
 import org.sciplore.utilities.config.Config;
 import org.sciplore.xtract.Xtract;
+import org.w3c.dom.DOMException;
+import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 public class Main {
 	
 	private static int NUMBER_OF_THREADS = 2;
 	private static int NUMBER_OF_FILES = 100;
 	
-	public static String DOCEAR_SERVICES = "https://api.docear.org";
+	//public static String DOCEAR_SERVICES = "https://api.docear.org";
+	public static String DOCEAR_SERVICES = "http://localhost:8080";
 
-	private LinkedList<Document> docs;
-	private LinkedList<Document> docsInProcess;
+	private LinkedList<TaskItem> docs;
+	private LinkedList<TaskItem> docsInProcess;
 
 	public Main() {
 		
 	}
 
-	public Document nextDocument() {
+	public TaskItem nextDocument() {
 		synchronized (docs) {
 			if (!docs.isEmpty()) {
-				Document doc = docs.removeFirst();
+				TaskItem doc = docs.removeFirst();
 				return doc;
 			} else {
 				return null;
@@ -55,8 +63,8 @@ public class Main {
 		
 		
 		Main pdfSpider = new Main();
-		pdfSpider.setDocsInProcess(new LinkedList<Document>());
-		pdfSpider.setDocs(new LinkedList<Document>());
+		pdfSpider.setDocsInProcess(new LinkedList<TaskItem>());
+		pdfSpider.setDocs(new LinkedList<TaskItem>());
 
 		//initiate threads
 		LinkedList<PdfDownloadRunner> downloaderThreads= new LinkedList<PdfDownloadRunner>();
@@ -93,7 +101,7 @@ public class Main {
 					Thread.sleep(5000); //wait before checking again when reached end of list
 				}
 				
-				LinkedList<Document> documents = retrieveDocuments(3);
+				LinkedList<TaskItem> documents = retrieveDocuments(3);
 				if (documents.size() == 0) {
 					documents = retrieveDocuments(20);
 				}
@@ -127,40 +135,80 @@ public class Main {
 		}
 	}
 	
-	public static LinkedList<Document> retrieveDocuments(Integer maxRank) throws IOException {
+	public static LinkedList<TaskItem> retrieveDocuments(Integer maxRank) throws IOException {
 		String query = DOCEAR_SERVICES+"/documents/?pdf_url=true&fulltext_indexed=false&number=" + NUMBER_OF_FILES;
+		
+		query = DOCEAR_SERVICES+"/internal/xrefs/pdf_urls/?number=" + NUMBER_OF_FILES;
+		
 		if (maxRank != null) {
 			query+="&max_rank="+maxRank;
 		}
-		URL url = new URL (query); //see org.sciplore.queries.DocumentResource for server side		
+		URL url = new URL (query);		
 		InputStream inputStream = url.openConnection().getInputStream();
-
-		//code below based on importer.Importer.uploadResource(java.util.LinkedList.class, inputStream, null);
-		XmlResourceReader reader = new XmlResourceReader(MrDlibXmlMapper.getDefaultMapper());
-		List<Document> resource = (List<Document>) reader.parse(inputStream);
+		
+		
+		LinkedList<TaskItem> resource = parseDom(getXMLDocument(inputStream));
 		if (resource == null) {
-			return new LinkedList<Document>();
+			return new LinkedList<TaskItem>();
 		}
-		LinkedList<Document> documents = new LinkedList<Document>();
-		for (Document document : resource) {
-			documents.add(document);
+		
+		return resource;
+	}
+	
+	private static LinkedList<TaskItem> parseDom(Document xmlDocument) {
+		LinkedList<TaskItem> items = new LinkedList<TaskItem>();
+		if(xmlDocument != null) {
+			NodeList xrefs = xmlDocument.getElementsByTagName("xref");
+			for(int i=0; i<xrefs.getLength(); i++) {
+				NamedNodeMap xref = xrefs.item(i).getAttributes();
+				try {
+					items.add(new TaskItem(xref.getNamedItem("id").getNodeValue(), xref.getNamedItem("document_id").getNodeValue(), xref.getNamedItem("url").getNodeValue()));
+				} catch (MalformedURLException e) {
+					e.printStackTrace();
+				} catch (DOMException e) {
+					e.printStackTrace();
+				}
+			}
 		}
-		return documents;
+		return items;
 	}
 
-	public List<Document> getDocs() {
+	public static Document getXMLDocument(InputStream inputStream) {
+		
+		// instance of a DocumentBuilderFactory
+	    DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+	    try {
+	        // use factory to get an instance of document builder
+	        DocumentBuilder db = dbf.newDocumentBuilder();
+	        // create instance of DOM
+	        return db.parse(inputStream);	        
+	    } catch (ParserConfigurationException pce) {
+	        System.out.println("UsersXML: Error trying to instantiate DocumentBuilder " + pce);
+	    } catch (SAXException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	    return null;
+		
+	}
+	
+
+	public List<TaskItem> getDocs() {
 		return docs;
 	}
 
-	public void setDocs(LinkedList<Document> documents) {
+	public void setDocs(LinkedList<TaskItem> documents) {
 		this.docs = documents;
 	}
 
-	public List<Document> getDocsInProcess() {
+	public List<TaskItem> getDocsInProcess() {
 		return docsInProcess;
 	}
 
-	public void setDocsInProcess(LinkedList<Document> docsInProcess) {
+	public void setDocsInProcess(LinkedList<TaskItem> docsInProcess) {
 		this.docsInProcess = docsInProcess;
 	}
 }

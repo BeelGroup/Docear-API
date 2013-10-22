@@ -1001,6 +1001,30 @@ public class InternalResource {
 			Tools.tolerantClose(session);
 		}
 	}
-
 	
+	@GET
+	@Path("/xrefs/pdf_urls")
+	public Response getDocuments(@Context UriInfo ui, @Context HttpServletRequest request
+			, @QueryParam("number") Integer number
+			, @QueryParam("max_rank") Integer maxRank
+			, @QueryParam("stream") boolean stream) {
+		Session session = Tools.getSession();
+		
+		try {
+			List<Object[]> xrefList = DocumentQueries.getDocumentNotIndexedDownloadUrls(session, number, maxRank);
+			return Tools.getHTTPStatusResponse(Status.OK, InternalCommons.buildDownloadListXML(xrefList));
+		}
+		catch (NullPointerException e) {
+			e.printStackTrace();
+			return Tools.getHTTPStatusResponse(Status.NOT_FOUND, "no documents found.");
+
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+			return Tools.getHTTPStatusResponse(Status.INTERNAL_SERVER_ERROR, "unknown error");
+		}
+		finally {
+			Tools.tolerantClose(session);
+		}
+	}
 }

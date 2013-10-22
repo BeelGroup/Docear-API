@@ -15,13 +15,17 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.Part;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -56,6 +60,8 @@ import util.ResourceCommons;
 import util.Tools;
 
 import com.sun.jersey.core.header.FormDataContentDisposition;
+import com.sun.jersey.multipart.FormDataBodyPart;
+import com.sun.jersey.multipart.FormDataMultiPart;
 import com.sun.jersey.multipart.FormDataParam;
 
 @Path("/documents")
@@ -252,11 +258,13 @@ public class DocumentResource {
 	@Path("/{id}/fulltexts")
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	public Response postFulltext(@Context UriInfo ui, @Context HttpServletRequest request
-			, @PathParam(value = "id") int id, @FormDataParam(value = "xrefId") int xref_id, @FormDataParam(value = "fullTextUrl") String fullTextUrl,
+			, @PathParam(value = "id") int id
+			, @FormDataParam(value = "xrefId") int xref_id
+			, @FormDataParam(value = "fullTextUrl") String fullTextUrl,
 			@FormDataParam(value = "hash") String hash,
 			@FormDataParam("file") InputStream inputStream, @FormDataParam("file") FormDataContentDisposition fileDetail,
 			@FormDataParam("xtract") InputStream xtractStream, @FormDataParam("xtract") FormDataContentDisposition xtractDetail,
-			@FormDataParam("email") List<String> emails,
+			FormDataMultiPart f,
 			@QueryParam("source") String source, @DefaultValue(Tools.DEFAULT_FORMAT) @QueryParam("format") String format,			
 			@QueryParam("stream") boolean stream) {
 			
@@ -266,7 +274,14 @@ public class DocumentResource {
 		if (!ResourceCommons.authenticate(request, user)) {
 			return Tools.getHTTPStatusResponse(Status.UNAUTHORIZED, "not authorized.");
 		}
-	
+		List<String> emails = new ArrayList<String>();
+		List<FormDataBodyPart> parts = f.getFields("email");
+		if(parts != null) {
+			for (FormDataBodyPart part : parts) {
+				emails.add(part.getValue());
+			}
+		}
+		
 		Document doc = DocumentQueries.getDocument(session, id);
 		if(doc == null) {
 			return Tools.getHTTPStatusResponse(Status.NOT_FOUND, "request document with id='"+id+"' does not exist.");
