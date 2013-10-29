@@ -152,13 +152,13 @@ public class DocumentCommons {
 		session.flush();
 	}
 	
-	public static boolean updateDocumentPersons(Session session, Document doc, List<String> emails) {
-		if (session == null || doc == null || emails == null /*||  doc.getPersons().size() > 0/**/) {
+	public static boolean updateDocumentPersons(Session session, Document document, List<String> emails) {
+		if (session == null || document == null || emails == null /*||  doc.getPersons().size() > 0/**/) {
 			return false;
 		}
 		boolean isDirty = false;
 		long time = System.currentTimeMillis();
-		Set<DocumentPerson> persons = doc.getPersons();
+		Set<DocumentPerson> persons = document.getPersons();
 		for (String email : emails) {
 			Contact contact = Contact.getContact(session, email);
 			//if no existing contact was found create new one
@@ -166,24 +166,30 @@ public class DocumentCommons {
 				contact = new Contact(session, email, Contact.CONTACT_TYPE_EMAIL);
 				contact.setPerson(new Person(""));
 				session.save(contact);
+				session.flush();
 			}
 			// if no author with this contact data is already attached, create and add a new
 			if(!containsContact(persons, contact)) {
 				PersonHomonym homonym = new PersonHomonym(session, "");
 				homonym.setPerson(contact.getPerson());
+				homonym.setValid((short) 1);
 				session.save(homonym);
+				session.flush();
 				
 				DocumentPerson docPerson = new DocumentPerson(session, homonym);
 				docPerson.setPersonMain(contact.getPerson());
+				docPerson.setDocument(document);
 				session.save(docPerson);
+				session.flush();
+				isDirty = true;
 				
 				persons.add(docPerson);
-				isDirty = true;
 			}
 		}
 		if(isDirty) {
-			session.saveOrUpdate(doc);
-			session.flush();
+			session.refresh(document);
+//			session.update(document);
+//			session.flush();
 		}
 		
 		System.out.println("updating DocumentPersons time: " + (System.currentTimeMillis() - time));

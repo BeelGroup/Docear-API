@@ -27,8 +27,8 @@ public class Main {
 	private static int NUMBER_OF_THREADS = 2;
 	private static int NUMBER_OF_FILES = 100;
 	
-	//public static String DOCEAR_SERVICES = "https://api.docear.org";
-	public static String DOCEAR_SERVICES = "http://localhost:8080";
+	public static String DOCEAR_SERVICES = "https://api.docear.org";
+	//public static String DOCEAR_SERVICES = "http://localhost:8080";
 
 	private LinkedList<TaskItem> docs;
 	private LinkedList<TaskItem> docsInProcess;
@@ -89,6 +89,15 @@ public class Main {
 				if(arg.length() > 0) {
 					NewFileCacheRunner fileWorker = new NewFileCacheRunner(arg); 
 					fileWorker.start();
+				}
+			}			 
+			else if(arg.startsWith("emailFileCachePath=")) {
+				String[] argSplit = arg.split("=");
+				arg = arg.replace(argSplit[0]+"=", "").trim();
+				if(arg.length() > 0) {
+					String whiteList = "./emailFileFilter.lst";
+					FileCacheEmailExtractionRunner emailWorker = new FileCacheEmailExtractionRunner(arg, whiteList.toString()); 
+					emailWorker.start();
 				}
 			}
 		}
