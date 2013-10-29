@@ -5,7 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URL;
-import java.util.Set;
+import java.util.Collection;
 import java.util.concurrent.RejectedExecutionException;
 
 import org.docear.pdf.PdfDataExtractor;
@@ -59,7 +59,7 @@ public class PdfFileWorker extends FullTextUploadWorker implements Worker {
 		if (text == null) {
 			throw new RejectedExecutionException("skipping file (text==null): "+file.getAbsolutePath());							
 		}
-		Set<String> emails = null;
+		Collection<String> emails = null;
 		try {
 			final File txt = File.createTempFile(file.getName().replace(" ", "_").replace(".", "_"), ".txt", tmpDir);
 			PrintStream ps = new PrintStream(new FileOutputStream(txt), false, "UTF-8");

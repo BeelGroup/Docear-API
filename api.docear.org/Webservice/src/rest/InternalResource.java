@@ -79,6 +79,8 @@ import util.UserSessionProvider.UserSession;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.core.header.FormDataContentDisposition;
+import com.sun.jersey.multipart.FormDataBodyPart;
+import com.sun.jersey.multipart.FormDataMultiPart;
 import com.sun.jersey.multipart.FormDataParam;
 
 @Path("/internal")
@@ -869,6 +871,51 @@ public class InternalResource {
 		}
 		
 		RecommendationCommons.offlineEvaluator.stop();
+		
+		return Tools.getHTTPStatusResponse(Status.OK, "OK");
+	}
+	
+	@POST
+	@Path("/documents/{hash}/emails/")
+	@Consumes(MediaType.MULTIPART_FORM_DATA)
+	public Response postDocumentsEmails(@Context UriInfo ui, @Context HttpServletRequest request,
+			@PathParam("hash") String hash,	FormDataMultiPart f) {
+		
+		List<String> emails = new ArrayList<String>();
+		List<FormDataBodyPart> parts = f.getFields("email");
+		if(parts != null) {
+			for (FormDataBodyPart part : parts) {
+				emails.add(part.getValue());
+			}
+		}
+		if(!emails.isEmpty()) {
+			Session session = Tools.getSession();
+			session.setFlushMode(FlushMode.MANUAL);
+			
+			try {
+				User user = new User(session).getUserByEmailOrUsername("pdfdownloader");
+				if (!ResourceCommons.authenticate(request, user)) {
+					return UserCommons.getHTTPStatusResponse(com.sun.jersey.api.client.ClientResponse.Status.UNAUTHORIZED, "no valid access token.");
+				}
+				
+				Document document = DocumentQueries.getDocumentByHashOrTitle(session, hash, null);
+				if (document == null) {
+					return Tools.getHTTPStatusResponse(Status.NOT_FOUND, "request document with hash='" + hash + "' does not exist.");
+				}
+				Transaction transaction = session.beginTransaction();
+				try {
+					DocumentCommons.updateDocumentPersons(session, document, emails);
+					transaction.commit();
+				}
+				catch (Exception e) {
+					transaction.rollback();
+					return Tools.getHTTPStatusResponse(Status.INTERNAL_SERVER_ERROR, "could update documentsPersons: "+e.getMessage());
+				}
+			}
+			finally {
+				Tools.tolerantClose(session);
+			}
+		}
 		
 		return Tools.getHTTPStatusResponse(Status.OK, "OK");
 	}

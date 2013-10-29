@@ -96,7 +96,7 @@ public class NewFileCacheRunner extends Thread {
 			}
 
 			
-			System.out.println("["+self.getName()+"] FileCacheWorker file time: " + (System.currentTimeMillis()-lastRequest));
+			System.out.println("["+self.getName()+"] NewFileCacheRunner file time: " + (System.currentTimeMillis()-lastRequest));
 			
 			try {
 				Thread.sleep(TIME_BETWEEN_REQUESTS);

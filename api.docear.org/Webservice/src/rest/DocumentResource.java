@@ -8,24 +8,18 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.channels.AlreadyConnectedException;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.Part;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
-import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -41,7 +35,6 @@ import javax.ws.rs.core.UriInfo;
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.jdbc.Work;
 import org.mrdlib.index.Indexer.DocumentHashItem;
 import org.sciplore.data.BeanFactory;
 import org.sciplore.database.AtomicOperation;
@@ -274,6 +267,7 @@ public class DocumentResource {
 		if (!ResourceCommons.authenticate(request, user)) {
 			return Tools.getHTTPStatusResponse(Status.UNAUTHORIZED, "not authorized.");
 		}
+		
 		List<String> emails = new ArrayList<String>();
 		List<FormDataBodyPart> parts = f.getFields("email");
 		if(parts != null) {
@@ -283,6 +277,8 @@ public class DocumentResource {
 		}
 		
 		Document doc = DocumentQueries.getDocument(session, id);
+		//DocumentCommons.updateDocumentPersons(session, doc, emails);
+		//doc = null;
 		if(doc == null) {
 			return Tools.getHTTPStatusResponse(Status.NOT_FOUND, "request document with id='"+id+"' does not exist.");
 		}
@@ -331,7 +327,7 @@ public class DocumentResource {
 					DocumentCommons.createOrUpdateFulltextHash(hash, session, doc, fulltext);
 					DocumentCommons.updateDocumentPersons(session, doc, emails);
 					//@Deprecated: in future not used anymore 
-					DocumentCommons.updateDocumentData(session, doc, xtractStream);
+					//DocumentCommons.updateDocumentData(session, doc, xtractStream);
 						
 					
 					transaction.commit();
