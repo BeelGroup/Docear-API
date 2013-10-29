@@ -1,7 +1,6 @@
 package org.docear;
 
 import java.util.Collection;
-import java.util.Collections;
 
 import javax.ws.rs.core.MediaType;
 

@@ -65,12 +65,10 @@ import org.sciplore.resources.GoogleDocumentQuery;
 import org.sciplore.resources.MindmapsPdfHash;
 import org.sciplore.resources.Person;
 import org.sciplore.resources.User;
-import org.sciplore.utilities.concurrent.AsynchUtilities;
 
 import util.BibtexCommons;
 import util.DocidxNotificationCommons;
 import util.DocumentCommons;
-import util.FulltextCommons;
 import util.InternalCommons;
 import util.RecommendationCommons;
 import util.ResourceCommons;
@@ -884,18 +882,21 @@ public class InternalResource {
 			Contact contact = Contact.getContact(session, mail);
 			Person person = contact.getPerson();
 			
-			if (token == null || token.equals(person.getDocidxIdToken())) {
+			if (token == null || !token.equals(person.getDocidxIdToken())) {
 				return UserCommons.getHTTPStatusResponse(com.sun.jersey.api.client.ClientResponse.Status.UNAUTHORIZED, "no valid token.");
 			}
 			
+			person.setSession(session);			
 			List<DocumentPerson> documentList = person.getDocumentsIndexed();
 			
 			person.setDocidxLastDisplayed(new Date());
 			
+			session.update(person);
 			session.flush();
 			return Tools.getHTTPStatusResponse(Status.OK, InternalCommons.buildDocumentIndexListXML(documentList, person, contact));
 		}
 		catch (Exception e) {
+			e.printStackTrace();
 			return Tools.getHTTPStatusResponse(Status.INTERNAL_SERVER_ERROR, "Error: "+ e.getMessage());
 		}
 		finally {
@@ -921,14 +922,14 @@ public class InternalResource {
 			Contact contact = Contact.getContact(session, mail);
 			Person person = contact.getPerson();
 			
-			if (token == null || token.equals(person.getDocidxIdToken())) {
+			if (token == null || !token.equals(person.getDocidxIdToken())) {
 				return UserCommons.getHTTPStatusResponse(com.sun.jersey.api.client.ClientResponse.Status.UNAUTHORIZED, "no valid token.");
 			}
 			
 			if(ignoreAll != null && ignoreAll) {
 				Collection<DocumentPerson> documents = person.getDocumentsIndexed();
 				for (DocumentPerson docPerson : documents) {
-					deleteFulltextFromIndex(session, docPerson);
+					InternalCommons.removeFulltextFromIndex(session, docPerson);
 				}
 			}
 			else {
@@ -938,7 +939,7 @@ public class InternalResource {
 					docPerson.setDocidxAllow(false);
 					session.update(docPerson);
 					session.flush();
-					deleteFulltextFromIndex(session, docPerson);					
+					InternalCommons.removeFulltextFromIndex(session, docPerson);					
 				}
 			}
 			
@@ -1000,16 +1001,30 @@ public class InternalResource {
 			Tools.tolerantClose(session);
 		}
 	}
+	
+	@GET
+	@Path("/xrefs/pdf_urls")
+	public Response getDocuments(@Context UriInfo ui, @Context HttpServletRequest request
+			, @QueryParam("number") Integer number
+			, @QueryParam("max_rank") Integer maxRank
+			, @QueryParam("stream") boolean stream) {
+		Session session = Tools.getSession();
+		
+		try {
+			List<Object[]> xrefList = DocumentQueries.getDocumentNotIndexedDownloadUrls(session, number, maxRank);
+			return Tools.getHTTPStatusResponse(Status.OK, InternalCommons.buildDownloadListXML(xrefList));
+		}
+		catch (NullPointerException e) {
+			e.printStackTrace();
+			return Tools.getHTTPStatusResponse(Status.NOT_FOUND, "no documents found.");
 
-	/**
-	 * @param session
-	 * @param docPerson
-	 */
-	private void deleteFulltextFromIndex(Session session, DocumentPerson docPerson) {
-		List<DocumentsPdfHash> pdfHashes = DocumentsPdfHashQueries.getPdfHashes(session, docPerson.getDocument());
-		for (DocumentsPdfHash documentsPdfHash : pdfHashes) {
-			//TODO
-			//FulltextCommons.requestPlainTextUpdate(docPerson.getDocument(), documentsPdfHash.getHash());
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+			return Tools.getHTTPStatusResponse(Status.INTERNAL_SERVER_ERROR, "unknown error");
+		}
+		finally {
+			Tools.tolerantClose(session);
 		}
 	}
 }

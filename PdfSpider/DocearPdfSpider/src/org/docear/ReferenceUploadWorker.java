@@ -22,7 +22,7 @@ public class ReferenceUploadWorker {
 	protected File tmpDir = new File(System.getProperty("java.io.tmpdir"));
 	
 	protected final boolean uploadReferences(String docId, String referenceData) {		
-		if (System.getProperty("docear.debug") != null && System.getProperty("docear.debug").equals("true")) {
+		if (System.getProperty("docear.detailed") != null && System.getProperty("docear.detailed").equals("true")) {
 			System.out.println("["+Thread.currentThread().getName()+"] documentId: "+docId);
 			System.out.println("["+Thread.currentThread().getName()+"] "+referenceData);
 		}
@@ -56,7 +56,7 @@ public class ReferenceUploadWorker {
 	}
 	
 	public boolean uploadReferencesByHash(String docHash, String referenceData) {
-		if (System.getProperty("docear.debug") != null && System.getProperty("docear.debug").equals("true")) {
+		if (System.getProperty("docear.detailed") != null && System.getProperty("docear.detailed").equals("true")) {
 			System.out.println("["+Thread.currentThread().getName()+"] docHash: "+docHash);
 			System.out.println("["+Thread.currentThread().getName()+"] "+referenceData);
 		}

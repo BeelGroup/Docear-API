@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
 import java.math.BigInteger;
+import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -47,6 +48,7 @@ import org.sciplore.queries.GoogleDocumentQueryQueries;
 import org.sciplore.resources.Contact;
 import org.sciplore.resources.Document;
 import org.sciplore.resources.DocumentPerson;
+import org.sciplore.resources.DocumentXref;
 import org.sciplore.resources.DocumentsPdfHash;
 import org.sciplore.resources.GoogleDocumentQuery;
 import org.sciplore.resources.Person;
@@ -408,6 +410,23 @@ public class InternalCommons {
 		}).start();
 	}
 
+	/**
+	 * @param session
+	 * @param docPerson
+	 */
+	public static void removeFulltextFromIndex(Session session, DocumentPerson docPerson) {
+		List<DocumentsPdfHash> pdfHashes = DocumentsPdfHashQueries.getPdfHashes(session, docPerson.getDocument());
+		for (DocumentsPdfHash documentsPdfHash : pdfHashes) {
+			//TODO
+			// rename plaintext file
+			
+			//update index
+			//FulltextCommons.requestPlainTextUpdate(docPerson.getDocument(), documentsPdfHash.getHash());
+			
+			//atomic update xref with indexed state 2 or sth
+		}
+	}
+	
 	public static String buildDocumentIndexListXML(List<DocumentPerson> documentList, Person person, Contact contact) {
 
 		org.w3c.dom.Document dom = getNewXMLDocument();
@@ -418,6 +437,8 @@ public class InternalCommons {
 			Element author = dom.createElement("author");
 			author.setAttribute("email", contact.getUri());
 			author.setAttribute("token", person.getDocidxIdToken());
+			author.setAttribute("ignoreAll", Boolean.toString(!person.getDocidxAllow()));
+			author.setAttribute("sendNotification", Boolean.toString(person.getDocidxNotify()));
 			root.appendChild(author);
 			
 			Element nameFirst = dom.createElement("firstname");
@@ -447,6 +468,26 @@ public class InternalCommons {
 				list.appendChild(doc);
 			}
 			root.appendChild(list);
+			
+			return getXMLStr(dom);
+		}
+		return "";
+	}
+	
+	public static String buildDownloadListXML(List<Object[]> xrefList) {
+
+		org.w3c.dom.Document dom = getNewXMLDocument();
+		if(dom != null) {
+			Element root = dom.createElement("xrefs");
+			dom.appendChild(root);
+			
+			for (Object[] xref : xrefList) {
+				Element doc = dom.createElement("xref");
+				doc.setAttribute("id", String.valueOf(xref[0]));
+				doc.setAttribute("document_id", String.valueOf(xref[1]));				
+				doc.setAttribute("url", String.valueOf(xref[2]));				
+				root.appendChild(doc);
+			}
 			
 			return getXMLStr(dom);
 		}

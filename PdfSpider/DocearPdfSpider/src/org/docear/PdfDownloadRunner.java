@@ -12,8 +12,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.FileUtils;
-import org.sciplore.resources.Document;
-import org.sciplore.resources.DocumentXref;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
@@ -31,7 +29,7 @@ public class PdfDownloadRunner extends Thread {
 
 	public void run() {
 		while (true) {
-			Document doc = null;
+			TaskItem doc = null;
 
 			doc = pdfSpider.nextDocument();
 
@@ -105,66 +103,62 @@ public class PdfDownloadRunner extends Thread {
 
 	boolean isFinished = false;
 
-	private void downloadDocuments(Document doc) {
-		for (final DocumentXref xref : doc.getXrefs()) {
-			ExecutorService executor = Executors.newSingleThreadExecutor();
-			try {
-				final File tempFile =	File.createTempFile(String.valueOf(xref.getId()), ".pdf", tmpDir);
-				//tempFile.createNewFile();	
-				
-				Future<?> future = executor.submit(new Runnable() {
+	private void downloadDocuments(final TaskItem xref) {		
+		ExecutorService executor = Executors.newSingleThreadExecutor();
+		try {
+			final File tempFile =	File.createTempFile(String.valueOf(xref.getId()), ".pdf", tmpDir);
+			//tempFile.createNewFile();	
+			
+			Future<?> future = executor.submit(new Runnable() {
 
-					@Override
-					public void run() {
+				@Override
+				public void run() {
 
-						long timeOverAll = System.currentTimeMillis();
-						try {
-							String URLString = xref.getSourcesId();
+					long timeOverAll = System.currentTimeMillis();
+					try {
+						// now attempt to download
+						final URL pdfLocationWeb = xref.getUrl();
+						//String fileName = URLString.substring(URLString.lastIndexOf("/") + 1);
 
-							// now attempt to download
-							final URL pdfLocationWeb = new URL(URLString);
-							String fileName = URLString.substring(URLString.lastIndexOf("/") + 1);
+						// use id to differentiate files of the same name
+//						if (fileName.contains(".pdf#page=") | fileName.contains(".pdf?")) {
+//							fileName = fileName.substring(0, fileName.lastIndexOf(".pdf")).concat(".pdf");
+//
+//						}
 
-							// use id to differentiate files of the same name
-							if (fileName.contains(".pdf#page=") | fileName.contains(".pdf?")) {
-								fileName = fileName.substring(0, fileName.lastIndexOf(".pdf")).concat(".pdf");
+						updateXref(xref);
 
-							}
+						final URL realUrl = redirectRecommendationLink(pdfLocationWeb);
+						FileUtils.copyURLToFile(realUrl, tempFile, 10000, 30000);
+						System.out.println("[" + Thread.currentThread().getName() + "] Time dl: " + (System.currentTimeMillis() - timeOverAll));
 
-							updateXref(xref);
+						PdfFileWorker pdfWorker = new PdfFileWorker(tempFile, xref.getDocumentId(), xref.getId(), realUrl);
+						pdfWorker.exec();
 
-							final URL realUrl = redirectRecommendationLink(pdfLocationWeb);
-							FileUtils.copyURLToFile(realUrl, tempFile, 10000, 30000);
-							System.out.println("[" + Thread.currentThread().getName() + "] Time dl: " + (System.currentTimeMillis() - timeOverAll));
-
-							PdfFileWorker pdfWorker = new PdfFileWorker(tempFile, xref.getDocument().getId(), xref.getId(), realUrl);
-							pdfWorker.exec();
-
-						} catch (Throwable e) {
-							System.err.println("org.docear.PdfDownloadRunner.downloadDocuments(...).new Runnable() {...}.run(): "+e.getMessage());
-							System.out.println("[" + Thread.currentThread().getName() + "] xrefid: " + xref.getId() + ", " + e
-									+ ". Skipping and set indexed=null.");
-						} finally {
-							tempFile.delete();
-							System.out.println("[" + Thread.currentThread().getName() + "] Time overAll: " + (System.currentTimeMillis() - timeOverAll));
-						}
+					} catch (Throwable e) {
+						System.err.println("org.docear.PdfDownloadRunner.downloadDocuments(...).new Runnable() {...}.run(): "+e.getMessage());
+						System.out.println("[" + Thread.currentThread().getName() + "] xrefid: " + xref.getId() + ", " + e
+								+ ". Skipping and set indexed=null.");
+					} finally {
+						tempFile.delete();
+						System.out.println("[" + Thread.currentThread().getName() + "] Time overAll: " + (System.currentTimeMillis() - timeOverAll));
 					}
-				});
-				future.get(300, TimeUnit.SECONDS);				
-			} catch (Throwable e) {
-				System.out.println("[" + Thread.currentThread().getName() + "] xrefid: " + xref.getId() + ", " + e + ". Skipping and set indexed=null.");
-			}
-			finally {
-				try {
-					executor.shutdown();
-				} catch (Throwable t) {
 				}
+			});
+			future.get(300, TimeUnit.SECONDS);				
+		} catch (Throwable e) {
+			System.out.println("[" + Thread.currentThread().getName() + "] xrefid: " + xref.getId() + ", " + e + ". Skipping and set indexed=null.");
+		}
+		finally {
+			try {
+				executor.shutdown();
+			} catch (Throwable t) {
 			}
 		}
-
+		
 	}
 
-	private boolean updateXref(DocumentXref xref) {
+	private boolean updateXref(TaskItem xref) {
 		if (System.getProperty("docear.debug") != null && System.getProperty("docear.debug").equals("true")) {
 			return true;
 		}
@@ -172,7 +166,7 @@ public class PdfDownloadRunner extends Thread {
 			Client client = Client.create(); // expensive operation, so change
 												// so that this is created as
 												// few times as possible
-			WebResource webResource = client.resource(Main.DOCEAR_SERVICES + "/documents/" + String.valueOf(xref.getDocument().getId()) + "/xrefs/"
+			WebResource webResource = client.resource(Main.DOCEAR_SERVICES + "/documents/" + String.valueOf(xref.getDocumentId()) + "/xrefs/"
 					+ String.valueOf(xref.getId()) + "/?dl_attempt=true");
 			Builder builder = webResource.header("accessToken", "AEF7AA6612CF44B92012982C6C8A0333");
 
