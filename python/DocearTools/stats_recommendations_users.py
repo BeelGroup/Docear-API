@@ -326,10 +326,10 @@ def update_user_person_table():
     target_query += " FROM users U JOIN persons P ON (U.person_id = P.id) JOIN tmp_rec_users T ON (T.user_id = U.id)"
     
     print target_query
-    db.query(query)
+    db.query(target_query)
     
 if __name__ == '__main__':  
-#     main()
-#     update_recommendations_active()
-#     update_recommendations_documents_set()
+    main()
+    update_recommendations_active()
+    update_recommendations_documents_set()
     update_user_person_table()
