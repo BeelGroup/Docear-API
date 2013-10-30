@@ -1,6 +1,7 @@
 package org.sciplore.resources;
 
 import java.security.NoSuchAlgorithmException;
+import java.util.Collection;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Set;
@@ -245,26 +246,78 @@ public class User extends Resource {
 		
 		if (!password.equals(retypedPassword)) 
 			return new SciploreResponseCode(SciploreResponseCode.PASSWORDS_NOT_IDENTICAL, "The passwords you have entered are not identical. Please try again.");
-		
-		if(Contact.getContact(getSession(), eMail) != null)
+				
+		if(Contact.getUserContact(getSession(), eMail) != null)
 			return new SciploreResponseCode(SciploreResponseCode.EMAIL_ALREADY_EXISTS, "This email address is already used by a user to register. Please use another one.");
 		
-		Person person = new Person(this.getSession());
-		person.setNameFirst(firstName);
-		person.setNameMiddle(middleName);
-		person.setNameLast(lastName);
-		person.setDob(new GregorianCalendar(birthYear, 0, 1).getTime());		
-		if (male != null) {			
-			person.setGender((short) (male ? 1:0));
+		
+		Session session = getSession();
+		Person person;
+		Contact contact = Contact.getContact(getSession(), eMail);
+
+    	if(contact == null) {
+    		person = new Person(this.getSession());
+    		person.setNameFirst(firstName);
+     		person.setNameMiddle(middleName);
+     		person.setNameLast(lastName);
+     		person.setDob(new GregorianCalendar(birthYear, 0, 1).getTime());		
+     		if (male != null) {			
+     			person.setGender((short) (male ? 1:0));
+     		}
+     		session.save(person);
+     		
+    		contact = new Contact(session, eMail, Contact.CONTACT_TYPE_PRIVATE_EMAIL);
+    		contact.setPerson(person);
+    		session.save(contact);
 		}
-		person.save();
-		
-		Contact contact = new Contact(this.getSession());
-		contact.setUri(eMail);
-		contact.setPerson(person);
-		contact.setType(Contact.CONTACT_TYPE_PRIVATE_EMAIL);
-		contact.save();
-		
+    	// this can only happen if the person is not affiliated with any user (see "if"-statements above)
+    	else {
+    		person = contact.getPerson();
+    		person.setNameFirst(firstName);
+     		person.setNameMiddle(middleName);
+     		person.setNameLast(lastName);
+     		person.setDob(new GregorianCalendar(birthYear, 0, 1).getTime());		
+     		if (male != null) {			
+     			person.setGender((short) (male ? 1:0));
+     		}
+     		session.update(person);    		
+    	}
+		Collection<PersonHomonym> homonyms = person.getHomonyms();
+		PersonHomonym personHomonym = null;
+		PersonHomonym personHomonymEmpty = null;
+    	if(homonyms != null) {
+    		String nameComplete = PersonHomonym.createNameComplete(person);
+    		
+    		for (PersonHomonym homonym : homonyms) {
+				if(homonym.getNameComparable() == null || homonym.getNameComparable().length() == 0) {
+					personHomonymEmpty = homonym;
+				}
+				else if(homonym.getNameComparable().equals(nameComplete)) {
+					personHomonym = homonym;
+				} 
+			}
+    		
+    		if (personHomonym == null) {
+    			personHomonym = personHomonymEmpty;
+    		}
+    	}
+    	if (personHomonym == null) {
+    		personHomonym = new PersonHomonym(this.getSession());
+    		personHomonym.setNameFirst(firstName);
+    		personHomonym.setNameMiddle(middleName);
+    		personHomonym.setNameLast(lastName);
+    		personHomonym.setValid((short) 1);
+    		personHomonym.setPerson(person);
+    		session.save(personHomonym);
+    	}
+    	else {
+    		if (personHomonym.getNameComparable() == null || personHomonym.getNameComparable().trim().length() == 0) {
+        		personHomonym.setNameFirst(firstName);
+        		personHomonym.setNameMiddle(middleName);
+        		personHomonym.setNameLast(lastName);    		    	
+        		session.update(personHomonym);
+    		}
+    	}
 		
 		this.setUsername(username);
 		this.setPerson(person);
@@ -273,14 +326,16 @@ public class User extends Resource {
 		this.setLang(USER_DEFAULT_LANG);
 		this.setRegistrationdate(new GregorianCalendar().getTime());
 		this.setRegistrationIPAddress(remoteAddress);
-		this.save();
+		session.save(this);
 		
 		Newsletter newsletter = new Newsletter(this.getSession());
 		newsletter.setUser(this);
 		newsletter.setNewsGeneral(generalNewsLetter);
 		newsletter.setNewsSearch(searchNewsLetter);
 		newsletter.setNewsSplmm(splmmNewsLetter);
-		newsletter.save();
+		session.save(newsletter);
+		
+		session.flush();
 		
 		return new SciploreResponseCode(SciploreResponseCode.OK, "User created.");
 	}

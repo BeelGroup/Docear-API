@@ -31,27 +31,22 @@ public class FileCacheEmailExtractionRunner extends Thread {
 		try {
 			if(whiteList.exists()) {
 				try {
+					System.out.println("starting to read email whitelist");
+					
 					Scanner scanner = new Scanner(whiteList);
 					while(scanner.hasNextLine()) {
-						fileList.add(new File(basedir, scanner.nextLine()));
+						fileList.add(new File(basedir, scanner.nextLine()+".zip"));
 					}
 					scanner.close();
+					
+					System.out.println("finished reading email whitelist with "+fileList.size()+" items");
 				}
 				catch (Exception e) {
 				}
 			}
 			else {
-				
-				for (File file : basedir.listFiles()) {
-					if (file.isDirectory() || (file.isFile() && !file.getName().toLowerCase().endsWith(".zip"))) {
-						continue;
-					}
-					fileList.add(file);
-				}
-				
-				if(!whiteList.createNewFile()) {
-					throw new Exception("could not create File: "+whiteList.getPath());
-				}				
+				System.out.println("no email whitelist found!");
+				return;
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

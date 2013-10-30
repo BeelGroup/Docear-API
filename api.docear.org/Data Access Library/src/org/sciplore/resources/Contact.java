@@ -109,6 +109,23 @@ public class Contact extends Resource {
 		.uniqueResult();
 	}
 	
+	public static Contact getUserContact(Session session, String uri){
+		Contact c = (Contact) session.createCriteria(Contact.class)		
+		.add(Restrictions.eq("uri", uri))
+		.setMaxResults(1)
+		.uniqueResult();
+		
+		if (c == null) {
+			return null;
+		}
+		
+		if (session.createCriteria(User.class).add(Restrictions.eq("person", c.getPerson())).list().size() == 0) {
+			return null;
+		}
+		
+		return c;
+	}
+	
 	/**
 	 * Returns a Contact object fromt he database for a {@link Person} and an uri.
 	 *

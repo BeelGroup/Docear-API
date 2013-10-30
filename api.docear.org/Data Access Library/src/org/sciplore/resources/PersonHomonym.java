@@ -65,18 +65,13 @@ public class PersonHomonym extends Resource {
 			p.load();
 			return p;
 		} else {
-			String nameComplete = p.createNameComplete();
-			try {
-				throw new Exception("Person Homonym called!");
-			}
-			catch (Exception e) {
-				e.printStackTrace();
-			}
+			String nameComplete = p.createNameComplete();			
 			System.out.println("PersonHomonym Name Complete: " + nameComplete);			
 			boolean changed = false;
 			do{
 				List<PersonHomonym> homonyms = (List<PersonHomonym>)getSession().createCriteria(PersonHomonym.class)														   
 											       .add(Restrictions.eq("nameComparable", nameComplete))
+											       .add(Restrictions.ne("nameComparable", ""))
 											       .list();
 				for(PersonHomonym homonym : homonyms){
 					changed = false;
@@ -234,6 +229,27 @@ public class PersonHomonym extends Resource {
 	public void setNameLastSuffix(String nameLastSuffix) {
 		this.nameLastSuffix = nameLastSuffix;
 		this.nameComparable = this.createNameComplete();
+	}
+	
+	public static String createNameComplete(Person p) {
+		String nameComplete = "";
+		if(p.getNameFirst() != null){
+			nameComplete += p.getNameFirst() + " ";
+		}
+		if(p.getNameMiddle() != null){
+			nameComplete += p.getNameMiddle() + " ";
+		}
+		if(p.getNameLastPrefix() != null){
+			nameComplete += p.getNameLastPrefix() + " ";
+		}
+		if(p.getNameLast() != null){
+			nameComplete += p.getNameLast() + " ";
+		}
+		if(p.getNameLastSuffix() != null){
+			nameComplete += p.getNameLastSuffix() + " ";
+		}
+		nameComplete = nameComplete.trim();
+		return nameComplete;
 	}
 	
 	public String createNameComplete() {

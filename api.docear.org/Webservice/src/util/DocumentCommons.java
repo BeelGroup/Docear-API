@@ -187,6 +187,7 @@ public class DocumentCommons {
 			}
 		}
 		if(isDirty) {
+			//document may be used elsewhere after running this method --> refreshing it
 			session.refresh(document);
 //			session.update(document);
 //			session.flush();

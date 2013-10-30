@@ -65,8 +65,17 @@ public abstract class XtractTask {
 		}
 	}
 	
+	/**
+	 * <ul> <li>this will not work with UTF-8 characters in the email address --> ASCII is sufficient for us</li>   
+	 * <li>filter only works on 2-3 letter top-level-domain email addresses (e.g. edu, com, org, ...)</li></ul>
+	 */
 	private static final Pattern emailPattern = Pattern.compile("[A-Z0-9._%+-]+@(?:[A-Z0-9-]+\\.)+[A-Z]{2,3}", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE);
-	
+		
+	/**
+	 * this will not work with UTF-8 characters --> ASCII is sufficient for us
+	 * @param file
+	 * @return the plain text (ASCII only) of the file
+	 */
 	public static String loadPlainText(File file) {
 		StringBuilder builder = new StringBuilder();
 		try {

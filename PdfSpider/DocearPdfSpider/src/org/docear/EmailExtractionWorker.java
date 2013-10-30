@@ -80,7 +80,9 @@ public class EmailExtractionWorker extends ReferenceUploadWorker implements Work
 			is.close();
 			try {
 				Collection<String> emails = XtractTask.findEmailAddresses(XtractTask.loadPlainText(txt));
-				uploadEmails(docHash, emails);
+				if(emails != null && !emails.isEmpty()) {
+					uploadEmails(docHash, emails);
+				}
 			}
 			finally {
 				txt.delete();

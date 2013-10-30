@@ -29,6 +29,7 @@ def resolveDuplicate(doc_id, cleantitle):
         db.query("UPDATE citations C SET C.cited_document_id="+str(min_doc_id)+" WHERE C.cited_document_id="+str(duplicate_doc_id))
         db.query("UPDATE documents_persons DP SET DP.document_id="+str(min_doc_id)+" WHERE DP.document_id="+str(duplicate_doc_id))
         db.query("UPDATE documents_pdfhash DP SET DP.document_id="+str(min_doc_id)+" WHERE DP.document_id="+str(duplicate_doc_id))
+        db.query("UPDATE documents_bibtex DB SET DB.document_id="+str(min_doc_id)+" WHERE DB.document_id="+str(duplicate_doc_id))
         db.query("DELETE FROM recommendations_documents WHERE document_id="+str(duplicate_doc_id))
         db.query("DELETE FROM document_xref WHERE document_id="+str(duplicate_doc_id))
         db.query("DELETE R FROM fulltext_url F JOIN recommendations_documents R ON (R.fulltext_url_id=F.id) WHERE F.document_id="+str(duplicate_doc_id))

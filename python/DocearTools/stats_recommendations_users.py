@@ -297,10 +297,39 @@ def update_recommendations_documents_set():
     db.query(query)
     query = """UPDATE recommendations_documents_set S SET S.rec_clicked_count=0, S.rec_clicked_ctr=0 WHERE S.delivered IS NOT NULL AND S.rec_clicked_count IS NULL"""
     db.query(query)
+      
+def rename_table_id_columns(tablename, alias):
+    columns = ""
+    
+    query = """SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = '{0}'""".format(tablename);
+    db.query(query)
+    cursor = db.store_result()
+       
+    while True:
+        row = cursor.fetch_row()  
+              
+        if not row:
+            break;
         
+        for column in row[0]:
+            columns += alias+'.'+column+' AS '+alias+'_'+column
+            columns += ','
+    
+    return columns[:-1]          
+      
+def update_user_person_table():
+    query = """DROP TABLE IF EXISTS tmp_user_person"""
+    db.query(query)
+    
+    target_query = "CREATE TABLE tmp_user_person AS SELECT "
+    target_query += rename_table_id_columns('users', 'U') + ', ' + rename_table_id_columns('persons', 'P') + ',' + rename_table_id_columns('tmp_rec_users', 'T')
+    target_query += " FROM users U JOIN persons P ON (U.person_id = P.id) JOIN tmp_rec_users T ON (T.user_id = U.id)"
+    
+    print target_query
+    db.query(query)
     
 if __name__ == '__main__':  
-    main()
-    update_recommendations_active()
-    update_recommendations_documents_set()
-    
+#     main()
+#     update_recommendations_active()
+#     update_recommendations_documents_set()
+    update_user_person_table()
