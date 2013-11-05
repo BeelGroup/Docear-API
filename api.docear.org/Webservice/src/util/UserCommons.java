@@ -536,7 +536,7 @@ public class UserCommons {
 		} 
 		message.append("Hello,\n");
 		message.append("\n");
-		message.append("You recieve this email message because you want to reset your password.\n");
+		message.append("You recieve this email message because you requested to change your password.\n");
 		message.append("\n");
 		message.append("Please use the link below and follow the instructions on the site.\n");
 		message.append("\n");
