@@ -536,11 +536,13 @@ public class UserCommons {
 		} 
 		message.append("Hello,\n");
 		message.append("\n");
-		message.append("You recieve this email message because you requested to change your password.\n");
+		message.append("you receive this email because you requested to change your password. Please use the link below and follow the instructions on the site.\n");
 		message.append("\n");
 		message.append("Please use the link below and follow the instructions on the site.\n");
 		message.append("\n");
-		message.append("http://www.docear.org/forgotten-password?token="+pwRequest.getToken()+"&mail="+email+"\n");
+		message.append("https://www.docear.org/my-docear/change-password?token="+pwRequest.getToken()+"&mail="+email+"\n");
+		message.append("\n");
+		message.append("If you did not request a password change, please ignore this email."); 
 		message.append("\n");
 		message.append("\n");		
 		message.append("Yours,\n");
@@ -553,15 +555,20 @@ public class UserCommons {
 
 		message.append("Hello,\n");
 		message.append("\n");
-		message.append("This email message is to confirm your newly created Docear account.\n");
-		message.append("\n");
-		message.append("Please note that the account is already activated.\n");
+		message.append("you successfully signed up at Docear. You can now use Docear's free online features such as PDF metadata retrieval, Backup, and Recommendations.\n");
 		message.append("\n");
 		message.append("Your information are as follows:\n");
 		message.append("\n");
 		message.append("Email: "+email+"\n");
 		message.append("User: "+username+"\n");
 		message.append("Password: "+maskedPassword(password, false)+"\n");
+		message.append("\n");
+		message.append("If you experience any problems, or have questions on how to use Docear, please do not hesitate to contact us https://www.docear.org/docear/contact/. You may also find the following links useful.\n");
+		message.append("\n");
+		message.append("Manual: https://www.docear.org/support/user-manual/");
+		message.append("Videos: https://www.docear.org/software/screenshots/");
+		message.append("Jobs & Internships: https://www.docear.org/docear/jobs/");
+		message.append("Blog: https://www.docear.org/docear/blog/");
 		message.append("\n");
 		message.append("\n");		
 		message.append("Yours,\n");
@@ -574,15 +581,14 @@ public class UserCommons {
 
 		message.append("Hello,\n");
 		message.append("\n");
-		message.append("This email message is to confirm your newly set password.\n");
-		message.append("\n");
-		message.append("Your information are as follows:\n");
+		message.append("you successfully changed your password for Docear. Your account information is as follows:\n");
 		message.append("\n");
 		message.append("Email: "+email+"\n");
 		message.append("User: "+username+"\n");
 		message.append("Password: "+maskedPassword(password, false)+"\n");
 		message.append("\n");
 		message.append("\n");
+		//remove as soon as Docear-Desktop handles unauthorized exceptions properly
 		message.append("Please note that all stored sessions with your old docear account credentials are invalid from now on.\n");
 		message.append("\n");
 		message.append("\n");		
