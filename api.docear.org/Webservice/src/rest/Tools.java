@@ -30,6 +30,8 @@ import org.apache.log4j.PatternLayout;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 
+import util.MailUtils;
+
 import com.sun.jersey.api.client.ClientResponse.Status;
 
 public class Tools {
@@ -162,21 +164,12 @@ public class Tools {
 	      }
 	  }
 	  
-	  public static boolean mail(String address, String subject, String message, String... headers) {
-//		  function confirmationEmail( $address,$username,$password )
-//		  {
-//		  	$subject  = 'Docear Account Signup Confirmation';
-//		  	$headers  = 'From: noreply@docear.org'."\r\n";
-//		  	$headers .= 'X-Mailer: docear.org'."\r\n";
-//
-//		  	@mail( $address,$subject,$message,$headers );
-//		  } 
+	  public static boolean mail(String address, String subject, String message) {
 		  try {
-			  System.out.println("Headers: "+headers);
-			  System.out.println("MailTo: "+ address);
-			  System.out.println("Subject: "+ subject);
-			  System.out.println("Message: "+ message);
-			  return true;
+//			  System.out.println("MailTo: "+ address);
+//			  System.out.println("Subject: "+ subject);
+//			  System.out.println("Message: "+ message);
+			  return MailUtils.sendMail(subject, message, MailUtils.parseAddress(address), MailUtils.DOCEAR_MAIL_CONFIGURATION);
 		  }
 		  catch (Exception e) {
 			e.printStackTrace();

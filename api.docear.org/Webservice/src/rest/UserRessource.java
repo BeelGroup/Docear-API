@@ -312,7 +312,9 @@ public class UserRessource {
 
 			SciploreResponseCode response = new User(session).createUser(userName, password, retypedPassword, eMail, firstName, middleName, lastName,
 					birthYear, generalNewsLetterBool, searchNewsLetterBool, splmmNewsLetterBool, (short) userType, isMale, remoteAddr);
-
+			if(response.getResponseCode() == 200) {
+				rest.Tools.mail(eMail, "Docear Account Signup Confirmation", UserCommons.getUserRegistrationMail(userName, password, eMail));
+			}
 			return UserCommons.getHTTPStatusResponse(response.getResponseCode(), response.getResponseMessage());
 		}
 		finally {
