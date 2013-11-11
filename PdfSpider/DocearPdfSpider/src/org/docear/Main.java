@@ -64,18 +64,18 @@ public class Main {
 		
 		Main pdfSpider = new Main();
 		pdfSpider.setDocsInProcess(new LinkedList<TaskItem>());
-		pdfSpider.setDocs(new LinkedList<TaskItem>());
-
-		//initiate threads
-		LinkedList<PdfDownloadRunner> downloaderThreads= new LinkedList<PdfDownloadRunner>();
-		for (int i = 0; i < NUMBER_OF_THREADS; i++) {
-			PdfDownloadRunner r = new PdfDownloadRunner(pdfSpider);
-			downloaderThreads.add(r);
-			r.start();
-		}
+		pdfSpider.setDocs(new LinkedList<TaskItem>());		
 		
 		for (String arg : args) {
-			if(arg.startsWith("fileCachePath=")) {
+			if(arg.startsWith("downloaderThreads=")) {
+				try {
+					NUMBER_OF_THREADS = Integer.parseInt(arg.split("=")[1].trim());
+				}
+				catch(Exception e) {
+					System.err.println("parameter 'downloaderThreads' requires an int value!");
+				}
+			}
+			else if(arg.startsWith("fileCachePath=")) {
 				String[] argSplit = arg.split("=");
 				arg = arg.replace(argSplit[0]+"=", "").trim();
 				if(arg.length() > 0) {
@@ -100,6 +100,14 @@ public class Main {
 					emailWorker.start();
 				}
 			}
+		}
+		
+		//initiate threads
+		LinkedList<PdfDownloadRunner> downloaderThreads= new LinkedList<PdfDownloadRunner>();
+		for (int i = 0; i < NUMBER_OF_THREADS; i++) {
+			PdfDownloadRunner r = new PdfDownloadRunner(pdfSpider);
+			downloaderThreads.add(r);
+			r.start();
 		}
 		
 		System.out.println("Threads initiated.");

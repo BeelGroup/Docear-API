@@ -8,7 +8,7 @@ import java.util.LinkedHashSet;
 import java.util.Scanner;
 
 public class FileCacheEmailExtractionRunner extends Thread {
-	private static int TIME_BETWEEN_REQUESTS = 2000;
+	private static int TIME_BETWEEN_REQUESTS = 1;
 
 	private File basedir;
 	private FileCacheEmailExtractionRunner self;
@@ -35,7 +35,7 @@ public class FileCacheEmailExtractionRunner extends Thread {
 					
 					Scanner scanner = new Scanner(whiteList);
 					while(scanner.hasNextLine()) {
-						fileList.add(new File(basedir, scanner.nextLine()+".zip"));
+						fileList.add(new File(basedir, scanner.nextLine()));
 					}
 					scanner.close();
 					
@@ -52,16 +52,19 @@ public class FileCacheEmailExtractionRunner extends Thread {
 			e.printStackTrace();
 			return;
 		}		
-		Iterator<File> iter = fileList.iterator();	
+		Iterator<File> iter = fileList.iterator();
+		int counter = 0;
 		while (iter.hasNext()) {
+			counter++;
 			File file = iter.next();
-				
-			if (!file.exists() || file.isDirectory() || (file.isFile() && !file.getName().toLowerCase().endsWith(".zip"))) {
-				System.out.println("["+self.getName()+"] skipping file: " + file);
-				continue;
-			}
 			
 			try {					
+    			if (!file.exists() || file.isDirectory() || (file.isFile() && !file.getName().toLowerCase().endsWith(".zip"))) {
+    				System.out.println("["+self.getName()+"] skipping file: " + file);
+    				iter.remove();
+    				continue;
+    			}
+    			
 				final String hash = file.getName().substring(0, file.getName().length()-4);
 					
 				if ((++i) % 100 == 0) {
@@ -70,12 +73,12 @@ public class FileCacheEmailExtractionRunner extends Thread {
 	
 				long timeSinceLastRequest = System.currentTimeMillis() - lastRequest;
 				// make sure that at least 300ms are between each webservice request
-				if (timeSinceLastRequest < TIME_BETWEEN_REQUESTS) {
-					try {
-						Thread.sleep(TIME_BETWEEN_REQUESTS - timeSinceLastRequest);
-					} catch (InterruptedException e) {
-					}
-				}
+//				if (timeSinceLastRequest < TIME_BETWEEN_REQUESTS) {
+//					try {
+//						Thread.sleep(TIME_BETWEEN_REQUESTS - timeSinceLastRequest);
+//					} catch (InterruptedException e) {
+//					}
+//				}
 				lastRequest = System.currentTimeMillis();
 					
 				try {
@@ -89,8 +92,10 @@ public class FileCacheEmailExtractionRunner extends Thread {
 					e.printStackTrace();
 				}
 			}
-			finally {				
-				saveList(whiteList, fileList);
+			finally {
+				if (counter%1000 == 0) {
+					saveList(whiteList, fileList);
+				}
 			}
 
 			

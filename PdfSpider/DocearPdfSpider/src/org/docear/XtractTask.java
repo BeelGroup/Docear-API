@@ -2,6 +2,7 @@ package org.docear;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Collection;
 import java.util.HashSet;
@@ -47,7 +48,7 @@ public abstract class XtractTask {
 			String text = loadPlainText(txt);
 			
     		//use the first 30% of the text only
-    		text = text.substring(0, (int)(text.length()*.3));
+//    		text = text.substring(0, (int)(text.length()*.3));
 			
     		//search for emails in text
     		emailIndex = (Set<String>) findEmailAddresses(text);
@@ -77,9 +78,22 @@ public abstract class XtractTask {
 	 * @return the plain text (ASCII only) of the file
 	 */
 	public static String loadPlainText(File file) {
+		try {
+			return loadPlainText(new FileInputStream(file));
+		} catch (Exception ex) {
+			return "";
+		}
+	}
+	
+	/**
+	 * this will not work with UTF-8 characters --> ASCII is sufficient for us
+	 * @param InputStream
+	 * @return the plain text (ASCII only) of the file
+	 */
+	public static String loadPlainText(InputStream is) {
 		StringBuilder builder = new StringBuilder();
 		try {
-			InputStreamReader reader = new InputStreamReader(new FileInputStream(file));
+			InputStreamReader reader = new InputStreamReader(is);
 			try {
 				int chr = -1;
 				while((chr = reader.read()) > -1 ) {

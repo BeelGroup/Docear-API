@@ -165,6 +165,7 @@ public class DocumentCommons {
 			if(contact == null) {
 				contact = new Contact(session, email, Contact.CONTACT_TYPE_EMAIL);
 				contact.setPerson(new Person(""));
+				session.save(contact.getPerson());
 				session.save(contact);
 				session.flush();
 			}

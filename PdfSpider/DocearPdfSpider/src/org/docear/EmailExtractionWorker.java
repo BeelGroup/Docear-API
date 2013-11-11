@@ -46,7 +46,7 @@ public class EmailExtractionWorker extends ReferenceUploadWorker implements Work
 
 	@Override
 	public void exec() throws IOException, RejectedExecutionException {
-		System.out.println("["+Thread.currentThread().getName()+"] ZipTextWorker working on file: " + file.getAbsolutePath());
+		System.out.println("["+Thread.currentThread().getName()+"] EmailExtractionWorker working on file: " + file.getAbsolutePath());
 		
 		ZipFile zipFile = new ZipFile(file);
 		ZipEntry textEntry = null;
@@ -66,29 +66,16 @@ public class EmailExtractionWorker extends ReferenceUploadWorker implements Work
 		}
 		
 		try {
-			final File txt = File.createTempFile(file.getName().replace(" ", "_").replace(".", "_"), ".txt", tmpDir);
-			
-			OutputStream os = new FileOutputStream(txt);
-			InputStream is = zipFile.getInputStream(textEntry);
-			while(is.available() > 0) {
-				byte[] buffer = new byte[is.available()];
-				int length = is.read(buffer); 
-				os.write(buffer,0,length);
-			}
-			os.flush();
-			os.close();
-			is.close();
+			InputStream is = zipFile.getInputStream(textEntry);			
 			try {
-				Collection<String> emails = XtractTask.findEmailAddresses(XtractTask.loadPlainText(txt));
+				Collection<String> emails = XtractTask.findEmailAddresses(XtractTask.loadPlainText(is));
 				if(emails != null && !emails.isEmpty()) {
 					uploadEmails(docHash, emails);
 				}
 			}
 			finally {
-				txt.delete();
+				is.close();
 			}
-			
-			
 		}
 		catch(Exception e) {
 			e.printStackTrace();
