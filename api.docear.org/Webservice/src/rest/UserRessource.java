@@ -668,8 +668,12 @@ public class UserRessource {
 		final Session session = SessionProvider.sessionFactory.openSession();
 		Transaction transaction = session.beginTransaction();
 		try {
-			if(password == null || !password.equals(password_retype) || password.trim().length() <= 0) {
-				return UserCommons.getHTTPStatusResponse(Status.BAD_REQUEST, "The passwords you have entered are not identical.");
+			if(password == null || password.trim().length() < 6) {
+				return UserCommons.getHTTPStatusResponse(Status.BAD_REQUEST, "The given password is invalid. Please choose a password with at least 6 characters.");
+			}
+			
+			if(!password.equals(password_retype)) {
+				return UserCommons.getHTTPStatusResponse(Status.BAD_REQUEST, "The passwords are not matching.");
 			}
 			
 			final User user = new User(session).getUserByEmail(email);
