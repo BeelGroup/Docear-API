@@ -13,6 +13,7 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Properties;
 import java.util.Random;
 
 import javax.servlet.http.HttpServletRequest;
@@ -37,7 +38,7 @@ import org.sciplore.resources.RecommendationsUsersSettings;
 import org.sciplore.resources.User;
 import org.sciplore.resources.UserPasswordRequest;
 import org.sciplore.resources.UsersApplications;
-
+import org.sciplore.utilities.config.Config;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.ClientResponse.Status;
@@ -45,6 +46,12 @@ import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 
 public class UserCommons {
+	public static Properties docearEMailConfig;
+	
+	static {
+		docearEMailConfig = Config.getProperties("org.mrdlib");		
+	}
+	
 	public static final String MINDMAPS_PATH = "/srv/docear/mindmaps/";
 	
 
@@ -533,14 +540,16 @@ public class UserCommons {
 			email = URLEncoder.encode(email, "UTF-8");
 		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();
-		} 
+		}
+		
+		
 		message.append("Hello,\n");
 		message.append("\n");
 		message.append("you receive this email because you requested to change your password. Please use the link below and follow the instructions on the site.\n");
 		message.append("\n");
 		message.append("Please use the link below and follow the instructions on the site.\n");
-		message.append("\n");
-		message.append("https://www.docear.org/my-docear/change-password?token="+pwRequest.getToken()+"&mail="+email+"\n");
+		message.append("\n");		
+		message.append(docearEMailConfig.getProperty("docear.pwd.reset.url", "https://www.docear.org/my-docear/change-password")+"?token="+pwRequest.getToken()+"&mail="+email+"\n");
 		message.append("\n");
 		message.append("If you did not request a password change, please ignore this email."); 
 		message.append("\n");
