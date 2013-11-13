@@ -12,7 +12,7 @@ import org.sciplore.resources.User;
 
 public class MindmapQueries {
 	private static Criteria getMindmapCriteria(Session session, User user, String accessToken, boolean requireAuthorization, Integer id, String mindmapId, 
-				Date datehi, Date datelo, Integer applicationMin, Integer mustAllowRecommendations) {
+				Date datehi, Date datelo, Integer applicationMin, Integer mustAllowRecommendations, Integer mustAllowBackup) {
 		if (user == null || user.getId() == null || user.getAccessToken() == null || user.getAccessToken().trim().length() == 0) {			
 			return null;
 		}
@@ -44,6 +44,10 @@ public class MindmapQueries {
 			criteria = criteria.add(Restrictions.eq("map.allowRecommendations", true));
 		}
 		
+		if (mustAllowBackup != null) {
+			criteria = criteria.add(Restrictions.eq("map.allowBackup", true));
+		}
+		
 		criteria = criteria.addOrder(Order.asc("map.filename")).addOrder(Order.asc("map.filepath")).addOrder(Order.desc("map.revision"));
 		return criteria;
 	}
@@ -52,28 +56,28 @@ public class MindmapQueries {
 		if (id == null) {			
 			return null;
 		}
-		List<Mindmap> maps = getMindmaps(session, user, accessToken, id, null, null, null, null, null);
+		List<Mindmap> maps = getMindmaps(session, user, accessToken, id, null, null, null, null, null, null);
 		if (maps.size()==0) {
 			return null;
 		}
 		else {
-			return getMindmaps(session, user, accessToken, id, null, null, null, null, null).get(0);
+			return getMindmaps(session, user, accessToken, id, null, null, null, null, null, null).get(0);
 		}
 	}
 	
 	public static List<Mindmap> getMindmaps(Session session, User user, String accessToken) {
-		return getMindmaps(session, user, accessToken, null, null, null, null, null, null);
+		return getMindmaps(session, user, accessToken, null, null, null, null, null, null, null);
 	}
 	
 	//the standard method to use
 	public static List<Mindmap> getMindmaps(Session session, User user, String accessToken, Integer id, String mindmapId, Date datehi, Date datelo, 
-			Integer minApplication, Integer allowRecommendations) {		
-		return getMindmaps(session, user, accessToken, true, id,  mindmapId,  datehi,  datelo, minApplication, allowRecommendations);
+			Integer minApplication, Integer allowRecommendations, Integer allowBackup) {		
+		return getMindmaps(session, user, accessToken, true, id,  mindmapId,  datehi,  datelo, minApplication, allowRecommendations, allowBackup);
 	}
 	
 	public static List<Mindmap> getMindmaps(Session session, User user, String accessToken, boolean requireAuthorization, Integer id, String mindmapId, 
-			Date datehi, Date datelo, Integer minApplication, Integer allowRecommendations) {		
-		Criteria criteria = getMindmapCriteria(session, user, accessToken, requireAuthorization, id, mindmapId, datehi, datelo, minApplication, allowRecommendations);
+			Date datehi, Date datelo, Integer minApplication, Integer allowRecommendations, Integer allowBackup) {		
+		Criteria criteria = getMindmapCriteria(session, user, accessToken, requireAuthorization, id, mindmapId, datehi, datelo, minApplication, allowRecommendations, allowBackup);
 		if (criteria == null) {
 			return null;
 		}
@@ -92,11 +96,19 @@ public class MindmapQueries {
 	}
 	
 	public static Mindmap getMindmap(Session session, String mindmapId, Date revision) {
-		return (Mindmap) session.createCriteria(Mindmap.class)
+		return getMindmap(session, mindmapId, revision, null);
+	}
+	
+	public static Mindmap getMindmap(Session session, String mindmapId, Date revision, Integer mustAllowBackup) {
+		Criteria criteria = session.createCriteria(Mindmap.class)
 			.add(Restrictions.eq("mindmapId", mindmapId))
-			.add(Restrictions.eq("revision", revision))
-			.setMaxResults(1)
-			.uniqueResult();		
+			.add(Restrictions.eq("revision", revision));
+		
+		if (mustAllowBackup != null)  {
+			criteria.add(Restrictions.eq("map.allowBackup", true));
+		}
+		
+		return (Mindmap) criteria.setMaxResults(1).uniqueResult();		
 	}
 	
 	public static Mindmap getMindmap(Session session, Integer id) {
