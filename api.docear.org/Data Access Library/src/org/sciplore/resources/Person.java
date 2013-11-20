@@ -120,6 +120,7 @@ public class Person extends Resource {
 	private String docidxIdToken;
 	private Boolean docidxAllow;
 	private Boolean docidxNotify;
+	private Boolean docidxNewDocuments;
 	
 	public Person() {
 	}
@@ -227,6 +228,14 @@ public class Person extends Resource {
 
 	public void setDocidxNotify(Boolean docidxNotify) {
 		this.docidxNotify = docidxNotify;
+	}
+	
+	public boolean getDocidxNewDocuments() {
+		return docidxNewDocuments==null ? false : docidxNewDocuments;
+	}
+
+	public void setDocidxNewDocuments(Boolean b) {
+		this.docidxNewDocuments = b;
 	}
 	
 	public List<DocumentPerson> getDocumentsIndexed() {

@@ -7,13 +7,13 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
 import java.math.BigInteger;
-import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -48,8 +48,8 @@ import org.sciplore.queries.GoogleDocumentQueryQueries;
 import org.sciplore.resources.Contact;
 import org.sciplore.resources.Document;
 import org.sciplore.resources.DocumentPerson;
-import org.sciplore.resources.DocumentXref;
 import org.sciplore.resources.DocumentsPdfHash;
+import org.sciplore.resources.FulltextUrl;
 import org.sciplore.resources.GoogleDocumentQuery;
 import org.sciplore.resources.Person;
 import org.w3c.dom.Element;
@@ -424,6 +424,7 @@ public class InternalCommons {
 			//FulltextCommons.requestPlainTextUpdate(docPerson.getDocument(), documentsPdfHash.getHash());
 			
 			//atomic update xref with indexed state 2 or sth
+			//ask joeran what to do in case we try to index a new document with at least one author "never index any doc"
 		}
 	}
 	
@@ -460,6 +461,12 @@ public class InternalCommons {
 			for (DocumentPerson document : documentList) {
 				Element doc = dom.createElement("document");
 				doc.setAttribute("id", Integer.toString(document.getId()));
+				String url = "";
+				Iterator<FulltextUrl> urls = document.getDocument().getFulltextUrls().iterator();
+				if(urls.hasNext()) {
+					url = urls.next().getUrl();
+				}				
+				doc.setAttribute("url", String.valueOf(url));
 				
 				Element title = dom.createElement("title");
 				title.setTextContent(document.getDocument().getTitle());
@@ -493,6 +500,48 @@ public class InternalCommons {
 		}
 		return "";
 	}
+
+	public static String buildMailerChunkXML(Collection<Object[]> chunk) {
+		org.w3c.dom.Document dom = getNewXMLDocument();
+		if(dom != null) {
+			Element root = dom.createElement("mailer_chunk");
+			dom.appendChild(root);
+			Element currentReceiver = null;
+			for (Object[] row : chunk) {
+				String address = String.valueOf(row[0]);
+				String title = String.valueOf(row[1]);
+				String pid = String.valueOf(row[2]);
+				if(currentReceiver == null || !currentReceiver.getAttribute("address").equals(address)) {
+					currentReceiver = dom.createElement("receiver");
+					currentReceiver.setAttribute("address", address);
+					currentReceiver.setAttribute("pid", pid);
+					root.appendChild(currentReceiver);
+				}
+				Element doc = dom.createElement("document");
+				doc.setTextContent(title);
+				
+				currentReceiver.appendChild(doc);
+			}
+			
+			return getXMLStr(dom);
+		}
+		return "";
+	}
+
+	@SuppressWarnings("unchecked")
+	public static Collection<Object[]> getNextMailerChunk(Session session, int chunkSize) {
+		String sql = "Select p.uri, d.title, p.id FROM " + 
+		"(SELECT p.id, p.docidx_last_notified, p.docidx_last_displayed, c.uri FROM persons p JOIN contacts c ON (p.id=c.person_id) WHERE (p.docidx_last_notified IS NULL OR DATE_ADD(p.docidx_last_notified, INTERVAL 3 MONTH)<NOW()) AND (p.docidx_last_displayed IS NULL OR DATE_ADD(p.docidx_last_displayed, INTERVAL 3 MONTH)<NOW()) AND (p.docidx_notify IS NULL OR p.docidx_notify=1) AND p.docidx_new_documents=1 Limit :chunksize) p " +   
+		"LEFT JOIN documents_persons dp ON (p.id=dp.person_id) " + 
+		"LEFT JOIN document_xref dx ON (dp.document_id=dx.document_id AND dx.indexed=1 AND (p.docidx_last_notified IS NULL OR p.docidx_last_notified < dx.last_attempt) AND (p.docidx_last_displayed IS NULL OR p.docidx_last_displayed < dx.last_attempt)) " + 
+		"LEFT JOIN documents d ON (dx.document_id=d.id) " +
+		"ORDER BY p.id";
+		Query query = session.createSQLQuery(sql);
+		
+		query.setParameter("chunksize", chunkSize);
+		
+		return query.list();
+	}	
 	
 	public static org.w3c.dom.Document getNewXMLDocument() {
 		
@@ -542,5 +591,5 @@ public class InternalCommons {
 
 	public static String normalizeStr(String str) {
 		return str == null ? "" : str.trim();
-	}	
+	}
 }

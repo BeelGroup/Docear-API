@@ -9,6 +9,7 @@ import java.nio.channels.AlreadyConnectedException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -186,6 +187,12 @@ public class DocumentCommons {
 				
 				persons.add(docPerson);
 			}
+			contact.getPerson().setDocidxNewDocuments(true);
+			if(contact.getPerson().getDocidxIdToken() == null) {
+				contact.getPerson().setDocidxIdToken(UUID.randomUUID().toString());
+			}
+			session.update(contact.getPerson());
+			session.flush();
 		}
 		if(isDirty) {
 			//document may be used elsewhere after running this method --> refreshing it

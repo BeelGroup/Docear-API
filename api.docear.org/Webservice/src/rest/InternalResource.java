@@ -951,15 +951,80 @@ public class InternalResource {
 		}
 	}
 	
+	@GET
+	@Path("/mailer/docidx/chunk")	
+	public Response getNextMailerChunk(@Context UriInfo ui, @Context HttpServletRequest request, @QueryParam("chunksize") Integer chunkSize) {
+		Session session = Tools.getSession();
+		session.setFlushMode(FlushMode.MANUAL);
+		try {
+			User user = new User(session).getUserByEmailOrUsername("pdfdownloader");
+			if (!ResourceCommons.authenticate(request, user)) {
+				System.out.println("Rejected unauthorized attempt to retrieve data");
+				return UserCommons.getHTTPStatusResponse(com.sun.jersey.api.client.ClientResponse.Status.UNAUTHORIZED, "no valid access token.");
+			}
+			
+			Collection<Object[]> results = InternalCommons.getNextMailerChunk(session, (chunkSize == null ? 100 : chunkSize)); 
+			
+			return Tools.getHTTPStatusResponse(Status.OK, InternalCommons.buildMailerChunkXML(results));
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+			return Tools.getHTTPStatusResponse(Status.INTERNAL_SERVER_ERROR, "Error: "+ e.getMessage());
+		}
+		finally {
+			Tools.tolerantClose(session);
+		}
+	}
+	
+	@GET
+	@Path("/mailer/update/{person_id}")	
+	public Response getMailerUpdatePerson(@Context UriInfo ui, @Context HttpServletRequest request, @PathParam("person_id") Integer personId, @QueryParam("notified") Boolean notified, @QueryParam("reset") Boolean reset) {
+		Session session = Tools.getSession();
+		session.setFlushMode(FlushMode.MANUAL);
+		try {
+			User user = new User(session).getUserByEmailOrUsername("pdfdownloader");
+			if (!ResourceCommons.authenticate(request, user)) {
+				System.out.println("Rejected unauthorized attempt to retrieve data");
+				return UserCommons.getHTTPStatusResponse(com.sun.jersey.api.client.ClientResponse.Status.UNAUTHORIZED, "no valid access token.");
+			}
+			
+			Person person = (Person) session.load(Person.class, personId); 
+			if(notified != null && notified) {
+				person.setDocidxLastNotified(new Date());
+				Integer counter = person.getDocidxNotificationCount();
+				if(counter == null) {
+					counter = 0;
+				}
+				person.setDocidxNotificationCount(counter++);
+			}
+			if(reset != null && reset) {
+				person.setDocidxNewDocuments(false);
+			}
+			session.update(person);
+			
+			return Tools.getHTTPStatusResponse(Status.OK, "OK");
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+			return Tools.getHTTPStatusResponse(Status.INTERNAL_SERVER_ERROR, "Error: "+ e.getMessage());
+		}
+		finally {
+			Tools.tolerantClose(session);
+		}
+	}
+	
 	@POST
 	@Path("/docidx/{author_mail}")	
 	public Response postDocIdxListMail(@PathParam("author_mail") String mail, @FormParam("token") String token
 			, @FormParam("first_name") String firstName
 			, @FormParam("middle_name") String middleName
 			, @FormParam("last_name") String lastName
-			, @FormParam("forbidden_docs") List<String> forbiddenDocumentIds
+//			, @FormParam("forbidden_doc") List<String> forbiddenDocumentIds
 			, @FormParam("ignore_all") Boolean ignoreAll
 			, @FormParam("allowNotification") Boolean allowNotification
+			, @FormParam("notification_option") String notification_option
+			, @FormParam("doc_option") List<String> doc_options
+			, @FormParam("wrong_title") List<String> wrong_titles
 			, @Context UriInfo ui, @Context HttpServletRequest request) {
 		Session session = Tools.getSession();
 		Transaction transaction = session.beginTransaction();
@@ -972,21 +1037,44 @@ public class InternalResource {
 			if (token == null || !token.equals(person.getDocidxIdToken())) {
 				return UserCommons.getHTTPStatusResponse(com.sun.jersey.api.client.ClientResponse.Status.UNAUTHORIZED, "no valid token.");
 			}
-			
-			if(ignoreAll != null && ignoreAll) {
+			//TODO: adjust to the new form field!!!!!
+			if((notification_option != null && "3".equals(notification_option)) || (ignoreAll != null && ignoreAll)) {
 				Collection<DocumentPerson> documents = person.getDocumentsIndexed();
 				for (DocumentPerson docPerson : documents) {
 					InternalCommons.removeFulltextFromIndex(session, docPerson);
 				}
 			}
 			else {
-				//docs
-				for (String docId : forbiddenDocumentIds) {
-					DocumentPerson docPerson = (DocumentPerson) session.load(DocumentPerson.class, Integer.parseInt(docId));
-					docPerson.setDocidxAllow(false);
+				
+				for (String id : wrong_titles) {
+					DocumentPerson docPerson = (DocumentPerson) session.load(DocumentPerson.class, Integer.parseInt(id));
+					docPerson.setDocidxWrongTitle(true);
 					session.update(docPerson);
 					session.flush();
-					InternalCommons.removeFulltextFromIndex(session, docPerson);					
+				}
+				
+				for (String option : doc_options) {
+					if(option.startsWith("dontIndex_")) {
+						String id = option.substring("dontIndex_".length());
+						DocumentPerson docPerson = (DocumentPerson) session.load(DocumentPerson.class, Integer.parseInt(id));
+						docPerson.setDocidxAllow(false);
+						session.update(docPerson);
+						session.flush();
+						InternalCommons.removeFulltextFromIndex(session, docPerson);
+					}
+					else if(option.startsWith("notAuthor_")) {
+						String id = (option.substring("notAuthor_".length()));
+						DocumentPerson docPerson = (DocumentPerson) session.load(DocumentPerson.class, Integer.parseInt(id));
+						session.delete(docPerson);
+						
+					}
+					else if(option.startsWith("isCollection_")) {
+						String id = option.substring("isCollection_".length());
+						DocumentPerson docPerson = (DocumentPerson) session.load(DocumentPerson.class, Integer.parseInt(id));
+						docPerson.setDocidxIsCollection(true);
+						session.update(docPerson);
+						session.flush();
+					}
 				}
 			}
 			
@@ -996,8 +1084,12 @@ public class InternalResource {
 				person.setDocidxAllow(!ignoreAll);
 				dirty = true;
 			}
-			if(allowNotification != null) {
-				person.setDocidxNotify(allowNotification);
+			if(person.getDocidxNotify() && (notification_option != null && "2".equals(notification_option))) {
+				person.setDocidxNotify(false);
+				dirty = true;
+			}
+			if(!person.getDocidxNotify() && (notification_option != null && "1".equals(notification_option))) {
+				person.setDocidxNotify(true);
 				dirty = true;
 			}
 			NameSeparator nameSeparator = new NameSeparator();

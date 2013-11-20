@@ -104,6 +104,10 @@ public class DocumentPerson extends Resource {
 	
 	private Boolean docidxAllow;
 	
+	private Boolean docidxWrongTitle;
+	
+	private Boolean docidxIsCollection;
+	
 	
 	public DocumentPerson getDocumentPerson(DocumentPerson dp) {
 		if(dp.getId() != null) {
@@ -234,7 +238,23 @@ public class DocumentPerson extends Resource {
 
 	public void setDocidxAllow(Boolean docidxAllow) {
 		this.docidxAllow = docidxAllow;
-	}	
+	}
+	
+	public boolean getDocidxWrongTitle() {
+		return docidxWrongTitle==null ? false : docidxWrongTitle;
+	}
+
+	public void setDocidxWrongTitle(Boolean isTitleWrong) {
+		this.docidxWrongTitle = isTitleWrong;
+	}
+	
+	public boolean getDocidxIsCollection() {
+		return docidxIsCollection==null ? false : docidxIsCollection;
+	}
+
+	public void setDocidxIsCollection(Boolean isCollection) {
+		this.docidxIsCollection = isCollection;
+	}
 
 	public Person getPersonMain() {
 		return personMain;
