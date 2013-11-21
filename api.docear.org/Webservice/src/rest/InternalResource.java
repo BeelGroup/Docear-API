@@ -995,12 +995,13 @@ public class InternalResource {
 				if(counter == null) {
 					counter = 0;
 				}
-				person.setDocidxNotificationCount(counter++);
+				counter++;
+				person.setDocidxNotificationCount(counter);
 			}
 			if(reset != null && reset) {
 				person.setDocidxNewDocuments(false);
 			}
-			session.update(person);
+			//session.update(person);
 			
 			return Tools.getHTTPStatusResponse(Status.OK, "OK");
 		}

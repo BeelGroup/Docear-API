@@ -92,12 +92,13 @@ public class ChunkedMailSender {
 				content.append(string);
 				content.append("\n");
 			}
-			
-			message = message.replaceAll("\\{TITLE_COUNT}", String.valueOf(titleList.size()));
+			boolean plural = titleList.size() > 1;
+			message = message.replaceAll("\\{TITLE_COUNT\\}", String.valueOf(titleList.size()));
 			message = message.replaceAll("\\{TITLE_LIST\\}", content.toString());
-			message = message.replaceAll("\\{PLURAL_PAPERS\\}", (titleList.size() > 1 ? "s" : ""));
-			message = message.replaceAll("\\{PLURAL_IS\\}", (titleList.size() > 1 ? "are" : "is"));
-			message = message.replaceAll("\\{INDEXING_SETTINGS_URL\\}", "https://http://www.docear.org/manage-documents/?email="+email+"&token="+ recipient.getToken());
+			message = message.replaceAll("\\{PLURAL_PAPERS\\}", (plural ? "s" : ""));
+			message = message.replaceAll("\\{PLURAL_THIS\\}", (plural ? "these" : "this"));
+			message = message.replaceAll("\\{PLURAL_IS\\}", (plural ? "are" : "is"));
+			message = message.replaceAll("\\{INDEXING_SETTINGS_URL\\}", "https://www.docear.org/manage-documents/?email="+email+"&token="+ recipient.getToken());
 			return MailUtils.sendMail(properties.getProperty("docear.mail.subject"), message, MailUtils.parseAddress("marcel.genzmehr@gmail.com"), MailUtils.DOCEAR_MAIL_CONFIGURATION);
 		}
 		else {
