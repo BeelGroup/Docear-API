@@ -1001,7 +1001,7 @@ public class InternalResource {
 			if(reset != null && reset) {
 				person.setDocidxNewDocuments(false);
 			}
-			//session.update(person);
+			session.update(person);
 			
 			return Tools.getHTTPStatusResponse(Status.OK, "OK");
 		}

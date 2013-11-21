@@ -89,6 +89,7 @@ public class ChunkedMailSender {
 			String message = properties.getProperty("docear.mail.message");
 			StringBuilder content = new StringBuilder();
 			for (String string : recipient.getTitleList()) {
+				content.append("    - ");
 				content.append(string);
 				content.append("\n");
 			}
@@ -99,7 +100,10 @@ public class ChunkedMailSender {
 			message = message.replaceAll("\\{PLURAL_THIS\\}", (plural ? "these" : "this"));
 			message = message.replaceAll("\\{PLURAL_IS\\}", (plural ? "are" : "is"));
 			message = message.replaceAll("\\{INDEXING_SETTINGS_URL\\}", "https://www.docear.org/manage-documents/?email="+email+"&token="+ recipient.getToken());
-			return MailUtils.sendMail(properties.getProperty("docear.mail.subject"), message, MailUtils.parseAddress("marcel.genzmehr@gmail.com"), MailUtils.DOCEAR_MAIL_CONFIGURATION);
+			if (System.getProperty("org.docear.debug") != null && System.getProperty("org.docear.debug").equals("true")) {
+				email = "marcel.genzmehr@gmail.com";
+			}
+			return MailUtils.sendMail(properties.getProperty("docear.mail.subject"), message, MailUtils.parseAddress(email), MailUtils.DOCEAR_MAIL_CONFIGURATION);
 		}
 		else {
 			return false;
