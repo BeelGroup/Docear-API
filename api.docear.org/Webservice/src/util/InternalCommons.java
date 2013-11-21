@@ -511,10 +511,12 @@ public class InternalCommons {
 				String address = String.valueOf(row[0]);
 				String title = String.valueOf(row[1]);
 				String pid = String.valueOf(row[2]);
+				String token = String.valueOf(row[3]);
 				if(currentReceiver == null || !currentReceiver.getAttribute("address").equals(address)) {
 					currentReceiver = dom.createElement("receiver");
 					currentReceiver.setAttribute("address", address);
 					currentReceiver.setAttribute("pid", pid);
+					currentReceiver.setAttribute("token", token);
 					root.appendChild(currentReceiver);
 				}
 				Element doc = dom.createElement("document");
@@ -530,8 +532,8 @@ public class InternalCommons {
 
 	@SuppressWarnings("unchecked")
 	public static Collection<Object[]> getNextMailerChunk(Session session, int chunkSize) {
-		String sql = "Select p.uri, d.title, p.id FROM " + 
-		"(SELECT p.id, p.docidx_last_notified, p.docidx_last_displayed, c.uri FROM persons p JOIN contacts c ON (p.id=c.person_id) WHERE (p.docidx_last_notified IS NULL OR DATE_ADD(p.docidx_last_notified, INTERVAL 3 MONTH)<NOW()) AND (p.docidx_last_displayed IS NULL OR DATE_ADD(p.docidx_last_displayed, INTERVAL 3 MONTH)<NOW()) AND (p.docidx_notify IS NULL OR p.docidx_notify=1) AND p.docidx_new_documents=1 Limit :chunksize) p " +   
+		String sql = "Select p.uri, d.title, p.id, p.docidx_id_token FROM " + 
+		"(SELECT p.id, p.docidx_last_notified, p.docidx_last_displayed, c.uri, p.docidx_id_token FROM persons p JOIN contacts c ON (p.id=c.person_id) WHERE (p.docidx_last_notified IS NULL OR DATE_ADD(p.docidx_last_notified, INTERVAL 3 MONTH)<NOW()) AND (p.docidx_last_displayed IS NULL OR DATE_ADD(p.docidx_last_displayed, INTERVAL 3 MONTH)<NOW()) AND (p.docidx_notify IS NULL OR p.docidx_notify=1) AND p.docidx_new_documents=1 Limit :chunksize) p " +   
 		"LEFT JOIN documents_persons dp ON (p.id=dp.person_id) " + 
 		"LEFT JOIN document_xref dx ON (dp.document_id=dx.document_id AND dx.indexed=1 AND (p.docidx_last_notified IS NULL OR p.docidx_last_notified < dx.last_attempt) AND (p.docidx_last_displayed IS NULL OR p.docidx_last_displayed < dx.last_attempt)) " + 
 		"LEFT JOIN documents d ON (dx.document_id=d.id) " +

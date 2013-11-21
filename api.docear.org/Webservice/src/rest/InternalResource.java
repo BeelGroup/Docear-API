@@ -952,7 +952,7 @@ public class InternalResource {
 	}
 	
 	@GET
-	@Path("/mailer/docidx/chunk")	
+	@Path("/mailer/persons/chunk")	
 	public Response getNextMailerChunk(@Context UriInfo ui, @Context HttpServletRequest request, @QueryParam("chunksize") Integer chunkSize) {
 		Session session = Tools.getSession();
 		session.setFlushMode(FlushMode.MANUAL);
@@ -977,7 +977,7 @@ public class InternalResource {
 	}
 	
 	@GET
-	@Path("/mailer/update/{person_id}")	
+	@Path("/mailer/persons/{person_id: \\d+}/update")	
 	public Response getMailerUpdatePerson(@Context UriInfo ui, @Context HttpServletRequest request, @PathParam("person_id") Integer personId, @QueryParam("notified") Boolean notified, @QueryParam("reset") Boolean reset) {
 		Session session = Tools.getSession();
 		session.setFlushMode(FlushMode.MANUAL);

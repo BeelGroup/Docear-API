@@ -43,11 +43,11 @@ public class ChunkedMailSender {
 	
 	private void postNotificationUpdate(Recipient recipient, boolean resetOnly) {
 		if(recipient.getTitleList().size() > 0) {
-			String queryStr = "/mailer/update/"+recipient.getPid()+"/?notified="+(!resetOnly)+"&reset=true";
+			String queryStr = "/internal/mailer/persons/"+recipient.getPid()+"/update/?notified="+(!resetOnly)+"&reset=true";
 			try {
 				URL url = new URL(SERVICE_HOST + queryStr);
 				URLConnection conn = url.openConnection();
-				
+				conn.setRequestProperty("accessToken", properties.getProperty("docear.mail.sender.token"));
 				System.out.println(conn.getContent());
 			}
 			catch (Exception e) {
@@ -60,7 +60,7 @@ public class ChunkedMailSender {
 	private Map<String, Recipient> getNextChunk(int maxChunkSize) {
 		Map<String, Recipient> chunk = new HashMap<String, Recipient>();
 		
-		String queryStr = "/internal/mailer/docidx/chunk/?chunksize="+maxChunkSize;
+		String queryStr = "/internal/mailer/persons/chunk/?chunksize="+maxChunkSize;
 		try {
 			URL url = new URL(SERVICE_HOST + queryStr);
 			URLConnection conn = url.openConnection();
@@ -69,7 +69,7 @@ public class ChunkedMailSender {
 			NodeList recieverList = doc.getElementsByTagName("receiver");
 			for (int i = 0; i < recieverList.getLength(); i++) {
 				Element receiver = (Element)recieverList.item(i);
-				Recipient recipient = new Recipient(Integer.parseInt(receiver.getAttribute("pid")));
+				Recipient recipient = new Recipient(Integer.parseInt(receiver.getAttribute("pid")), receiver.getAttribute("token"));
 				NodeList titleList = receiver.getElementsByTagName("document");
 				for (int j = 0; j < titleList.getLength(); j++) {
 					recipient.addTitle(titleList.item(j).getTextContent());
@@ -92,7 +92,12 @@ public class ChunkedMailSender {
 				content.append(string);
 				content.append("\n");
 			}
+			
+			message = message.replaceAll("\\{TITLE_COUNT}", String.valueOf(titleList.size()));
 			message = message.replaceAll("\\{TITLE_LIST\\}", content.toString());
+			message = message.replaceAll("\\{PLURAL_PAPERS\\}", (titleList.size() > 1 ? "s" : ""));
+			message = message.replaceAll("\\{PLURAL_IS\\}", (titleList.size() > 1 ? "are" : "is"));
+			message = message.replaceAll("\\{INDEXING_SETTINGS_URL\\}", "https://http://www.docear.org/manage-documents/?email="+email+"&token="+ recipient.getToken());
 			return MailUtils.sendMail(properties.getProperty("docear.mail.subject"), message, MailUtils.parseAddress("marcel.genzmehr@gmail.com"), MailUtils.DOCEAR_MAIL_CONFIGURATION);
 		}
 		else {
@@ -102,12 +107,18 @@ public class ChunkedMailSender {
 	
 	static class Recipient {
 		private final int pid;
+		private final String token;
 		private final List<String> titleList = new ArrayList<String>();
 		
-		public Recipient(int pid) {
+		public Recipient(int pid, String token) {
 			this.pid = pid;
+			this.token = token;
 		}
 		
+		public String getToken() {
+			return token;
+		}
+
 		public int getPid() {
 			return pid;
 		}
