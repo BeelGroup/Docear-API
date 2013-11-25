@@ -97,7 +97,8 @@ def send_email():
     s.quit()
     
 
-def _main():    
+def _main():  
+    
     _test_recommendations()
     _test_pdf_downloader()
     

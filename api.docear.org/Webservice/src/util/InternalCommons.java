@@ -431,6 +431,7 @@ public class InternalCommons {
 					//atomic update xref with indexed state 2 or sth
 					xref.setIndexed(2);
 					session.update(xref);
+					session.flush();
 				}
 			}
 			catch(Exception e) {

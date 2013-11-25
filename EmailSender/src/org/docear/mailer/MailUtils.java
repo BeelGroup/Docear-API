@@ -22,6 +22,26 @@ import org.sciplore.utilities.config.Config;
 
 public class MailUtils {
 	
+	public static class MailSenderException {
+		private InternetAddress[] emailAddresses = null;
+		private Exception exception = null;
+		
+		public MailSenderException(Exception exception, InternetAddress[] emailAddresses) {
+			this.emailAddresses = emailAddresses;
+			this.exception = exception;
+		}
+		
+		public String toString() {
+			StringBuffer sb = new StringBuffer();
+			for (InternetAddress emailAddress: emailAddresses) {
+				sb.append(emailAddress.getAddress()).append(" ");
+			}
+			return sb.append(": ").append(exception.getMessage()).toString();
+		}
+	}
+	
+	public final static List<MailSenderException> senderExceptions = new ArrayList<MailUtils.MailSenderException>();
+	
 	public interface MailConfiguration {
 
 		public Session getSession();
@@ -70,7 +90,16 @@ public class MailUtils {
 		}
 		
 		public void setSSLEnabled(boolean enabled) {
-			props.put("mail.smtp.ssl.enable", "true");
+			props.put("mail.smtp.ssl.enable", Boolean.toString(enabled));
+		}
+
+		
+		public void setTLSEnabled(boolean enabled) {
+			props.put("mail.smtp.starttls.enable", Boolean.toString(enabled));
+		}
+		
+		public void setPort(int port) {
+			props.put("mail.smtp.port", Integer.toString(port));
 		}
 		
 
@@ -123,6 +152,8 @@ public class MailUtils {
 		    msg.setText(message, "UTF-8");
 		    
 		    Transport.send(msg);
+		    
+		    senderExceptions.clear();
 		    return true;
 		} catch (MessagingException mex) {
 		    System.out.println("\n--Exception handling in MailUtils.sendMail()");
@@ -132,6 +163,8 @@ public class MailUtils {
 		    Exception ex = mex;
 		    do {
 			if (ex instanceof SendFailedException) {
+				senderExceptions.add(new MailSenderException(ex, recipients));
+				
 			    SendFailedException sfex = (SendFailedException)ex;
 			    Address[] invalid = sfex.getInvalidAddresses();
 			    if (invalid != null) {

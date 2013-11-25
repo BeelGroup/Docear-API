@@ -1068,6 +1068,7 @@ public class InternalResource {
 						String id = (option.substring("notAuthor_".length()));
 						DocumentPerson docPerson = (DocumentPerson) session.load(DocumentPerson.class, Integer.parseInt(id));
 						session.delete(docPerson);
+						session.flush();
 						
 					}
 					else if(option.startsWith("isCollection_")) {
@@ -1099,23 +1100,24 @@ public class InternalResource {
 			name += InternalCommons.normalizeStr(middleName) + " ";
 			name += InternalCommons.normalizeStr(lastName);
 			NameComponents nameParts = nameSeparator.seperateName(InternalCommons.normalizeStr(name));
-			if(nameParts.getFirstName() != null && !nameParts.getFirstName().trim().isEmpty() && !nameParts.getFirstName().equals(person.getNameFirst())) {
+			
+			if(!InternalCommons.normalizeStr(person.getNameFirst()).equals(InternalCommons.normalizeStr(nameParts.getFirstName()))) {
 				person.setNameFirst(nameParts.getFirstName());
 				dirty = true;
 			}
-			if(nameParts.getMiddleName() != null && !nameParts.getMiddleName().trim().isEmpty() && !nameParts.getMiddleName().equals(person.getNameMiddle())) {
+			if(!InternalCommons.normalizeStr(nameParts.getMiddleName()).equals(InternalCommons.normalizeStr(person.getNameMiddle()))) {
 				person.setNameMiddle(nameParts.getMiddleName());
 				dirty = true;
 			}
-			if(nameParts.getLastNamePrefix() != null && !nameParts.getLastNamePrefix().trim().isEmpty() && !nameParts.getLastNamePrefix().equals(person.getNameLastPrefix())) {
+			if(!InternalCommons.normalizeStr(nameParts.getLastNamePrefix()).equals(InternalCommons.normalizeStr(person.getNameLastPrefix()))) {
 				person.setNameLastPrefix(nameParts.getLastNamePrefix());
 				dirty = true;
 			}
-			if(nameParts.getLastName() != null && !nameParts.getLastName().trim().isEmpty() && !nameParts.getLastName().equals(person.getNameLast())) {
+			if(!InternalCommons.normalizeStr(nameParts.getLastName()).equals(InternalCommons.normalizeStr(person.getNameLast()))) {
 				person.setNameLast(nameParts.getLastName());
 				dirty = true;
 			}
-			if(nameParts.getLastNameSuffix() != null && !nameParts.getLastNameSuffix().trim().isEmpty() && !nameParts.getLastNameSuffix().equals(person.getNameLastSuffix())) {
+			if(!InternalCommons.normalizeStr(nameParts.getLastNameSuffix()).equals(InternalCommons.normalizeStr(person.getNameLastSuffix()))) {
 				person.setNameLastSuffix(nameParts.getLastNameSuffix());
 				dirty = true;
 			}
