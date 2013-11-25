@@ -1002,6 +1002,7 @@ public class InternalResource {
 				person.setDocidxNewDocuments(false);
 			}
 			session.update(person);
+			session.flush();
 			
 			return Tools.getHTTPStatusResponse(Status.OK, "OK");
 		}

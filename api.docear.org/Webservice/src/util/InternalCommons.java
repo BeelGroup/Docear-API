@@ -45,9 +45,11 @@ import org.sciplore.database.SessionProvider;
 import org.sciplore.queries.DocumentQueries;
 import org.sciplore.queries.DocumentsPdfHashQueries;
 import org.sciplore.queries.GoogleDocumentQueryQueries;
+import org.sciplore.queries.XrefQueries;
 import org.sciplore.resources.Contact;
 import org.sciplore.resources.Document;
 import org.sciplore.resources.DocumentPerson;
+import org.sciplore.resources.DocumentXref;
 import org.sciplore.resources.DocumentsPdfHash;
 import org.sciplore.resources.FulltextUrl;
 import org.sciplore.resources.GoogleDocumentQuery;
@@ -417,14 +419,23 @@ public class InternalCommons {
 	public static void removeFulltextFromIndex(Session session, DocumentPerson docPerson) {
 		List<DocumentsPdfHash> pdfHashes = DocumentsPdfHashQueries.getPdfHashes(session, docPerson.getDocument());
 		for (DocumentsPdfHash documentsPdfHash : pdfHashes) {
-			//TODO
-			// rename plaintext file
-			
-			//update index
-			//FulltextCommons.requestPlainTextUpdate(docPerson.getDocument(), documentsPdfHash.getHash());
-			
-			//atomic update xref with indexed state 2 or sth
-			//ask joeran what to do in case we try to index a new document with at least one author "never index any doc"
+			try {
+				// delete plaintext file
+				File f = new File(DocumentCommons.PDF_STORE_PATH, documentsPdfHash.getHash()+".zip");
+				f.delete();
+
+				//update index
+				FulltextCommons.requestPlainTextUpdate(docPerson.getDocument(), documentsPdfHash.getHash());
+				
+				for (DocumentXref xref : XrefQueries.getDocumentXrefs(session, documentsPdfHash.getDocument())) {
+					//atomic update xref with indexed state 2 or sth
+					xref.setIndexed(2);
+					session.update(xref);
+				}
+			}
+			catch(Exception e) {
+				System.out.println("util.InternalCommons.removeFulltextFromIndex(session, docPerson): "+e.getMessage());
+			}
 		}
 	}
 	

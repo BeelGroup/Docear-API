@@ -51,23 +51,23 @@ public class MindmapQueries {
 		criteria = criteria.addOrder(Order.asc("map.filename")).addOrder(Order.asc("map.filepath")).addOrder(Order.desc("map.revision"));
 		return criteria;
 	}
-	
-	public static Mindmap getMindmap(Session session, User user, String accessToken, Integer id) {
-		if (id == null) {			
-			return null;
-		}
-		List<Mindmap> maps = getMindmaps(session, user, accessToken, id, null, null, null, null, null, null);
-		if (maps.size()==0) {
-			return null;
-		}
-		else {
-			return getMindmaps(session, user, accessToken, id, null, null, null, null, null, null).get(0);
-		}
+		
+	public static List<Mindmap> getMindmaps(Session session, User user, String accessToken, Integer allowBackup) {
+		return getMindmaps(session, user, accessToken, null, null, null, null, null, null, allowBackup);
 	}
 	
-	public static List<Mindmap> getMindmaps(Session session, User user, String accessToken) {
-		return getMindmaps(session, user, accessToken, null, null, null, null, null, null, null);
+	public static Mindmap getMindmap(Session session, User user, String accessToken, Integer id, Integer allowBackup) {
+		if (id == null) {                        
+            return null;
+		}
+		List<Mindmap> maps = getMindmaps(session, user, accessToken, id, null, null, null, null, null, allowBackup);
+		if (maps != null && maps.size() > 0) {
+			return maps.get(0);
+		}
+		
+		return null;
 	}
+
 	
 	//the standard method to use
 	public static List<Mindmap> getMindmaps(Session session, User user, String accessToken, Integer id, String mindmapId, Date datehi, Date datelo, 

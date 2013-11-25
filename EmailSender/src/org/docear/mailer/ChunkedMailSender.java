@@ -18,23 +18,38 @@ import org.w3c.dom.NodeList;
 
 public class ChunkedMailSender {
 	private final Properties properties = Config.getProperties("mail.sender");
-	private final static String SERVICE_HOST = "http://localhost:8080";//"https://api.docear.org";
+	private final static String SERVICE_HOST = "https://api.docear.org";
 	
 	public void start(final int maxChunkSize) {
 		new Thread() {
 			public void run() {
-				Map<String, Recipient> chunk = getNextChunk(maxChunkSize);
-				while(!chunk.isEmpty()) {
-					Iterator<Entry<String, Recipient>> iter = chunk.entrySet().iterator();
-					while(iter.hasNext()) {
-						Entry<String, Recipient> entry = iter.next();
-						if(sendNotificationMail(entry.getKey(), entry.getValue())) {
-							postNotificationUpdate(entry.getValue(), false);
-							iter.remove();
+				while (true) {
+    				Map<String, Recipient> chunk = getNextChunk(maxChunkSize);
+    				if (chunk.isEmpty()) {
+    					try {
+							sleep(24*3600*1000);
 						}
-						else {
-							postNotificationUpdate(entry.getValue(), true);
+						catch (InterruptedException e) {
 						}
+    				}
+    				while(!chunk.isEmpty()) {
+    					Iterator<Entry<String, Recipient>> iter = chunk.entrySet().iterator();
+    					while(iter.hasNext()) {
+    						Entry<String, Recipient> entry = iter.next();
+    						if(sendNotificationMail(entry.getKey(), entry.getValue())) {
+    							postNotificationUpdate(entry.getValue(), false);
+    							iter.remove();
+    						}
+    						else {
+    							postNotificationUpdate(entry.getValue(), true);
+    						}
+    					}
+    				}
+    				
+    				try {
+						sleep(600*1000);
+					}
+					catch (InterruptedException e) {
 					}
 				}
 			}
@@ -52,6 +67,13 @@ public class ChunkedMailSender {
 			}
 			catch (Exception e) {
 				e.printStackTrace();
+				try {
+					Thread.sleep(600*1000);
+				}
+				catch (InterruptedException ex) {
+				}
+				
+				postNotificationUpdate(recipient, resetOnly);
 			}
 		}
 		
@@ -99,7 +121,7 @@ public class ChunkedMailSender {
 			message = message.replaceAll("\\{PLURAL_PAPERS\\}", (plural ? "s" : ""));
 			message = message.replaceAll("\\{PLURAL_THIS\\}", (plural ? "these" : "this"));
 			message = message.replaceAll("\\{PLURAL_IS\\}", (plural ? "are" : "is"));
-			message = message.replaceAll("\\{INDEXING_SETTINGS_URL\\}", "https://www.docear.org/manage-documents/?email="+email+"&token="+ recipient.getToken());
+			message = message.replaceAll("\\{INDEXING_SETTINGS_URL\\}", "https://www.docear.org/my-docear/my-documents/manage-documents/?email="+email+"&token="+ recipient.getToken());
 			if (System.getProperty("org.docear.debug") != null && System.getProperty("org.docear.debug").equals("true")) {
 				email = "marcel.genzmehr@gmail.com";
 			}

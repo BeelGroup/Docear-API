@@ -1,20 +1,25 @@
 package org.sciplore.queries;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Response;
+import java.util.List;
 
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
-import org.sciplore.database.SessionProvider;
 import org.sciplore.resources.Document;
 import org.sciplore.resources.DocumentXref;
 import org.sciplore.tools.Tools;
 
 public class XrefQueries {
 
+	@SuppressWarnings("unchecked")
+	public static List<DocumentXref> getDocumentXrefs(Session session, Document document) {
+		Criteria criteria = session.createCriteria(DocumentXref.class, "xref");
+		if (document != null) {
+			criteria = criteria.add(Restrictions.eq("document", document));
+		}
+		
+		return criteria.list();
+	}
+	
 	public static DocumentXref getDocumentXref(Session session, Document document, String source/*, String sourcesId*/) {
 		Criteria criteria = session.createCriteria(DocumentXref.class, "xref");
 		if (document != null) {

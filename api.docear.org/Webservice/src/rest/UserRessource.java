@@ -139,7 +139,7 @@ public class UserRessource {
 
 		final User user = new User(session).getUserByEmailOrUsername(userName);
 		if (!ResourceCommons.authenticate(request, user)) {
-			return UserCommons.getHTTPStatusResponse(Status.INTERNAL_SERVER_ERROR, "no valid access token.");
+			return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "no valid access token.");
 		}
 
 		try {
@@ -333,7 +333,8 @@ public class UserRessource {
 			}
 
 			String accessToken = request.getHeader("accessToken");
-			Mindmap map = MindmapQueries.getMindmap(session, user, accessToken, id);
+			Mindmap map = MindmapQueries.getMindmap(session, user, accessToken, id, 1);
+//					.getMindmap(session, user, accessToken, id, new Integer(1));
 
 			if (map == null) {
 				return UserCommons.getHTTPStatusResponse(Status.FORBIDDEN, "no mindmap found.");
@@ -364,7 +365,7 @@ public class UserRessource {
 
 			String output = "";
 			String accessToken = request.getHeader("accessToken");
-			for (Mindmap map : MindmapQueries.getMindmaps(session, user, accessToken)) {
+			for (Mindmap map : MindmapQueries.getMindmaps(session, user, accessToken, 1)) {
 				output += map.getId() + SEP + map.getMindmapId() + SEP + map.getRevision().toLocaleString() + SEP + map.getFilepath() + SEP + map.getFilename()
 						+ SEP + map.getFilesize() + "\n";
 			}
@@ -668,12 +669,8 @@ public class UserRessource {
 		final Session session = SessionProvider.sessionFactory.openSession();
 		Transaction transaction = session.beginTransaction();
 		try {
-			if(password == null || password.trim().length() < 6) {
-				return UserCommons.getHTTPStatusResponse(Status.BAD_REQUEST, "The given password is invalid. Please choose a password with at least 6 characters.");
-			}
-			
-			if(!password.equals(password_retype)) {
-				return UserCommons.getHTTPStatusResponse(Status.BAD_REQUEST, "The passwords are not matching.");
+			if(password == null || !password.equals(password_retype) || password.trim().length() <= 0) {
+				return UserCommons.getHTTPStatusResponse(Status.BAD_REQUEST, "The passwords you have entered are not identical.");
 			}
 			
 			final User user = new User(session).getUserByEmail(email);
