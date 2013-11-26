@@ -182,7 +182,7 @@ public class ChunkedMailSender {
 	private boolean sendNotificationMail(String email, Recipient recipient) {
 		List<String> titleList = recipient.getTitleList();
 		
-		if (titleList.size() > 0) {
+		if (titleList.size() > 0 && titleList.size()<=150) {
 			String message = properties.getProperty("docear.mail.message");
 			StringBuilder content = new StringBuilder();    			
 			for (String string : recipient.getTitleList()) {
@@ -190,10 +190,10 @@ public class ChunkedMailSender {
 				content.append(string);
 				content.append("\n");
 			}
-			boolean plural = titleList.size() > 1;
+			boolean plural = titleList.size() > 1;			
 			try {
     			message = message.replaceAll("\\{TITLE_COUNT\\}", String.valueOf(titleList.size()));
-    			message = message.replaceAll("\\{TITLE_LIST\\}", content.toString());
+    			message = message.replaceAll("\\{TITLE_LIST\\}", content.toString().replaceAll("\\$", "\\\\\\$"));
     			message = message.replaceAll("\\{PLURAL_PAPERS\\}", (plural ? "s" : ""));
     			message = message.replaceAll("\\{PLURAL_THIS\\}", (plural ? "these" : "this"));
     			message = message.replaceAll("\\{PLURAL_IS\\}", (plural ? "are" : "is"));
@@ -207,7 +207,7 @@ public class ChunkedMailSender {
     					MailUtils.DOCEAR_MAIL_CONFIGURATION);
     			}
 			catch(Exception e) {				
-				System.err.println(email + " :\n" + content);
+				//System.err.println(email + " :\n" + content);
 				e.printStackTrace();
 				return false;
 			}
