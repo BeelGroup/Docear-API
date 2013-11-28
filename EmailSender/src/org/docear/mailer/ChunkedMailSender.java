@@ -31,11 +31,18 @@ public class ChunkedMailSender {
 	private final Properties properties = Config.getProperties("mail.sender");
 	private final static String SERVICE_HOST = "https://api.docear.org";
 
-	public void start(final int maxChunkSize) {
+	public void start() {
 		new Thread() {
 			public void run() {
-//				while (true) {
-					Map<String, Recipient> chunk = getNextChunk(maxChunkSize);
+				int chunkSize = Integer.parseInt(properties.getProperty("docear.mail.chunk.size", "1"));
+				int maxChunkRequests = Integer.parseInt(properties.getProperty("docear.mail.chunk.requestnumber", "1"));
+				
+				System.out.println("starting parameters [docear.mail.chunk.size="+chunkSize+"; docear.mail.chunk.requestnumber="+maxChunkRequests+"]");
+				
+				// i==-1 --> infinite loop
+				for (int i=0; (maxChunkRequests<0 ? true : i<maxChunkRequests); i=(maxChunkRequests<0 ? -1 : i+1)) {
+					
+					Map<String, Recipient> chunk = getNextChunk(chunkSize);
 					if (chunk.isEmpty()) {						
 						try {
 							sleep(24 * 3600 * 1000);
@@ -46,7 +53,8 @@ public class ChunkedMailSender {
 					else {
 						System.out.println("got "+chunk.size()+" entries");
 					}
-					while (!chunk.isEmpty()) {
+//					while (!chunk.isEmpty()) 
+					{
 						Iterator<Entry<String, Recipient>> iter = chunk.entrySet().iterator();
 						while (iter.hasNext()) {
 							Entry<String, Recipient> entry = iter.next();
@@ -77,7 +85,7 @@ public class ChunkedMailSender {
 					catch (InterruptedException e) {
 					}
 				}
-//			}
+			}
 
 		}.start();
 	}

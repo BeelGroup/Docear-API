@@ -1,9 +1,7 @@
 package org.docear.mailer;
 
-public class Main {
-	public static int LIMIT = 10000;
-	
+public class Main {	
 	public static void main(String... args) {		
-		new ChunkedMailSender().start(LIMIT);
+		new ChunkedMailSender().start();
 	}
 }
