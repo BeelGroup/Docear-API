@@ -75,7 +75,7 @@ public class DocumentXrefCategory extends Resource {
 	public DocumentXrefCategory getDocumentXrefCategory(DocumentXrefCategory parsedDocXrefCat) {
 		if(parsedDocXrefCat.getId() != null) {
 			parsedDocXrefCat.load();
-			return parsedDocXrefCat;
+			return (DocumentXrefCategory) getSession().load(DocumentXrefCategory.class, parsedDocXrefCat.getId());
 		} else {
 			if(!Tools.empty(parsedDocXrefCat.getCategory())) {
 				return getDocumentXrefCategory(parsedDocXrefCat.getCategory(), parsedDocXrefCat.getXref(), parsedDocXrefCat.getSource());

@@ -38,8 +38,7 @@ public class XrefQueries {
 	
 	public static DocumentXref getDocumentXref(Session session, DocumentXref x) {
 		if(x.getId() != null) {
-			x.load(x.getId());
-			return x;
+			return (DocumentXref) session.load(DocumentXref.class, x.getId());			
 		} else {
 			if(x.getDocument() == null || x.getDocument().getId() == null /*|| x.getInstitution() == null || x.getInstitution().getId() == null*/) {
 				return null;
@@ -48,8 +47,7 @@ public class XrefQueries {
 		}
 	}
 	
-	public static DocumentXref getDocumentXref(Session session, Integer id, String source) {
-//		return (DocumentXref) session.get(DocumentXref.class, id);
+	public static DocumentXref getDocumentXref(Session session, Integer id, String source) {		
 		Criteria criteria = session.createCriteria(DocumentXref.class, "xref").add(Restrictions.eq("id", id));
 		if (source != null) {
 			criteria.add(Tools.getDisjunctionFromString("source", source));

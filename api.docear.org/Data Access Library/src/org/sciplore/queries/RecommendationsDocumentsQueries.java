@@ -35,8 +35,7 @@ public class RecommendationsDocumentsQueries {
 
 	public static RecommendationsDocuments getRecommendationsDocuments(Session session, RecommendationsDocuments recDoc) {
 		if (recDoc.getId() != null) {
-			recDoc.load(recDoc.getId());
-			return recDoc;
+			return (RecommendationsDocuments) session.load(RecommendationsDocuments.class, recDoc.getId());			
 		}
 		else {
 			return null;

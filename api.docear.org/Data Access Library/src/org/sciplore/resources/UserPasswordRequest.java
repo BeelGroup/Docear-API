@@ -53,8 +53,7 @@ public class UserPasswordRequest extends Resource {
 	@Override
 	public Resource getPersistentIdentity() {
 		if(getId() != null) {
-			load();
-			return this;
+			return (Resource) getSession().load(UserPasswordRequest.class, getId());			
 		} 
 		else {
 			return getUserPasswordRequest(getSession(), getToken());

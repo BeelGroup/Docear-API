@@ -111,9 +111,9 @@ public class DocumentPerson extends Resource {
 	
 	public DocumentPerson getDocumentPerson(DocumentPerson dp) {
 		if(dp.getId() != null) {
-			dp.load(dp.getId());
-			return dp;
-		} else {
+			return (DocumentPerson) getSession().load(DocumentPerson.class, dp.getId());			
+		} 
+		else {
 			return getDocumentPerson(dp.getDocument(), dp.getPersonHomonym());
 		}
 	}

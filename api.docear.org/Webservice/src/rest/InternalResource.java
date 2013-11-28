@@ -1083,8 +1083,8 @@ public class InternalResource {
 			
 			//TODO update person data
 			boolean dirty = false;
-			if(ignoreAll != null) {
-				person.setDocidxAllow(!ignoreAll);
+			if((notification_option != null && "3".equals(notification_option))) {				
+				person.setDocidxAllow(false);
 				dirty = true;
 			}
 			if(person.getDocidxNotify() && (notification_option != null && "2".equals(notification_option))) {
@@ -1092,7 +1092,7 @@ public class InternalResource {
 				dirty = true;
 			}
 			if(!person.getDocidxNotify() && (notification_option != null && "1".equals(notification_option))) {
-				person.setDocidxNotify(true);
+				person.setDocidxNotify(true);				
 				dirty = true;
 			}
 			NameSeparator nameSeparator = new NameSeparator();

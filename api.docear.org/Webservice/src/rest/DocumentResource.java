@@ -500,7 +500,10 @@ public class DocumentResource {
 			if (number == null) {
 				number = items.size();
 			}
-			for (int i=0; i<number; i++) {
+			if (items==null || items.size() == 0) {
+				throw new NullPointerException();
+			}
+			for (int i=0; i<Math.min(number, items.size()); i++) {
 				docIds.add(items.get(i).documentId);
 			}
 			List<Document> docs = DocumentQueries.getDocuments(session, docIds);
@@ -510,7 +513,7 @@ public class DocumentResource {
 		}
 		catch (NullPointerException e) {
 			e.printStackTrace();
-			return Tools.getHTTPStatusResponse(Status.NOT_FOUND, "No document found for the given id");
+			return Tools.getHTTPStatusResponse(Status.NOT_FOUND, "No document found for the given query");
 		}
 		catch (Exception e) {
 			e.printStackTrace();

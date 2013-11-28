@@ -16,8 +16,7 @@ public class PersonXref extends Resource {
 		
 	public  PersonXref getPersonXref(PersonXref x) {
 		if(x.getId() != null) {
-			x.load();
-			return x;
+			return (PersonXref) getSession().load(PersonXref.class, x.getId());
 		} else {
 			return getPersonXref(x.getPerson(), x.getSource(), x.getSourcesId(), x.getType());
 		}

@@ -319,8 +319,7 @@ public class DocumentQueries {
 	 */
 	public static Document getDocument(Session session, Document d) {
 		if (d.getId() != null) {
-			d.load(d.getId());
-			return d;
+			return (Document) session.load(Document.class, d.getId());			
 			// return getDocument(d.getId());
 		}
 		if (d.getTitle() != null) {

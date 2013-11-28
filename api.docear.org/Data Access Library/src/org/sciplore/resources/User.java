@@ -58,8 +58,7 @@ public class User extends Resource {
 	
 	public  User getUser(User u) {
 		if(u.getId() != null) {
-			u.load(u.getId());
-			return u;
+			return (User) getSession().load(User.class, u.getId());			
 		} else {
 			return getUser(u.getUsername());
 		}

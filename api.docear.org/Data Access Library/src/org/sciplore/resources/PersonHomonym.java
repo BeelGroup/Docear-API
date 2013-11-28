@@ -62,8 +62,7 @@ public class PersonHomonym extends Resource {
 	@SuppressWarnings("unchecked")
 	public  PersonHomonym getPersonHomonym(PersonHomonym p) {
 		if(p.getId() != null) {
-			p.load();
-			return p;
+			return (PersonHomonym) getSession().load(PersonHomonym.class, p.getId());
 		} else {
 			String nameComplete = p.createNameComplete();			
 			System.out.println("PersonHomonym Name Complete: " + nameComplete);			

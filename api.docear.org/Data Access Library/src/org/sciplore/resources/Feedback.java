@@ -26,8 +26,7 @@ public class Feedback extends Resource {
 	
 	public  Feedback getFeedback(Feedback f) {
 		if(f.getId() != null) {
-			f.load(f.getId());
-			return f;
+			return (Feedback) getSession().load(Feedback.class, f.getId());
 			//return getFeedback(f.getId());
 		} else {
 			return getFeedback(f.getDocument(), f.getType(), f.getText(), f.getCreated());

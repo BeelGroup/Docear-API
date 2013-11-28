@@ -29,8 +29,7 @@ public class Institution extends Resource {
 	
 	public  Institution getInstitution(Institution i) {
 		if(i.getId() != null && i.getSession() != null) {
-			i.load();
-			return i;
+			return (Institution) getSession().load(Institution.class, i.getId());
 		} else {
 			return getInstitution(i.getName());
 		}

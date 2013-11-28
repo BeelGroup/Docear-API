@@ -53,8 +53,7 @@ public class FulltextUrl extends Resource {
 	
 	public  FulltextUrl getFulltextUrl(FulltextUrl f) {
 		if(f.getId() != null) {
-			f.load(f.getId());
-			return f;
+			return (FulltextUrl) getSession().load(FulltextUrl.class, f.getId());			
 		} else  {
 			return getFulltextUrl(f.getDocument(), f.getUrl());
 		}
