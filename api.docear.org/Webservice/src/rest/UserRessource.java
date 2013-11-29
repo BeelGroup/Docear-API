@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.text.DateFormat;
@@ -102,9 +103,10 @@ public class UserRessource {
 				RecommendationCommons.click(session, recDoc);				
 			}
 
+			URL url = null;
+			FulltextUrl fulltextUrl = null;
 			try {
-				URL url = null;
-				FulltextUrl fulltextUrl = recDoc.getFulltextUrl();
+				fulltextUrl = recDoc.getFulltextUrl();
 				if (fulltextUrl != null) {
 					url = new URL(fulltextUrl.getUrl());
 					return UserCommons.getRedirectedResponse(url.toURI());
@@ -112,7 +114,12 @@ public class UserRessource {
 				// return UserCommons.getRedirectResponse(url,
 				// "Redirecting to Resource");
 			}
-			catch (Exception e) {
+			catch(MalformedURLException e) {
+				System.out.println("rest.UserRessource.getRecommendationFulltext(hashId, userName, uriInfo, request, format, stream):\n"
+						+ "url: "+url+"\nfulltextUrl: "+fulltextUrl+" throws Exception: \n"
+								+ e.getMessage());
+			}
+			catch (Exception e) {				
 				e.printStackTrace();
 				return UserCommons.getHTTPStatusResponse(Status.INTERNAL_SERVER_ERROR, e.getMessage());
 			}
@@ -126,7 +133,7 @@ public class UserRessource {
 		}
 
 		return UserCommons.getHTTPStatusResponse(Status.INTERNAL_SERVER_ERROR, "unexpected exception when trying to fetch recommendation's url");
-	}
+	}	
 
 	@GET
 	@Path("/{username}/recommendations/documents/")
