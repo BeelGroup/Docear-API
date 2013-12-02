@@ -633,6 +633,10 @@ public class Algorithm extends Resource {
 		}
     }
     
+    public static void main(String[] args) {
+    	System.out.println(new Algorithm().toString());
+    }
+    
     public String toString() {
     	return "stemming="+getStemming()+";"
     			+"approach="+getApproach()+";"
