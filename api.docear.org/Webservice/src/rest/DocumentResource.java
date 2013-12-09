@@ -56,6 +56,9 @@ import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataBodyPart;
 import com.sun.jersey.multipart.FormDataMultiPart;
 import com.sun.jersey.multipart.FormDataParam;
+import org.mrdlib.index.Indexer;
+import org.sciplore.queries.DocumentsPdfHashQueries;
+import org.sciplore.resources.DocumentsPdfHash;
 
 @Path("/documents")
 public class DocumentResource {
@@ -154,6 +157,35 @@ public class DocumentResource {
 		finally {
 			Tools.tolerantClose(session);
 		}
+	}
+	
+	@GET
+	@Path("/{id}/plaintext")
+	public Response getPlainText(@Context UriInfo ui, @Context HttpServletRequest request, @PathParam(value = "id") int id) {
+		Session session = Tools.getSession();
+		try {
+			Document document = (Document) session.get(Document.class, id);
+			if (document == null) {
+				return Tools.getHTTPStatusResponse(Status.NOT_FOUND, "No document found for the given id");
+			}
+						
+			File file = null;
+			for (DocumentsPdfHash hash : DocumentsPdfHashQueries.getPdfHashes(session, document)) {
+				file = new File(Indexer.DOCUMENT_PLAINTEXT_DIRECTORY, hash.getHash()+".zip");
+				System.out.println("probing file: "+file.getAbsolutePath());
+				if (file.exists()) {
+					return Tools.getSerializedResponseAsStream(file);
+				}
+			}
+		}
+		catch (Exception e) {			
+			e.printStackTrace();
+		}
+		finally {
+			Tools.tolerantClose(session);
+		}
+		
+		return Tools.getHTTPStatusResponse(Status.NOT_FOUND, "File not found");
 	}
 
 	@GET
@@ -609,12 +641,13 @@ public class DocumentResource {
 			return Tools.getSerializedResponse(format, bean, stream);
 		}
 		catch (NullPointerException e) {
+                        
 			e.printStackTrace();
 			return Tools.getHTTPStatusResponse(Status.NOT_FOUND, "no documents found.");
 
 		}
 		catch(Exception e) {
-			e.printStackTrace();
+                        e.printStackTrace();
 			return Tools.getHTTPStatusResponse(Status.INTERNAL_SERVER_ERROR, "unknown error");
 		}
 		finally {
