@@ -1,6 +1,7 @@
 package rest;
 
 import java.io.InputStream;
+import java.math.BigInteger;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -40,6 +41,7 @@ import org.apache.lucene.util.Version;
 import org.docear.googleparser.GoogleScholarParser;
 import org.docear.googleparser.WebSearchResult;
 import org.hibernate.FlushMode;
+import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.mrdlib.index.Searcher;
@@ -53,6 +55,7 @@ import org.sciplore.queries.DocumentsBibtexUsersQueries;
 import org.sciplore.queries.DocumentsPdfHashQueries;
 import org.sciplore.queries.InternalQueries;
 import org.sciplore.queries.MindmapsPdfHashQueries;
+import org.sciplore.resources.Algorithm;
 import org.sciplore.resources.Contact;
 import org.sciplore.resources.Document;
 import org.sciplore.resources.DocumentPerson;
@@ -76,6 +79,8 @@ import util.Tools;
 import util.UserCommons;
 import util.UserSessionProvider;
 import util.UserSessionProvider.UserSession;
+import util.recommendations.AlgorithmCommons;
+import util.recommendations.RecommendationLogger;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.core.header.FormDataContentDisposition;
@@ -100,6 +105,35 @@ public class InternalResource {
 	}
 	
 	@GET
+	@Path("/testAlg")
+	public Response testAlg(@Context UriInfo ui, @Context HttpServletRequest request) {
+		final Session session = SessionProvider.sessionFactory.openSession();
+		try {
+			SQLQuery query = session.createSQLQuery("SELECT DISTINCT user_id FROM recommendations_documents_set WHERE created IS NOT NULL AND created >='2013-09-01' ORDER BY created DESC");
+			List<BigInteger> result = query.list();		
+			
+			int counter = 0;
+			for (BigInteger userId : result) {
+				RecommendationCommons.logger.log("computing test recommendation for user ["+userId+"] ("+counter+" of "+result.size()+")");
+				RecommendationCommons.computeForSingleUser(userId.intValue(), 0);
+				try {
+					Thread.sleep(10000);
+				}
+				catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				
+				counter++;
+			}
+		}
+		finally {
+			Tools.tolerantClose(session);
+		}
+		
+		return UserCommons.getHTTPStatusResponse(ClientResponse.Status.OK, "ok");
+	}
+	
+	@GET
 	@Path("/recommendations/compute")
 	public Response computeRecommendations(@Context UriInfo ui, @Context HttpServletRequest request) {
 		final Session session = SessionProvider.sessionFactory.openSession();
@@ -110,6 +144,78 @@ public class InternalResource {
 			}
 			
 			RecommendationCommons.computeForAllUsers(session);
+			return UserCommons.getHTTPStatusResponse(ClientResponse.Status.OK, "ok");
+		}
+		catch(RuntimeException e) {
+			e.printStackTrace();
+			return UserCommons.getHTTPStatusResponse(ClientResponse.Status.CONFLICT, e.getMessage());
+		}
+		finally {
+			Tools.tolerantClose(session);
+		}
+	}
+	
+	@GET
+	@Path("/recommendations/dryRun")
+	public Response dryRunOfflineRecommendations(@Context UriInfo ui, @Context HttpServletRequest request) {
+		final Session session = SessionProvider.sessionFactory.openSession();
+		try {
+			User user = new User(session).getUserByEmailOrUsername("pdfdownloader");
+			if (!ResourceCommons.authenticate(request, user)) {
+				return UserCommons.getHTTPStatusResponse(com.sun.jersey.api.client.ClientResponse.Status.UNAUTHORIZED, "no valid access token.");
+			}
+			
+			RecommendationCommons.dryRun(session);
+			return UserCommons.getHTTPStatusResponse(ClientResponse.Status.OK, "ok");
+		}
+		catch(RuntimeException e) {
+			e.printStackTrace();
+			return UserCommons.getHTTPStatusResponse(ClientResponse.Status.CONFLICT, e.getMessage());
+		}
+		finally {
+			Tools.tolerantClose(session);
+		}
+	}
+	
+	@GET
+	@Path("/recommendations/stop")
+	public Response stop(@Context UriInfo ui, @Context HttpServletRequest request) {
+		final Session session = SessionProvider.sessionFactory.openSession();
+		try {
+			User user = new User(session).getUserByEmailOrUsername("pdfdownloader");
+			if (!ResourceCommons.authenticate(request, user)) {
+				return UserCommons.getHTTPStatusResponse(com.sun.jersey.api.client.ClientResponse.Status.UNAUTHORIZED, "no valid access token.");
+			}
+			
+			RecommendationCommons.stopOfflineRecommendations();
+			return UserCommons.getHTTPStatusResponse(ClientResponse.Status.OK, "ok");
+		}
+		catch(RuntimeException e) {
+			e.printStackTrace();
+			return UserCommons.getHTTPStatusResponse(ClientResponse.Status.CONFLICT, e.getMessage());
+		}
+		finally {
+			Tools.tolerantClose(session);
+		}
+	}
+	
+	@GET
+	@Path("/recommendations/testcomputation")
+	public Response testcomputation(@Context UriInfo ui, @Context HttpServletRequest request, @QueryParam("userId") Integer userId, 
+			@QueryParam("algorithmId") Integer algorithmId) {
+		final Session session = SessionProvider.sessionFactory.openSession();
+		try {
+			User user = new User(session).getUserByEmailOrUsername("pdfdownloader");
+			if (!ResourceCommons.authenticate(request, user)) {
+				return UserCommons.getHTTPStatusResponse(com.sun.jersey.api.client.ClientResponse.Status.UNAUTHORIZED, "no valid access token.");
+			}
+			
+			System.out.println("computing recommendations for user["+userId+"] and algorithm ["+algorithmId+"]");
+			
+			user = (User) session.get(User.class, userId);
+			Algorithm algorithm = (Algorithm) session.get(Algorithm.class, algorithmId);
+			
+			RecommendationCommons.dryRunForSingleUser(session, user, algorithm);
 			return UserCommons.getHTTPStatusResponse(ClientResponse.Status.OK, "ok");
 		}
 		catch(RuntimeException e) {

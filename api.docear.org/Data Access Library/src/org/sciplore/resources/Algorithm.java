@@ -4,7 +4,9 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 
+import org.hibernate.Criteria;
 import org.hibernate.Session;
+import org.sciplore.tools.CriteriaToSqlConverter;
 import org.sciplore.tools.SimpleRestrictions;
 
 @Entity
@@ -296,7 +298,7 @@ public class Algorithm extends Resource {
 		return data_element_type_weighting;
 	}
 
-	public void setDataElementTypeWeighting(String data_element_type_weighting) {
+	public void setDataElementTypeWeighting(String data_element_type_weighting) {		
 		this.data_element_type_weighting = data_element_type_weighting;
 	}
 	
@@ -580,7 +582,7 @@ public class Algorithm extends Resource {
 			, Integer nodeDepthMetric, Integer noSiblings, Integer noSiblingsMetric, Integer noChildren, Integer noChildrenLevel, Integer noChildrenMetric, Integer wordCount
 			, Integer wordCountMetric, Integer nodeWeightNormalization, Integer nodeWeightComboScheme) {
 		
-		return (Algorithm)this.getSession().createCriteria(Algorithm.class)
+		Criteria criteria = this.getSession().createCriteria(Algorithm.class)
 		.add(SimpleRestrictions.eq("stemming", useStemming))
 		.add(SimpleRestrictions.eq("stop_word_removal", useStopWordRemoval))
 		.add(SimpleRestrictions.eq("sibling_nodes", useSiblingNodes))
@@ -613,9 +615,11 @@ public class Algorithm extends Resource {
 	    .add(SimpleRestrictions.eq("word_count", wordCount))
 	    .add(SimpleRestrictions.eq("word_count_metric", wordCountMetric))
 	    .add(SimpleRestrictions.eq("node_weight_normalization", nodeWeightNormalization))
-	    .add(SimpleRestrictions.eq("node_weight_combo_scheme", nodeWeightComboScheme))
-		.setMaxResults(1)
-		.uniqueResult();
+	    .add(SimpleRestrictions.eq("node_weight_combo_scheme", nodeWeightComboScheme));
+		
+		new CriteriaToSqlConverter();
+//		System.out.println("### selecting algorithm: "+CriteriaToSqlConverter.generateSQL(criteria));
+		return (Algorithm) criteria.setMaxResults(1).uniqueResult();
 	}
 
     

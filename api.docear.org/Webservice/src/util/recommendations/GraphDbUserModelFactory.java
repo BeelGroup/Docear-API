@@ -24,6 +24,7 @@ import org.sciplore.resources.GoogleDocumentQuery;
 import org.sciplore.resources.User;
 import org.sciplore.resources.UserModel;
 
+import util.RecommendationCommons;
 import util.recommendations.xml.XmlUserModelParser;
 import xml.XmlElement;
 
@@ -46,6 +47,10 @@ public class GraphDbUserModelFactory {
 	public GraphDbUserModelFactory(Session session, User user, Algorithm algorithm) throws Exception {
 		model = new UserModel(session);
 		xml = createModel(session, user, algorithm);
+		
+		if (xml == null) {
+			RecommendationCommons.logger.log("xml empty for user ["+user.getId()+"] and algorithm ["+algorithm.getId()+"]");
+		}
 
 		processXmlModel(session);
 	}
@@ -140,7 +145,6 @@ public class GraphDbUserModelFactory {
 			query.setPriority(GoogleDocumentQuery.CREATED_BY_RECOMMENDATION);
 
 			session.saveOrUpdate(query);
-
 			session.flush();
 			transaction.commit();
 		}
@@ -319,6 +323,8 @@ public class GraphDbUserModelFactory {
 				time = System.currentTimeMillis();
 				if (algorithm == null) {
 					algorithm = AlgorithmCommons.getRandomAlgorithm(session, maxTrials == 5);
+					session.saveOrUpdate(algorithm);
+					RecommendationCommons.logger.log("created algorithm ["+algorithm.getId()+"] for user ["+user.getId()+"]");					
 				}
 				model.setAlgorithm(algorithm);
 				valid = true;
@@ -327,18 +333,28 @@ public class GraphDbUserModelFactory {
 				if (model.getAlgorithm().getApproach() == Algorithm.APPROACH_STEREOTYPE) {
 					return null;
 				}
-				response = requestUserModel(user, model.getAlgorithm(), null);
-				if (response == null) {
-					maxTrials--;
-					valid = false;
+				try {
+    				response = requestUserModel(user, model.getAlgorithm(), null);
+    				if (response == null) {
+    					RecommendationCommons.logger.log("empty userModel for user ["+user.getId()+"] and algorithm ["+model.getAlgorithm().getId()+"]");
+    					maxTrials--;
+    					algorithm = null;
+    					valid = false;
+    				}
+    				else {
+    					valid = true;
+    				}
 				}
-				else {
-					valid = true;
+				catch(Exception e) {
+					valid = false;
+					RecommendationCommons.logger.log("exception for algorithm ["+model.getAlgorithm().getId()+"] and user ["+user.getId()+"]: "+e.getMessage());
+					e.printStackTrace();
 				}
 			}
 			if (!valid) {
 				time = System.currentTimeMillis();
 				model.setAlgorithm(AlgorithmCommons.getDefault(session));
+				RecommendationCommons.logger.log("using default algorithm ["+model.getAlgorithm().getPersistentIdentity().getId()+"] for user ["+user.getId()+"]");
 				response = requestUserModel(user, model.getAlgorithm(), null);
 			}
 		}

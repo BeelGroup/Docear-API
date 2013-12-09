@@ -421,7 +421,7 @@ public class InternalCommons {
 		for (DocumentsPdfHash documentsPdfHash : pdfHashes) {
 			try {
 				// delete plaintext file
-				File f = new File(DocumentCommons.PDF_STORE_PATH, documentsPdfHash.getHash()+".zip");
+				File f = new File(Indexer.DOCUMENT_PLAINTEXT_DIRECTORY, documentsPdfHash.getHash()+".zip");
 				f.delete();
 
 				//update index

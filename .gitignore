@@ -17,3 +17,12 @@ Desktop/flamingo/build/
 Desktop/flamingo/drop/
 Desktop/flamingo/www/webstart/
 EmailSender/bin/
+/PdfSpider/Xtract/nbproject/private/
+/api.docear.org/Utilities/nbproject/private/
+/PdfSpider/DocearPdfSpider/nbproject/private/
+/EmailSender/nbproject/private/
+/graphdb/docear_mindmap_parser/nbproject/private/
+/graphdb/docear-graphdb/nbproject/private/
+/api.docear.org/Webservice/nbproject/private/
+/api.docear.org/Webservice/nbbuild/
+/api.docear.org/Webservice/dist/

@@ -1,5 +1,6 @@
 package util;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,11 +31,21 @@ import org.sciplore.resources.UserModel;
 import rest.UserRessource;
 import util.recommendations.GraphDbUserModelFactory;
 import util.recommendations.OfflineEvaluator;
+import util.recommendations.RecommendationLogger;
 
 public class RecommendationCommons {	
 	public static final OfflineEvaluator offlineEvaluator = new OfflineEvaluator();
 	public static final List<Document> stereotypeDocuments = new ArrayList<Document>();
-	static {
+	public static RecommendationLogger logger;	
+	static {		
+		try {
+			logger = new RecommendationLogger("/tmp/recommendationsLogger.log");
+		}
+		catch (IOException e) {
+			logger = null;
+			e.printStackTrace();
+		}
+		
 		if (!UserRessource.PARSER_WORKING_PATH.exists()) {
 			UserRessource.PARSER_WORKING_PATH.mkdirs();
 		}
@@ -51,6 +62,134 @@ public class RecommendationCommons {
 	}
 
 	private static boolean locked = false;
+	private static boolean stop = false;
+
+	/**
+	 * This method does not save any recommendations. Instead it tries to compute them and logs if anýthing goes wrong
+	 * @param session
+	 * @param logFile
+	 */
+	public static void stopOfflineRecommendations() {
+		if (locked) {
+			stop = true;
+		}
+	}
+	
+	/**
+	 * This method does not save any recommendations. Instead it tries to compute them and logs if anýthing goes wrong
+	 * @param session
+	 * @param logFile
+	 */
+	public static void dryRun(Session session) {
+		if (locked) {
+			throw new RuntimeException("computing of recommendations already in progress!");
+		}
+		
+		locked = true;
+		
+		try {			
+			List<BigInteger> users = UserQueries.getUsers(session);
+			try {
+				Thread.sleep(1000);
+			}
+			catch (InterruptedException e) {
+			}
+
+			for (BigInteger userId : users) {				
+				session = SessionProvider.sessionFactory.openSession();
+				try {
+    				if (stop) {
+    					stop = false;
+    					locked = false;
+    					System.out.println("stopping RecommendationRunner");
+    					return;
+    				}
+    				User user = (User) session.get(User.class, userId.intValue());
+    				dryRunForSingleUser(session, user);
+				}
+				catch(Exception e) {
+					logger.log("exception in main loop for user ["+userId.intValue()+"]");
+				}
+				finally {
+					session.close();
+				}
+			}
+		}
+		
+		finally {
+			locked = false;		
+		}
+	}
+	
+	private static boolean dryRunForSingleUser(Session session, User user) {
+		return dryRunForSingleUser(session, user, null);
+	}
+	
+	public static boolean dryRunForSingleUser(Session session, User user, Algorithm algorithm) {
+		try {	
+			System.out.println("compute recommendations for user: " + user.getId() + " (" + user.getUsername() + ")");
+
+			Integer days = UserQueries.getDaysUsed(session, user);
+			if (days == null || days < 2) {
+				logger.log("user ["+user.getId()+"] not not using Docear long enough");				
+				return false;
+			}
+
+			GraphDbUserModelFactory response = new GraphDbUserModelFactory(session, user, algorithm);
+			if (response.getUserModel().getModel() == null) {
+				logger.log("user model empty for user ["+user.getId()+"]");
+				return false;
+			}
+
+			RecommendationsDocumentsSet recDocSet = null;			
+			if (response.getUserModel() != null && response.getUserModel().getModel() != null) {
+//				if (response.getUserModel().getModel().equals(GraphDbUserModelFactory.GRAPHDB_TYPE_SEPARATOR)) {
+//					// model is empty
+//					return false;
+//				}
+
+				/*****************************************
+				 * stereotype recommendations
+				 *****************************************/
+				if (response.getUserModel().getAlgorithm().getApproach() == Algorithm.APPROACH_STEREOTYPE) {
+					recDocSet = getStereotypes(session, user, response.getUserModel());
+					recDocSet.setRecAmountCurrent(10);
+					recDocSet.setRecAmountPotential(stereotypeDocuments.size());
+					recDocSet.setRecAmountShould(10);
+				}
+				/*****************************************
+				 * use our own database for CBF and bibocoupling
+				 *****************************************/
+				else {
+					try {
+						recDocSet = searchLucene(session, user, response, "text");
+						if (recDocSet == null || recDocSet.getRecommendationsDocuments() == null || recDocSet.getRecommendationsDocuments().size()==0) {
+							logger.log("lucene search returned no documents for user ["+user.getId()+"]");
+						}
+						else {
+							logger.log("lucene search returned "+ recDocSet.getRecommendationsDocuments().size()+" documents for user ["+user.getId()+"]");
+						}
+						logger.log("no_days_since_max for user ["+user.getId()+"] and algorithm ["+recDocSet.getUserModel().getAlgorithm().getId()+"]: "+recDocSet.getUserModel().getAlgorithm().getNoDaysSinceMax());
+					}
+					catch(Exception e) {
+						logger.log("exception when searching lucene for user ["+user.getId()+"]: "+response.getLuceneQuery().toString());
+					}
+				}
+			}
+
+			if (recDocSet == null) {
+				return false;
+			}			
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+		
+		logger.log("recommendation task finished for user ["+user.getId()+"]");
+
+		return true;
+	}
 
 	public static void computeForAllUsers(Session session) {
 		if (locked) {
@@ -67,6 +206,12 @@ public class RecommendationCommons {
 			}
 
 			for (BigInteger userId : users) {
+				if (stop) {
+					stop = false;
+					locked = false;
+					System.out.println("stopping RecommendationRunner");
+					return;
+				}
 				computeForSingleUser(userId.intValue(), 0);
 			}
 		}
@@ -194,7 +339,7 @@ public class RecommendationCommons {
 			if (response.getUserModel().getModel() == null) {
 				return false;
 			}
-
+			
 			RecommendationsDocumentsSet recDocSet = null;			
 			if (response.getUserModel() != null && response.getUserModel().getModel() != null) {
 //				if (response.getUserModel().getModel().equals(GraphDbUserModelFactory.GRAPHDB_TYPE_SEPARATOR)) {
@@ -235,12 +380,14 @@ public class RecommendationCommons {
 				
 				session.saveOrUpdate(recDocSet);
 				session.flush();
+				RecommendationCommons.logger.log("recommendations saved for user["+recDocSet.getUser().getId()+"] with algorithm["+recDocSet.getUserModel().getAlgorithm().getId()+"] having stopWordRemoval set to: "+recDocSet.getUserModel().getAlgorithm().getStopWordRemoval()+"\n#####\n");
 				
 				transaction.commit();
 			}
 			catch (Exception e) {
 				transaction.rollback();
 				e.printStackTrace();
+				logger.log("error when saving the model with no_days_since_max: "+recDocSet.getUserModel().getAlgorithm().getNoDaysSinceMax());
 			}
 			
 			

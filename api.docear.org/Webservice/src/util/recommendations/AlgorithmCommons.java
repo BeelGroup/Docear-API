@@ -108,10 +108,7 @@ public class AlgorithmCommons {
 			
 		}
 		alg.setDataElementTypeWeighting(s);
-		
-		if (alg.getDataElementType() == 3) {
-			alg.setStopWordRemoval(null);
-		}
+
 		// if pure citations are used as user model, there is not stop word removal
 		if (alg.getDataElementType()==2) {
 			alg.setStopWordRemoval(null);

@@ -5,8 +5,8 @@ import java.io.File;
 import org.docear.graphdb.GraphDbController;
 
 public class Main {
-	private static final String DB_PATH = "/media/extern/work/docear-graph.db";
-	private static final String MAPS_PATH = "/media/extern/work/mindmap-parser";
+	private static final String DB_PATH = "/home/stefan/work/docear-graph.db";
+	private static final String MAPS_PATH = "/home/stefan/work/mindmap-parser";
 //	private static final String DB_PATH = "/Volumes/Untitled/work/docear-graph.db";
 //	private static final String MAPS_PATH = "/Volumes/Untitled/work/mindmap-parser";
 
