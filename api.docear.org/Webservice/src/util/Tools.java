@@ -35,6 +35,8 @@ import org.sciplore.database.SessionProvider;
 import org.sciplore.formatter.Bean;
 
 import com.sun.jersey.multipart.FormDataBodyPart;
+import java.io.File;
+import java.io.FileInputStream;
 
 public class Tools {
 	
@@ -65,6 +67,25 @@ public class Tools {
 			String xml = bean.toXML();
 			return Tools.getResponse(Status.OK, MediaType.APPLICATION_XML_TYPE, xml);
 		}
+	}
+	
+	public static Response getSerializedResponseAsStream(final File file) {
+		StreamingOutput output = new StreamingOutput() {
+			@Override
+			public void write(OutputStream stream) throws IOException, WebApplicationException {
+				FileInputStream fis = new FileInputStream(file);
+				try {
+					while (fis.available() > 0) {
+						stream.write(fis.read());
+					}
+				}
+				finally {
+					fis.close();
+				}
+			}
+		};
+		
+		return Tools.getResponse(Status.OK, MediaType.APPLICATION_OCTET_STREAM_TYPE, output);
 	}
 
 	public static Response getSerializedResponseAsStream(String format, final Bean bean) {
