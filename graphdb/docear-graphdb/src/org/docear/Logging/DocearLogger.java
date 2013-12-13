@@ -70,7 +70,7 @@ public class DocearLogger {
 		}
 		
 		if (cause != null) {
-			printer.println(date+"Excepton in "+getExceptionTrace(cause)+": "+cause.getMessage());
+			printer.println(date+"Exception in "+getExceptionTrace(cause)+": "+cause.getMessage());
 		}
 	}
 

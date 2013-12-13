@@ -729,7 +729,7 @@ public class GraphDbController implements KernelEventHandler, TransactionEventLi
 					ClientResponse response = builder.post(ClientResponse.class, formParams);
 
 					if (response.getStatus() != 200) {
-						DocearLogger.info("pdf_hashes for revision("+revision+") error: " + response.getStatus());
+						DocearLogger.error("pdf_hashes for revision("+revision+") Exception: " + response.getStatus());
 					}
 				}
 				catch (Exception e) {

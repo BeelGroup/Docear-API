@@ -79,8 +79,6 @@ import util.Tools;
 import util.UserCommons;
 import util.UserSessionProvider;
 import util.UserSessionProvider.UserSession;
-import util.recommendations.AlgorithmCommons;
-import util.recommendations.RecommendationLogger;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.core.header.FormDataContentDisposition;
@@ -388,6 +386,11 @@ public class InternalResource {
 								continue;
 							}
 
+							session.saveOrUpdate(doc);
+							session.flush();
+							
+							doc = (Document) doc.getPersistentIdentity();
+							
 							DocumentsPdfHash pdfhash = new DocumentsPdfHash();
 							pdfhash.setSession(session);
 							pdfhash.setDocument(doc);
