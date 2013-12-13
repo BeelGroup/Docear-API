@@ -4,14 +4,15 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import org.docear.Logging.DocearLogger;
 import org.docear.database.AlgorithmArguments;
 import org.docear.xml.UserModel;
 import org.neo4j.graphdb.Node;
@@ -191,7 +192,7 @@ public class GraphDbHelper {
 		try {
 			return dateFormat.parse(dateString).getTime();
 		} catch (ParseException e) {
-			e.printStackTrace();
+			DocearLogger.error(e);
 		}
 		return -1;
 	}

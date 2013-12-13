@@ -1,5 +1,6 @@
 package org.neo4j.plugins;
 
+import org.docear.Logging.DocearLogger;
 import org.docear.database.AlgorithmArguments;
 import org.docear.graphdb.DocearReferencesGenerator;
 import org.docear.lucene.TFIDFKeywordGenerator;
@@ -32,7 +33,7 @@ public class DocearPlugin extends ServerPlugin {
 			args = new AlgorithmArguments(algorithmArguments);
 		}
 
-		System.out.println("===> user(" + userId + "): " + algorithmArguments);		
+		DocearLogger.info("===> user(" + userId + "): " + algorithmArguments);		
 		Integer data_element_type = (Integer) args.getArgument(AlgorithmArguments.DATA_ELEMENT_TYPE);
 		
 		UserModel userModel = new UserModel();		
@@ -41,7 +42,7 @@ public class DocearPlugin extends ServerPlugin {
 				fillKeywords(userId, args, userModel, excludeHash);
 			}
 			catch(Exception e) {
-				e.printStackTrace();
+				DocearLogger.error(e);
 			}
 		}
 		if (data_element_type == 0 || data_element_type == 2) {
@@ -49,18 +50,52 @@ public class DocearPlugin extends ServerPlugin {
 				fillReferences(userId, args, userModel, excludeHash);
 			}
 			catch(Exception e) {
-				e.printStackTrace();
+				DocearLogger.error(e);
 			}
 		}
 		
-		System.out.println("before");
-						
+		DocearLogger.info("before");
+		
 		if (userModel.getKeywords().isEmpty() && userModel.getReferences().isEmpty()) {
+			DocearLogger.info("###### not enough data gathered for (" + args + ")");
 			throw new Exception("not enough data gathered for (" + args + ")");
 		}
 		
 		summarizeVariables(userModel);
 		
+		try {
+    		Integer no_days_since_max_nodes = null;
+    		Integer no_days_since_max_maps = null;
+    		
+    		
+    		String s = userModel.getKeywords().getVariables().get("no_days_since_max_nodes");
+    		if (s == null) {
+    			s = userModel.getReferences().getVariables().get("no_days_since_max_nodes");
+    		}
+    		if (s != null) {
+    			no_days_since_max_nodes = Integer.parseInt(s);
+    		}
+    		
+    		s = userModel.getVariables().getVariables().get("no_days_since_max_maps");
+    		if (s == null) {
+    			s = userModel.getReferences().getVariables().get("no_days_since_max_maps");
+    		}
+    		if (s != null) {
+    			no_days_since_max_maps = Integer.parseInt(s);
+    		}
+    		
+    		DocearLogger.info("####### no_days_since_max_nodes: "+no_days_since_max_nodes);
+    		DocearLogger.info("####### no_days_since_max_maps: "+no_days_since_max_maps);
+    		
+    		if ( (no_days_since_max_nodes != null && no_days_since_max_nodes < 0) ||
+    				(no_days_since_max_maps != null && no_days_since_max_maps < 0) ) {
+    			DocearLogger.info("negativ variables");
+    		}
+		}
+		catch (Exception e) {
+			DocearLogger.error(e);
+		}
+    		
 		String out = userModel.getXml();
 		return out;
 	}
@@ -87,7 +122,7 @@ public class DocearPlugin extends ServerPlugin {
     		}
 		}
 		catch (Exception e) {
-			e.printStackTrace();
+			DocearLogger.error(e);
 			return null;
 		}
 		
@@ -98,7 +133,7 @@ public class DocearPlugin extends ServerPlugin {
 		ResultGenerator generator = new TFKeywordGenerator(args);
 		if (((Integer) args.getArgument(AlgorithmArguments.WEIGHTING_SCHEME)) == 2 && ((Integer) args.getArgument(AlgorithmArguments.WEIGHT_IDF)) == 1) {
 			generator = new TFIDFKeywordGenerator(args);
-			System.out.println("using TFIDF");
+			DocearLogger.info("using TFIDF");
 		}
 
 		generator.generateResultsForUserModel(userId, userModel, excludeHash);

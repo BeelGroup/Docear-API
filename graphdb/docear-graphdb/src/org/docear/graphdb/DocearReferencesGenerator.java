@@ -1,5 +1,6 @@
 package org.docear.graphdb;
 
+import org.docear.Logging.DocearLogger;
 import org.docear.database.AlgorithmArguments;
 import org.docear.lucene.LuceneController;
 import org.docear.query.ResultGenerator;
@@ -31,7 +32,7 @@ public class DocearReferencesGenerator implements ResultGenerator {
 			}
 		}
 		finally {
-			System.out.println("references for user: "+userId+" (" + (System.currentTimeMillis() - sTime) + ")");
+			DocearLogger.info("references for user: "+userId+" (" + (System.currentTimeMillis() - sTime) + ")");
 		}
 	}
 

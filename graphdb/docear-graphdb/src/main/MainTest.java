@@ -30,15 +30,15 @@ public class MainTest {
 //			references.addReference("t2", "h2", 2d);
 //			userModel.setReferences(references);
 //			
-//			System.out.println(userModel.getXml());
+//			DocearLogger.info(userModel.getXml());
 //    		}
 //		catch (ParserConfigurationException e) {
 //			// TODO Auto-generated catch block
-//			e.printStackTrace();
+//			DocearLogger.error();
 //		}
 //		catch (TransformerException e) {
 //			// TODO Auto-generated catch block
-//			e.printStackTrace();
+//			DocearLogger.error();
 //		}
 	}
 }

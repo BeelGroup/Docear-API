@@ -25,6 +25,7 @@ import javax.swing.text.html.HTML.Tag;
 import javax.swing.text.html.HTMLEditorKit.ParserCallback;
 import javax.swing.text.html.parser.ParserDelegator;
 
+import org.docear.Logging.DocearLogger;
 import org.docear.database.AlgorithmArguments;
 import org.docear.graphdb.relationship.Type;
 import org.docear.graphdb.relationship.UserRelationship;
@@ -185,7 +186,7 @@ public class GraphDbWorker {
 		for (Node node : foundDemoNodes) {
 			nodes.remove(node);
 		}
-		System.out.println("demo-nodes: "+foundDemoNodes.size()+" of "+nodes.size());
+		DocearLogger.info("demo-nodes: "+foundDemoNodes.size()+" of "+nodes.size());
 		
 		userModel.addVariable("element_amount_nodes", String.valueOf(amount));
 		userModel.addVariable("node_count_before_expanded", String.valueOf(amount));
@@ -295,7 +296,7 @@ public class GraphDbWorker {
     				}
 				}
 			} catch (Exception e) {
-				e.printStackTrace();			
+				DocearLogger.error(e);			
 			}			
 		}
 		
@@ -347,7 +348,7 @@ public class GraphDbWorker {
 										//str2 = rev2.getNode().getSingleRelationship(Type.ROOT, Direction.INCOMING).getStartNode().getProperty("dcr_id").toString();
 									}
 								} catch (Exception e) {
-									e.printStackTrace();
+									DocearLogger.error(e);
 									return 1;
 								}
 								
@@ -425,7 +426,7 @@ public class GraphDbWorker {
 		for (Node startNode : maps) {
 			try {
 				collectNodes(nodeSet, startNode, args, minExcludeDate);
-				System.out.println("user("+userId+"): use map "+startNode.getProperty("ID").toString());
+				DocearLogger.info("user("+userId+"): use map "+startNode.getProperty("ID").toString());
 			}
 			catch(Throwable t) {
 				t.printStackTrace();
@@ -552,7 +553,7 @@ public class GraphDbWorker {
 				nodeInfos.add(extraxtNodeInfo(node, args));
 			return nodeInfos;
 		} catch (Exception e) {
-			e.printStackTrace();			
+			DocearLogger.error(e);			
 		}
 		return null;
 	}
@@ -570,7 +571,7 @@ public class GraphDbWorker {
 			}
 			return buffer.toString();
 		} catch (Exception e) {
-			e.printStackTrace();			
+			DocearLogger.error(e);			
 		}
 		return null;
 	}
@@ -654,9 +655,8 @@ public class GraphDbWorker {
 			try {
 				String[] linkParts = java.net.URLDecoder.decode(node.getProperty("LINK").toString(), "UTF-8").trim().split(File.separator);
 				return linkParts[linkParts.length-1].split(".pdf")[0];
-			} catch (UnsupportedEncodingException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			} catch (UnsupportedEncodingException e) {				
+				DocearLogger.error(e);
 			}
 		}
 		return null;
@@ -819,7 +819,7 @@ public class GraphDbWorker {
 		try {
 			parserDelegator.parse(new StringReader(html), parserCallback, true);
 		} catch (IOException e) {
-			e.printStackTrace();
+			DocearLogger.error(e);
 		}
 
 		return stringBuilder.toString();
@@ -937,11 +937,11 @@ public class GraphDbWorker {
 					}
 					if(minExludeDate != null) {
 						if (path.endNode().hasProperty("MODIFIED") && minExludeDate <= Long.valueOf(path.endNode().getProperty("MODIFIED").toString())) {
-							System.out.println("excluding node with modified date: "+path.endNode().getProperty("MODIFIED"));
+							DocearLogger.info("excluding node with modified date: "+path.endNode().getProperty("MODIFIED"));
 							return Evaluation.EXCLUDE_AND_CONTINUE;
 						}
 						else {
-							System.out.println("including node with modified date: "+path.endNode().getProperty("MODIFIED"));
+							DocearLogger.info("including node with modified date: "+path.endNode().getProperty("MODIFIED"));
 						}
 					}
 					return Evaluation.INCLUDE_AND_CONTINUE;
@@ -962,7 +962,7 @@ public class GraphDbWorker {
 		// if data_element is mind maps: order the mind maps
 		if (new Integer(1).equals(args.getArgument(AlgorithmArguments.DATA_ELEMENT))) {			
 			final Integer method = (Integer) args.getArgument(AlgorithmArguments.ELEMENT_SELECTION_METHOD); 
-
+			
 			if (method != null && method > 0) {
 				Collections.sort(allMaps, new Comparator<Node>() {
 					@Override
@@ -1060,7 +1060,7 @@ public class GraphDbWorker {
 				addOrReplaceRevision(latestRev, revisionNode);
 			}
 		}
-		//System.out.println("user("+userId+"): iterated through "+count+" map revisions");
+		//DocearLogger.info("user("+userId+"): iterated through "+count+" map revisions");
 		return latestRev;
 	}
 

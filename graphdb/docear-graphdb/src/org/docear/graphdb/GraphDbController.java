@@ -28,6 +28,7 @@ import net.n3.nanoxml.IXMLReader;
 import net.n3.nanoxml.StdXMLReader;
 import net.n3.nanoxml.XMLParserFactory;
 
+import org.docear.Logging.DocearLogger;
 import org.docear.graphdb.relationship.Type;
 import org.docear.graphdb.relationship.UserRelationship;
 import org.docear.graphdb.threading.ControlServer;
@@ -153,7 +154,7 @@ public class GraphDbController implements KernelEventHandler, TransactionEventLi
 			service.start();
 			ctrlServer.start();			
 		} catch (IOException e) {
-			e.printStackTrace();
+			DocearLogger.error(e);
 		}
 	}
 	
@@ -250,7 +251,7 @@ public class GraphDbController implements KernelEventHandler, TransactionEventLi
 					addFile(move(file, processingDirectory));
 				}
 				catch (IOException e) {					
-					e.printStackTrace();
+					DocearLogger.error(e);
 				}
 				
 			}
@@ -273,7 +274,7 @@ public class GraphDbController implements KernelEventHandler, TransactionEventLi
 	}
 
 	protected void startParseWorker() {
-		System.out.println("start parsing with " + MAX_PARSER_THREADS + " threads ...");
+		DocearLogger.info("start parsing with " + MAX_PARSER_THREADS + " threads ...");
 		for (int i = 0; i < MAX_PARSER_THREADS; i++) {
 			worker[i] = new ParserWorkerThread();
 			worker[i].setName("ParseWorker["+i+"]");
@@ -351,7 +352,7 @@ public class GraphDbController implements KernelEventHandler, TransactionEventLi
 			resetParserQueue();
 		}
 		catch(Exception e) {
-			e.printStackTrace();
+			DocearLogger.error(e);
 		}
 		while (graphDBWorker.isAlive()) {
 			try {
@@ -448,7 +449,7 @@ public class GraphDbController implements KernelEventHandler, TransactionEventLi
 				jobManager.addJob(currentJob);
 			}
 			catch (Exception e) {
-				e.printStackTrace();
+				DocearLogger.error(e);
 				MoveToFailure(file);
 			}
 			finally {
@@ -547,8 +548,8 @@ public class GraphDbController implements KernelEventHandler, TransactionEventLi
 			while (!shutdown) {
 				while (jobManager.hasJobs() && !shutdown) {
 					GraphCreatorJob job = jobManager.next();
-					System.out.println("working on " + job.getName() + " with " + job.size() + " steps");
-					System.out.println(jobManager.remaining() + " jobs remaining");
+					DocearLogger.info("working on " + job.getName() + " with " + job.size() + " steps");
+					DocearLogger.info(jobManager.remaining() + " jobs remaining");
 					if (job.isAborted()) {
 						failedJob(job);
 						continue;
@@ -565,7 +566,7 @@ public class GraphDbController implements KernelEventHandler, TransactionEventLi
 								break;
 							}
 						}
-						System.out.println("steps (job: " + job.getName() + ") took: " + (System.currentTimeMillis()-stepsTime));
+						DocearLogger.info("steps (job: " + job.getName() + ") took: " + (System.currentTimeMillis()-stepsTime));
 						if (job.isAborted()) {
 							tx.failure();
 							failedJob(job);
@@ -580,12 +581,12 @@ public class GraphDbController implements KernelEventHandler, TransactionEventLi
 					catch(DuplicateRevisionException e) {
 						tx.failure();
 						finishedJob(job);
-						System.out.println("Revision ("+job.getName()+") already exists.");
+						DocearLogger.info("Revision ("+job.getName()+") already exists.");
 					}
 					catch(Exception e) {
 						tx.failure();
 						failedJob(job);
-						e.printStackTrace();
+						DocearLogger.error(e);
 					}
 					finally {
 						tx.finish();
@@ -596,7 +597,7 @@ public class GraphDbController implements KernelEventHandler, TransactionEventLi
 						}
 					}
 					Long consumption = (System.currentTimeMillis() - start);
-					System.out.println("["+dateFormat.format(new Date())+"] Time consumption for (job: " + job.getName() + "): " + (consumption) + "/" + getAvgTime(consumption));					
+					DocearLogger.info("["+dateFormat.format(new Date())+"] Time consumption for (job: " + job.getName() + "): " + (consumption) + "/" + getAvgTime(consumption));					
 				}
 
 				try {
@@ -606,7 +607,7 @@ public class GraphDbController implements KernelEventHandler, TransactionEventLi
 				catch (InterruptedException e) {
 				}
 			}
-			System.out.println("GraphDBWorker Thread stopped");
+			DocearLogger.info("GraphDBWorker Thread stopped");
 		}
  		
  		public synchronized long getAvgTime(Long consumption) { 			
@@ -695,7 +696,7 @@ public class GraphDbController implements KernelEventHandler, TransactionEventLi
 			this.luceneCtrl.updateUserMap(job.getUserID(), (Node) job.getFromContext("revisionNode"));
 		} 
 		catch (Exception e) {
-			e.printStackTrace();
+			DocearLogger.error(e);
 		}
 	}
 
@@ -728,25 +729,25 @@ public class GraphDbController implements KernelEventHandler, TransactionEventLi
 					ClientResponse response = builder.post(ClientResponse.class, formParams);
 
 					if (response.getStatus() != 200) {
-						System.out.println("pdf_hashes for revision("+revision+") error: " + response.getStatus());
+						DocearLogger.info("pdf_hashes for revision("+revision+") error: " + response.getStatus());
 					}
 				}
 				catch (Exception e) {
-					e.printStackTrace();
+					DocearLogger.error(e);
 				}
 				finally {
-					System.out.println("---- post pdf_hashes for revision("+revision+") time: " + (System.currentTimeMillis()-time));
+					DocearLogger.info("---- post pdf_hashes for revision("+revision+") time: " + (System.currentTimeMillis()-time));
 				}
 				synchronized (servicePostCounter) {
 					servicePostCounter--;
-					System.out.println("==== POSTS IN QUEUE: " + servicePostCounter);
+					DocearLogger.info("==== POSTS IN QUEUE: " + servicePostCounter);
 				}	
 				
 			}
 		});
 		synchronized (servicePostCounter) {
 			servicePostCounter++;
-			System.out.println("==== POSTS IN QUEUE: " + servicePostCounter);
+			DocearLogger.info("==== POSTS IN QUEUE: " + servicePostCounter);
 		}
 		
 	}
@@ -761,7 +762,7 @@ public class GraphDbController implements KernelEventHandler, TransactionEventLi
 			}
 			sb.append(entry.getValue().getCsvValue());
 		}
-		System.out.println("build csv from "+count+" entries with length of "+sb.length());
+		DocearLogger.info("build csv from "+count+" entries with length of "+sb.length());
 		return sb.toString();
 	}
 
@@ -813,7 +814,7 @@ public class GraphDbController implements KernelEventHandler, TransactionEventLi
 				}
 			}
 			catch (Exception e) {
-				e.printStackTrace();
+				DocearLogger.error(e);
 			}
 		}
 		
@@ -840,10 +841,10 @@ public class GraphDbController implements KernelEventHandler, TransactionEventLi
 				node.delete();
 			}
 			catch (Exception e) {
-				e.printStackTrace();
+				DocearLogger.error(e);
 			}
 		}
-		System.out.println("reduction from "+revCounter+" to "+keepNumber+" revisions finished. ("+(System.currentTimeMillis()-time)+")");
+		DocearLogger.info("reduction from "+revCounter+" to "+keepNumber+" revisions finished. ("+(System.currentTimeMillis()-time)+")");
 	}
 	
 	private boolean markedForRemoval(Node node) {
@@ -879,7 +880,7 @@ public class GraphDbController implements KernelEventHandler, TransactionEventLi
 			}			
 		}
 		catch (Exception e) {
-			e.printStackTrace();
+			DocearLogger.error(e);
 		}
 		return false;
 	}

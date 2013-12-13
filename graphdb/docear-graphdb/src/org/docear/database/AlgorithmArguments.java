@@ -2,6 +2,8 @@ package org.docear.database;
 
 import java.util.HashMap;
 
+import org.docear.Logging.DocearLogger;
+
 public class AlgorithmArguments {
 	public static final int MAX_ELEMENT_AMOUNT = 1000;
 	public static final int MAX_RESULT_AMOUNT = 1000;
@@ -78,7 +80,7 @@ public class AlgorithmArguments {
 				}				
 			}
 			catch(Exception e) {
-				System.out.println("org.docear.database.AlgorithmArguments.parse(arguments): invalid argument pair:" + token);
+				DocearLogger.error("org.docear.database.AlgorithmArguments.parse(arguments): invalid argument pair:" + token);
 			}
 		}
 	}

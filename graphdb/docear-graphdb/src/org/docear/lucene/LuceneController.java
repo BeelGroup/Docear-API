@@ -17,6 +17,7 @@ import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.Version;
+import org.docear.Logging.DocearLogger;
 import org.docear.graphdb.GraphDbWorker;
 import org.neo4j.graphdb.Node;
 import org.neo4j.kernel.AbstractGraphDatabase;
@@ -73,7 +74,7 @@ public class LuceneController {
 				case SELECTION: mapData = getGraphDbWorker().getUserMapDataList(item.getUserID(), item.getDirtyMaps(), false); break;
 				default: mapData = getGraphDbWorker().getUserMapDataList(item.getUserID(), false);				
 			}
-			System.out.println("retrieve mapData("+mapData.size()+"): "+(System.currentTimeMillis()-time));
+			DocearLogger.info("retrieve mapData("+mapData.size()+"): "+(System.currentTimeMillis()-time));
 			time = System.currentTimeMillis();
 			for (Map<String, String> data : mapData) {
 				try {
@@ -82,11 +83,11 @@ public class LuceneController {
 					getIndexWriter().commit();
 				}
 				catch (Exception e) {
-					e.printStackTrace();
+					DocearLogger.error(e);
 					getIndexWriter().rollback();
 				}					
 			}
-			System.out.println("add mapDocuments("+mapData.size()+"): "+(System.currentTimeMillis()-time));
+			DocearLogger.info("add mapDocuments("+mapData.size()+"): "+(System.currentTimeMillis()-time));
 			
 			removeDirtyUser(item);
 		}
@@ -160,9 +161,9 @@ public class LuceneController {
 		try {
 			updateIndex();
 		} catch (Exception e) {
-			e.printStackTrace();
+			DocearLogger.error(e);
 		}
-		System.out.println("lucene updates: "+updateCounter);
+		DocearLogger.info("lucene updates: "+updateCounter);
 	}
 	
 	public IndexReader getIndexReader() throws IOException {

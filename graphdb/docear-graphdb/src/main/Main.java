@@ -17,9 +17,9 @@ public class Main {
 		}
 		
 		GraphDbController worker = new GraphDbController(DB_PATH, MAPS_PATH);
-//		worker.clearDb();
+//		worker.clearDb(); // for debugging
 		worker.init();
-//		worker.initControlFrame();
+//		worker.initControlFrame(); // for debugging
 		worker.start();
 	}
 }

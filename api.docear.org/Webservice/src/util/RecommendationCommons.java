@@ -387,7 +387,7 @@ public class RecommendationCommons {
 			catch (Exception e) {
 				transaction.rollback();
 				e.printStackTrace();
-				logger.log("error when saving the model with no_days_since_max: "+recDocSet.getUserModel().getAlgorithm().getNoDaysSinceMax());
+				logger.log("error when saving the model for user ["+recDocSet.getUser().getId()+"] with algorithm["+recDocSet.getUserModel().getAlgorithm().getId()+"] having no_days_since_max: "+recDocSet.getUserModel().getAlgorithm().getNoDaysSinceMax());
 			}
 			
 			

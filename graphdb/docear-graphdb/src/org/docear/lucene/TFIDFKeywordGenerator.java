@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
+import org.docear.Logging.DocearLogger;
 import org.docear.database.AlgorithmArguments;
 import org.docear.graphdb.GraphDbWorker;
 import org.docear.xml.Keyword;
@@ -27,7 +28,7 @@ public class TFIDFKeywordGenerator extends TFKeywordGenerator {
 		super.fillKeywords(userId, args, userModel, excludePdfHash);
 		setIDFFromMindmaps(userModel.getKeywords());
 
-		System.out.println("tfidf-terms for user: "+userId+" (" + (System.currentTimeMillis() - sTime) + ")");	
+		DocearLogger.info("tfidf-terms for user: "+userId+" (" + (System.currentTimeMillis() - sTime) + ")");	
 	}
 	
 

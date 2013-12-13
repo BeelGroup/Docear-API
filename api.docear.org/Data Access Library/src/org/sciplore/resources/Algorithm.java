@@ -243,6 +243,10 @@ public class Algorithm extends Resource {
     @Column()
     private Integer node_weight_combo_scheme;
     
+    @Column()
+    private Integer default_algorithm;
+    
+    
     public Integer getDataSource() {
 		return data_source;
 	}
@@ -574,7 +578,14 @@ public class Algorithm extends Resource {
 		this.node_weight_combo_scheme = nodeWeightComboScheme;
 	}
 	
-	
+	public Integer getDefaultAlgorithm() {
+		return default_algorithm;
+	}
+
+	public void setDefaultAlgorithm(Integer defaultAlgorithm) {
+		this.default_algorithm = defaultAlgorithm;
+	}
+
 	public Algorithm getAlgorithm(Integer useStemming, Integer useStopWordRemoval, Integer useSiblingNodes, Integer childNodes
 			, Integer timeFrame, Integer useRootPath, Integer elementAmount, Integer noDaysSinceMax, Integer noDaysSinceChosen, Integer elementSelectionMethod
 			, Integer dataElementType, String dataElementTypeWeighting, Integer dataElement, Integer dataSourceLimitation, Integer dataSource, Integer resultAmount

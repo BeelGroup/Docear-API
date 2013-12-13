@@ -46,7 +46,7 @@ public class GraphDbUserModelFactory {
 
 	public GraphDbUserModelFactory(Session session, User user, Algorithm algorithm) throws Exception {
 		model = new UserModel(session);
-		xml = createModel(session, user, algorithm);
+		xml = createModel(session, user, algorithm);		
 		
 		if (xml == null) {
 			RecommendationCommons.logger.log("xml empty for user ["+user.getId()+"] and algorithm ["+algorithm.getId()+"]");

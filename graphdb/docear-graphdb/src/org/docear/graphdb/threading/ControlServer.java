@@ -7,6 +7,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Scanner;
 
+import org.docear.Logging.DocearLogger;
 import org.docear.graphdb.GraphDbController;
 
 public class ControlServer extends Thread {
@@ -22,7 +23,7 @@ public class ControlServer extends Thread {
 	
 	public void run() {
 		started = true;
-		System.out.println("ControlServer started on localhost:7575");
+		DocearLogger.info("ControlServer started on localhost:7575");
 		while(started ) {
 			try {
 				Socket clientSocket = server.accept();
@@ -65,10 +66,10 @@ public class ControlServer extends Thread {
 					clientSocket.close();
 				}
 			} catch (IOException e) {
-				e.printStackTrace();
+				DocearLogger.error(e);
 			}
 		}
-		System.out.println("ControlServer shutdown");
+		DocearLogger.info("ControlServer shutdown");
 	}
 
 	private void printHelp(PrintStream writer) {

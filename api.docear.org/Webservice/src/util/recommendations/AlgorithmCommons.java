@@ -184,6 +184,7 @@ public class AlgorithmCommons {
 
 	public static Algorithm getDefault(Session session) {
 		Algorithm alg = new Algorithm(session);
+		alg.setDefaultAlgorithm(1);
 		return alg;
 	}
 }

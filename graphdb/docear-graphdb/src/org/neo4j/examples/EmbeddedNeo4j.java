@@ -2,6 +2,8 @@ package org.neo4j.examples;
 
 import java.io.File;
 import java.io.IOException;
+
+import org.docear.Logging.DocearLogger;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
@@ -115,8 +117,8 @@ public class EmbeddedNeo4j
 
     void shutDown()
     {
-        System.out.println();
-        System.out.println( "Shutting down database ..." );
+        System.out.println();;
+        DocearLogger.info( "Shutting down database ..." );
         // START SNIPPET: shutdownServer
         graphDb.shutdown();
         // END SNIPPET: shutdownServer

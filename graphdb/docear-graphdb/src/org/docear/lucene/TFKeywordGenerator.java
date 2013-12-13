@@ -127,13 +127,13 @@ public class TFKeywordGenerator implements ResultGenerator {
 
 		} catch (CorruptIndexException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			DocearLogger.error();
 		} catch (LockObtainFailedException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			DocearLogger.error();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			DocearLogger.error();
 		}
 		return null;
 	}

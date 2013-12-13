@@ -4,6 +4,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.docear.Logging.DocearLogger;
 import org.docear.graphdb.relationship.StyleRelationship;
 import org.docear.graphdb.relationship.Type;
 import org.docear.graphdb.threading.GraphCreatorJob;
@@ -93,7 +94,7 @@ public class NodeElementHandler implements IElementHandler {
 						count++;
 					}
 				}
-				System.out.println("build NodeIndex with "+count+" nodes ("+(System.currentTimeMillis()-time)+")");
+				DocearLogger.info("build NodeIndex with "+count+" nodes ("+(System.currentTimeMillis()-time)+")");
 			}
 			
 			private String getNodeRevisionKey(Node node) {

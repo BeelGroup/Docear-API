@@ -48,7 +48,7 @@ public class DocearAnalyzer extends StopwordAnalyzerBase {
 			return new ReusableAnalyzerBase.TokenStreamComponents(tokenizer, getTokenStream(tokenizer));
 		}
 		catch (IOException e) {
-			e.printStackTrace();
+			DocearLogger.error();
 			return null;
 		}		
 	}
@@ -91,7 +91,7 @@ public class DocearAnalyzer extends StopwordAnalyzerBase {
 				}
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			DocearLogger.error();
 		}
 		return stopwords;
 	}
