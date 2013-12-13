@@ -161,9 +161,13 @@ public class GraphDbHelper {
 		}
 		
 		for (Iterator<Node> it = nodes.iterator(); it.hasNext(); ) {
-			Long nodeDate = Long.valueOf(it.next().getProperty(propertyName).toString());
-			if (nodeDate > maxDate)
-				maxDate = nodeDate;
+			Node node = it.next();			
+			if (node.hasProperty(propertyName)) {
+				Long nodeDate = Long.valueOf(node.getProperty(propertyName).toString());
+				if (nodeDate > maxDate) {
+					maxDate = nodeDate;
+				}
+			}			
 		}
 		return maxDate;
 	}
@@ -181,9 +185,13 @@ public class GraphDbHelper {
 		}
 		
 		for (Iterator<Node> it = nodes.iterator(); it.hasNext(); ) {
-			Long nodeDate = Long.valueOf(it.next().getProperty(propertyName).toString());
-			if (nodeDate < minDate)
-				minDate = nodeDate;
+			Node node = it.next();			
+			if (node.hasProperty(propertyName)) {
+    			Long nodeDate = Long.valueOf(node.getProperty(propertyName).toString());
+    			if (nodeDate < minDate) {
+    				minDate = nodeDate;
+    			}
+			}
 		}
 		return minDate;
 	}
