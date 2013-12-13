@@ -19,6 +19,7 @@ import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.standard.StandardFilter;
 import org.apache.lucene.analysis.standard.StandardTokenizer;
 import org.apache.lucene.util.Version;
+import org.docear.Logging.DocearLogger;
 import org.docear.database.DocearFilter;
 import org.docear.database.DocearTermCounter;
 
@@ -48,7 +49,7 @@ public class DocearAnalyzer extends StopwordAnalyzerBase {
 			return new ReusableAnalyzerBase.TokenStreamComponents(tokenizer, getTokenStream(tokenizer));
 		}
 		catch (IOException e) {
-			DocearLogger.error();
+			DocearLogger.error(e);
 			return null;
 		}		
 	}
@@ -91,7 +92,7 @@ public class DocearAnalyzer extends StopwordAnalyzerBase {
 				}
 			}
 		} catch (Exception e) {
-			DocearLogger.error();
+			DocearLogger.error(e);
 		}
 		return stopwords;
 	}
