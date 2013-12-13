@@ -24,19 +24,29 @@ public class DocearPlugin extends ServerPlugin {
 	public String getRecommendationKeywords(@Source GraphDatabaseService graphDb, @Parameter(name = "userId", optional = false) Integer userId,
 			@Parameter(name = "algorithmArguments", optional = true) String algorithmArguments,
 			@Parameter(name = "excludeHash", optional = true) String excludeHash) throws Exception {
-				
+		
 		AlgorithmArguments args;
-		if (algorithmArguments == null) {
-			args = new AlgorithmArguments("");
+		
+		try {
+    		if (algorithmArguments == null) {
+    			args = new AlgorithmArguments("");
+    		}
+    		else {
+    			args = new AlgorithmArguments(algorithmArguments);
+    		}
 		}
-		else {
-			args = new AlgorithmArguments(algorithmArguments);
+		catch(Exception e) {
+			DocearLogger.error(e);
+			throw new Exception("could not parse algorithm's arguments: "+algorithmArguments);
 		}
 
 		DocearLogger.info("===> user(" + userId + "): " + algorithmArguments);		
 		Integer data_element_type = (Integer) args.getArgument(AlgorithmArguments.DATA_ELEMENT_TYPE);
+		if (data_element_type == null) {
+			data_element_type = 0;
+		}
 		
-		UserModel userModel = new UserModel();		
+		UserModel userModel = new UserModel();	
 		if (data_element_type == 0 || data_element_type == 1) {
 			try {
 				fillKeywords(userId, args, userModel, excludeHash);
@@ -61,9 +71,9 @@ public class DocearPlugin extends ServerPlugin {
 			throw new Exception("not enough data gathered for (" + args + ")");
 		}
 		
-		summarizeVariables(userModel);
-		
 		try {
+			summarizeVariables(userModel);
+			
     		Integer no_days_since_max_nodes = null;
     		Integer no_days_since_max_maps = null;
     		
