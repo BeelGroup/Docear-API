@@ -259,11 +259,15 @@ public class GraphDbWorker {
 		extractReferences(getRelevantNodes(userId, args, userModel, pdfHash), userModel);
 	}
 	
-	private void extractReferences(Collection<Node> nodes, UserModel userModel) {		
+	private void extractReferences(Collection<Node> nodes, UserModel userModel) {
+		if (nodes == null) {
+			return;
+		}
+		
 		Map<String, HashReferenceItem> occurenceMap = new HashMap<String, HashReferenceItem>();
 		
 		int featureCountReferences = 0;
-		Iterator<Node> iter = nodes.iterator();
+		Iterator<Node> iter = nodes.iterator();		
 		while (iter.hasNext()) {
 			Node n = iter.next();
 			try {				
@@ -638,12 +642,20 @@ public class GraphDbWorker {
 		if (node.hasProperty("LINK") && node.hasProperty("attribute_title")) {
 			ReferenceInfo refInfo = new ReferenceInfo();
 			refInfo.setTitle(node.getProperty("attribute_title").toString());
-			if (node.hasProperty("attribute_journal")) 
+			if (node.hasProperty("attribute_journal")) { 
 				refInfo.setJournal(node.getProperty("attribute_journal").toString());
-			if (node.hasProperty("attribute_authors")) 
+			}
+			if (node.hasProperty("attribute_authors")) { 
 				refInfo.setAuthors(node.getProperty("attribute_authors").toString());
-			if (node.hasProperty("attribute_year")) 
-				refInfo.setYear(Integer.valueOf(node.getProperty("attribute_year").toString()));
+			}
+			if (node.hasProperty("attribute_year")) {
+				try {
+					refInfo.setYear(Integer.valueOf(node.getProperty("attribute_year").toString()));
+				}
+				catch(Exception e) {
+					DocearLogger.info(e);
+				}
+			}
 			return refInfo;
 		}
 		return null;

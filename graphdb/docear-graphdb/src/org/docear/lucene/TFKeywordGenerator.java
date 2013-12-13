@@ -20,6 +20,7 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.LockObtainFailedException;
 import org.apache.lucene.store.RAMDirectory;
 import org.apache.lucene.util.Version;
+import org.docear.Logging.DocearLogger;
 import org.docear.database.AlgorithmArguments;
 import org.docear.graphdb.GraphDbWorker;
 import org.docear.query.ResultGenerator;
@@ -126,14 +127,11 @@ public class TFKeywordGenerator implements ResultGenerator {
     		return directory;
 
 		} catch (CorruptIndexException e) {
-			// TODO Auto-generated catch block
-			DocearLogger.error();
+			DocearLogger.error(e);
 		} catch (LockObtainFailedException e) {
-			// TODO Auto-generated catch block
-			DocearLogger.error();
+			DocearLogger.error(e);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			DocearLogger.error();
+			DocearLogger.error(e);
 		}
 		return null;
 	}
