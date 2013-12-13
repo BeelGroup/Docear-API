@@ -357,7 +357,8 @@ public class GraphDbUserModelFactory {
 			}
 			if (!valid) {
 				time = System.currentTimeMillis();
-				model.setAlgorithm(AlgorithmCommons.getDefault(session));
+				algorithm = AlgorithmCommons.getDefault(session);
+				model.setAlgorithm(algorithm);
 				RecommendationCommons.logger.log("using default algorithm ["+model.getAlgorithm().getPersistentIdentity().getId()+"] for user ["+user.getId()+"]");
 				response = requestUserModel(user, model.getAlgorithm(), null);
 			}
