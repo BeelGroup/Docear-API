@@ -574,10 +574,10 @@ public class UserCommons {
 		message.append("\n");
 		message.append("If you experience any problems, or have questions on how to use Docear, please do not hesitate to contact us https://www.docear.org/docear/contact/. You may also find the following links useful.\n");
 		message.append("\n");
-		message.append("Manual: https://www.docear.org/support/user-manual/");
-		message.append("Videos: https://www.docear.org/software/screenshots/");
-		message.append("Jobs & Internships: https://www.docear.org/docear/jobs/");
-		message.append("Blog: https://www.docear.org/docear/blog/");
+		message.append("Manual: https://www.docear.org/support/user-manual/\n");
+		message.append("Videos: https://www.docear.org/software/screenshots/\n");
+		message.append("Jobs & Internships: https://www.docear.org/docear/jobs/\n");
+		message.append("Blog: https://www.docear.org/docear/blog/\n");
 		message.append("\n");
 		message.append("\n");		
 		message.append("Yours,\n");
