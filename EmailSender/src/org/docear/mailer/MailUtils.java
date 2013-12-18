@@ -127,7 +127,9 @@ public class MailUtils {
 		try {
 			DOCEAR_MAIL_CONFIGURATION = new SmtpMailConfiguration(p.getProperty("docear.mail.host"), p.getProperty("docear.mail.from"));
 			DOCEAR_MAIL_CONFIGURATION.setFromAlias(p.getProperty("docear.mail.fromAlias"));
-			DOCEAR_MAIL_CONFIGURATION.setAuthEnabled(true);
+			DOCEAR_MAIL_CONFIGURATION.setAuthEnabled(Boolean.parseBoolean(p.getProperty("docear.mail.auth", "true")));
+			DOCEAR_MAIL_CONFIGURATION.setSSLEnabled(Boolean.parseBoolean(p.getProperty("docear.mail.ssl", "false")));
+			DOCEAR_MAIL_CONFIGURATION.setTLSEnabled(Boolean.parseBoolean(p.getProperty("docear.mail.tls", "false")));
 			DOCEAR_MAIL_CONFIGURATION.setDebugEnabled(Boolean.parseBoolean(p.getProperty("docear.mail.debug")));
 			DOCEAR_MAIL_CONFIGURATION.setAuthenticator(new Authenticator() {
 				protected PasswordAuthentication getPasswordAuthentication() {
