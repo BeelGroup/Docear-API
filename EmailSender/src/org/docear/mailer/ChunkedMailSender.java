@@ -45,7 +45,7 @@ public class ChunkedMailSender {
 					Map<String, Recipient> chunk = getNextChunk(chunkSize);
 					if (chunk.isEmpty()) {						
 						try {
-							sleep(24 * 3600 * 1000);
+							sleep(24 * 3600 * 1000);//24h
 						}
 						catch (InterruptedException e) {
 						}
@@ -72,7 +72,7 @@ public class ChunkedMailSender {
 							}
 						
 							try {
-								sleep(1000);
+								sleep(25 * 1000); //25sec
 							}
 							catch (InterruptedException e) {
 							}
@@ -80,7 +80,7 @@ public class ChunkedMailSender {
 					}
 
 					try {
-						sleep(600 * 1000);
+						sleep(600 * 1000); //10min
 					}
 					catch (InterruptedException e) {
 					}
@@ -202,11 +202,13 @@ public class ChunkedMailSender {
 			try {
     			message = message.replaceAll("\\{TITLE_COUNT\\}", String.valueOf(titleList.size()));
     			message = message.replaceAll("\\{TITLE_LIST\\}", content.toString().replaceAll("\\$", "\\\\\\$"));
+    			message = message.replaceAll("\\{RECV_MAIL_ADDR\\}", email);
     			message = message.replaceAll("\\{PLURAL_PAPERS\\}", (plural ? "s" : ""));
     			message = message.replaceAll("\\{PLURAL_THIS\\}", (plural ? "these" : "this"));
     			message = message.replaceAll("\\{PLURAL_IS\\}", (plural ? "are" : "is"));
+    			message = message.replaceAll("\\{PLURAL_WAS\\}", (plural ? "were" : "was"));
     			message = message.replaceAll("\\{INDEXING_SETTINGS_URL\\}",
-    					"https://www.docear.org/my-docear/my-documents/?email=" + email + "&token=" + recipient.getToken());
+    					"https://www.doc-ear.org/my-docear/my-documents/?email=" + email + "&token=" + recipient.getToken());
     			if (System.getProperty("org.docear.debug") != null && System.getProperty("org.docear.debug").equals("true")) {
     				email = "marcel.genzmehr@gmail.com";
     			}
@@ -214,8 +216,7 @@ public class ChunkedMailSender {
     			return MailUtils.sendMail(properties.getProperty("docear.mail.subject"), message, MailUtils.parseAddress(email),
     					MailUtils.DOCEAR_MAIL_CONFIGURATION);
     			}
-			catch(Exception e) {				
-				//System.err.println(email + " :\n" + content);
+			catch(Exception e) {			
 				e.printStackTrace();
 				return false;
 			}
