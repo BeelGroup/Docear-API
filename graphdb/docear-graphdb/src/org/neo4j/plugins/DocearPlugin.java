@@ -21,7 +21,11 @@ public class DocearPlugin extends ServerPlugin {
 	@Description("test specific algorithm arguments")
 	@PluginTarget(GraphDatabaseService.class)
 	public String getRecommendationKeywords(@Source GraphDatabaseService graphDb) throws Exception {		
-		String args = "stemming=0;approach=1;weightingScheme=2;weightTF=1;weightIDF=2;resultAmount=100;stopwords=0;siblings=0;children=0;timeframe=0;rootpath=null;amount=0;noDaysSinceMax=null;noDaysSinceChosen=null;method=1;type=1;typeWeighting=1,909;element=2;limitation=0;source=1;nodeInfoSource=4;nodeVisibility=0;nodeDepth=0;nodeDepthMetric=null;noSiblings=2;noSiblingsMetric=1;noChildren=0;noChildrenLevel=null;noChildrenMetric=null;wordCount=2;wordCountMetric=0;nodeWeightNormalization=2;nodeWeightComboScheme=2";
+		String args = "stemming=0;approach=1;weightingScheme=1;weightTF=1;weightIDF=null;resultAmount=100;stopwords=0;siblings=0;children=0;"
+				+ "timeframe=0;rootpath=null;amount=0;noDaysSinceMax=null;noDaysSinceChosen=null;method=1;type=1;typeWeighting=1,909;"
+				+ "element=2;limitation=0;source=1;nodeInfoSource=4;nodeVisibility=0;nodeDepth=1;nodeDepthMetric=0;noSiblings=1;"
+				+ "noSiblingsMetric=0;noChildren=0;noChildrenLevel=null;noChildrenMetric=null;wordCount=1;wordCountMetric=0;"
+				+ "nodeWeightNormalization=2;nodeWeightComboScheme=0";
 		
 		return getRecommendationKeywords(graphDb, 2, args, null);
 	}
