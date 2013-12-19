@@ -692,16 +692,15 @@ public class GraphDbWorker {
 	 * @param node
 	 * @return the number of siblings of the node (on the mind map)
 	 */
-	private Integer calculateNoOfSiblings(Node node) {
-		Integer noOfSiblings = 0;
+	private Integer calculateNoOfSiblings(Node node) {		
 		Iterable<Relationship> parents = node.getRelationships(Type.CHILD, Direction.INCOMING);
 		
 		// each mind map node has only one parent 
 		for (Relationship parent : parents) {
-			noOfSiblings += calculateNoOfChildren(parent.getStartNode());
+			return calculateNoOfChildren(parent.getStartNode()) -1;
 		}
-		// minus 1 since the node itself is also considered
-		return noOfSiblings - 1;
+		
+		return 0;
 	}
 	
 	/**
