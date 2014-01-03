@@ -26,10 +26,10 @@ for x = 1:size(X, 1)
 	v_min = norm(X(x,:) - centroids(1, :));
 	i = 1;
 
-	for c = 2:K
+	for c = 1:K
 		
 		v = norm(X(x,:) - centroids(c, :));
-		if v<v_min
+		if v < v_min
 			v_min = v;
 			i = c;
 		end	

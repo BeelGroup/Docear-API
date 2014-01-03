@@ -55,10 +55,11 @@ for i=1:max_iters
     % Given the memberships, compute new centroids
     old_centroids = centroids;
     centroids = computeCentroids(X, idx, K);
-	 if isequalwithequalnans(old_centroids, centroids)
-		  centroids;
-	     break
-	 end
+
+	if isequalwithequalnans(old_centroids, centroids)
+	     centroids;
+	    break
+	end
 end
 
 % Hold off if we are plotting progress

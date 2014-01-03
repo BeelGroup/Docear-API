@@ -27,8 +27,14 @@ centroids = zeros(K, n);
 %
 
 for c = 1:K
+	idx_c = idx == c;
 
-	centroids (c, :) = sum ((idx == c) .* X, 1)  ./ sum(idx==c);
+	if size(idx_c, 1) == 0
+		centroids (c, :) = [];
+		fprintf('removed a centroid\n');
+	else
+		centroids (c, :) = sum (idx_c .* X, 1)  ./ sum(idx_c);
+	end
 
 end
 

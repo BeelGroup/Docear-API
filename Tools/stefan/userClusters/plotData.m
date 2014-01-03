@@ -18,21 +18,6 @@ for i = 1:K
 	plot(mu(1), mu(2), 'k+', 'MarkerEdgeColor', plotColor(i),  'MarkerSize', 10);
 
 end
-%class_1 = find(y == 1);
-%class_2 = find(y == 2);
-%class_3 = find(y == 3);
-%class_4 = find(y == 4);
-%% Plot Examples
-%plot(X(class_1, 1), X(class_1, 2), 'ko', 'MarkerFaceColor', 'b', 'MarkerSize', 7);
-%plot(X(class_2, 1), X(class_2, 2), 'ko', 'MarkerFaceColor', 'y', 'MarkerSize', 7);
-%plot(X(class_3, 1), X(class_3, 2), 'ko', 'MarkerFaceColor', 'r', 'MarkerSize', 7);
-%plot(X(class_4, 1), X(class_4, 2), 'ko', 'MarkerFaceColor', 'g', 'MarkerSize', 7);
-%
-%cx = class_1
-%circles(centroids(:,1), centroids(:,2), ones(size(centroids, 1), 1)*1, '+')
-
-
-
 
 
 % =========================================================================
