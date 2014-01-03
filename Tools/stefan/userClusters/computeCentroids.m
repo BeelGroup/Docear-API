@@ -32,10 +32,12 @@ for c = 1:K
 	if size(idx_c, 1) == 0
 		centroids (c, :) = [];
 		fprintf('removed a centroid\n');
-	else
-		centroids (c, :) = sum (idx_c .* X, 1)  ./ sum(idx_c);
+		break;
 	end
 
+	%centroids (c, :) = sum (idx_c .* X, 1)  ./ sum(idx_c);
+	
+	centroids(c, :) = mean(X(idx_c, :));
 end
 
 

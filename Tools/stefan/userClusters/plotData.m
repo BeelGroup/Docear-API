@@ -15,7 +15,7 @@ for i = 1:K
 	plot(x(:,1), x(:,2), 'ko', 'MarkerFaceColor', plotColor(i), 'MarkerEdgeColor', plotColor(i), 'MarkerSize', 4);
 
 	[X_norm, mu, sigma] = featureNormalize(x);
-	plot(mu(1), mu(2), 'k+', 'MarkerEdgeColor', plotColor(i),  'MarkerSize', 10);
+	plot(mu(1), mu(2), 'k+', 'MarkerEdgeColor', 'b',  'MarkerSize', 10);
 
 end
 

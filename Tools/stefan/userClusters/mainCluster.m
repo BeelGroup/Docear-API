@@ -1,5 +1,5 @@
-debug_on_warning(1)
 clear ; close all; clc
+debug_on_warning(1)
 warning ("off", "Octave:broadcast");
 
 fprintf('clustering Docear users using kMeans\n\n');
