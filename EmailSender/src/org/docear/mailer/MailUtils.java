@@ -1,10 +1,16 @@
 package org.docear.mailer;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.mail.Address;
 import javax.mail.Authenticator;
@@ -20,8 +26,15 @@ import javax.mail.internet.MimeMessage;
 
 import org.sciplore.utilities.config.Config;
 
+import com.sun.mail.smtp.SMTPAddressFailedException;
+
 public class MailUtils {
 	
+	/**
+	 * <ul> <li>this will not work with UTF-8 characters in the email address --> ASCII is sufficient for us</li>   
+	 * <li>filter only works on 2-3 letter top-level-domain email addresses (e.g. edu, com, org, ...)</li></ul>
+	 */
+	private static final Pattern emailPattern = Pattern.compile("[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9]{2,3}", Pattern.CASE_INSENSITIVE);
 	public static class MailSenderException {
 		private InternetAddress[] emailAddresses = null;
 		private Exception exception = null;
@@ -32,11 +45,34 @@ public class MailUtils {
 		}
 		
 		public String toString() {
+			StringWriter sw = new StringWriter();
+			print(sw);
+			return sw.toString();
+		}
+		
+		public boolean isInvalidAddressException() {
+			if(exception instanceof SendFailedException && exception.getCause() instanceof SMTPAddressFailedException) {
+				SMTPAddressFailedException smtpEx = (SMTPAddressFailedException) exception.getCause();
+				if(smtpEx.getReturnCode() == 550) {
+					return true;
+				}
+			}
+			return false;
+		}
+		
+		public void print(Writer writer) {
 			StringBuffer sb = new StringBuffer();
 			for (InternetAddress emailAddress: emailAddresses) {
 				sb.append(emailAddress.getAddress()).append(" ");
 			}
-			return sb.append(": ").append(exception.getMessage()).toString();
+			sb.append(": ").append(exception.getMessage()).append(System.getProperty("line.separator"));
+			try {
+				writer.append(sb.toString());
+				exception.printStackTrace(new PrintWriter(writer));
+				writer.flush();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 	
@@ -210,6 +246,16 @@ public class MailUtils {
 			}
 		}
 		return addrList.toArray(new InternetAddress[0]);
+	}
+
+	public static boolean isValidMailAddress(String email) {
+		if(email != null) {
+			Matcher matcher = emailPattern.matcher(email);
+			if(matcher.matches()) {
+				return true;
+			}			
+		}
+		return false;
 	}
 
 }

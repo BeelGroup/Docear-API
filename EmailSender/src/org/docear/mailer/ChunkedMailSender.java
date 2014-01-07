@@ -3,6 +3,7 @@ package org.docear.mailer;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.net.URL;
 import java.net.URLConnection;
 import java.text.SimpleDateFormat;
@@ -18,7 +19,9 @@ import java.util.Properties;
 
 import javax.mail.Authenticator;
 import javax.mail.PasswordAuthentication;
+import javax.mail.SendFailedException;
 import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
 
 import org.docear.mailer.MailUtils.MailSenderException;
 import org.docear.mailer.MailUtils.SmtpMailConfiguration;
@@ -27,6 +30,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
+import com.sun.mail.smtp.SMTPAddressFailedException;
+
 public class ChunkedMailSender {
 	private final Properties properties = Config.getProperties("mail.sender");
 	private final static String SERVICE_HOST = "https://api.docear.org";
@@ -34,75 +39,166 @@ public class ChunkedMailSender {
 	public void start() {
 		new Thread() {
 			public void run() {
-				int chunkSize = Integer.parseInt(properties.getProperty("docear.mail.chunk.size", "1"));
-				int maxChunkRequests = Integer.parseInt(properties.getProperty("docear.mail.chunk.requestnumber", "1"));
-				
-				System.out.println("starting parameters [docear.mail.chunk.size="+chunkSize+"; docear.mail.chunk.requestnumber="+maxChunkRequests+"]");
-				
-				// i==-1 --> infinite loop
-				for (int i=0; (maxChunkRequests<0 ? true : i<maxChunkRequests); i=(maxChunkRequests<0 ? -1 : i+1)) {
-					
-					Map<String, Recipient> chunk = getNextChunk(chunkSize);
-					if (chunk.isEmpty()) {						
-						try {
-							sleep(24 * 3600 * 1000);//24h
-						}
-						catch (InterruptedException e) {
-						}
-					}
-					else {
-						System.out.println("got "+chunk.size()+" entries");
-					}
-//					while (!chunk.isEmpty()) 
-					{
-						Iterator<Entry<String, Recipient>> iter = chunk.entrySet().iterator();
-						while (iter.hasNext()) {
-							Entry<String, Recipient> entry = iter.next();
-							if (sendNotificationMail(entry.getKey(), entry.getValue())) {
-								postNotificationUpdate(entry.getValue(), false);
-								iter.remove();
-								System.out.println(entry.getKey());
-							}
-							else {
-								postNotificationUpdate(entry.getValue(), true);
-							}
+				if (System.getProperty("org.docear.debug.mail") != null && System.getProperty("org.docear.debug.mail").equals("true")) {
+					runAddressTest();
+				}
+				else {
+					int chunkSize = Integer.parseInt(properties.getProperty("docear.mail.chunk.size", "1"));
+					int maxChunkRequests = Integer.parseInt(properties.getProperty("docear.mail.chunk.requestnumber", "1"));
+		
+					performSending(chunkSize, maxChunkRequests);
+				}
+			}
+		}.start();
+	}
+	
+	/**
+	 * @param chunkSize
+	 * @param maxChunkRequests
+	 */
+	private void performSending(int chunkSize, int maxChunkRequests) {
+		System.out.println("starting parameters [docear.mail.chunk.size="+chunkSize+"; docear.mail.chunk.requestnumber="+maxChunkRequests+"]");
+		
+		// i==-1 --> infinite loop
+		for (int i=0; (maxChunkRequests<0 ? true : i<maxChunkRequests); i=(maxChunkRequests<0 ? -1 : i+1)) {
+			
+			Map<String, Recipient> chunk = getNextChunk(chunkSize);
+			if (chunk.isEmpty()) {						
+				try {
+					Thread.sleep(24 * 3600 * 1000);//24h
+				}
+				catch (InterruptedException e) {
+				}
+			}
+			else {
+				System.out.println("got "+chunk.size()+" entries");
+			}
+			Iterator<Entry<String, Recipient>> iter = chunk.entrySet().iterator();
+			while (iter.hasNext()) {
+				Entry<String, Recipient> entry = iter.next();
+				if (sendNotificationMail(entry.getKey(), entry.getValue())) {
+					postNotificationUpdate(entry.getValue(), false);
+					iter.remove();
+					System.out.println(entry.getKey());
+				}
+				else {
+					postNotificationUpdate(entry.getValue(), true);
+				}
 
-							if (MailUtils.senderExceptions.size() > 0) {
-								performEmergencyExit();
-							}
-						
-							try {
-								sleep(25 * 1000); //25sec
-							}
-							catch (InterruptedException e) {
-							}
-						}
-					}
-
-					try {
-						sleep(600 * 1000); //10min
-					}
-					catch (InterruptedException e) {
-					}
+				if (MailUtils.senderExceptions.size() > 0) {
+					performEmergencyExit();
+				}
+				
+				try {
+					Thread.sleep(25 * 1000); //25sec
+				}
+				catch (InterruptedException e) {
 				}
 			}
 
-		}.start();
+			try {
+				Thread.sleep(600 * 1000); //10min
+			}
+			catch (InterruptedException e) {
+			}
+		}
 	}
+	
+	private void runAddressTest() {
+		Map<String, Recipient> chunk = new HashMap<String, Recipient>();
+		
+		//invalid address
+		Recipient recipient = new Recipient(0, "");
+		recipient.addTitle("Empty TEST Title");
+		chunk.put(".jmolinas@conexion.com.py", recipient);
+		
+		//valid address
+		recipient = new Recipient(-1, "");
+		recipient.addTitle("Empty TEST Title");
+		chunk.put("marcel.genzmehr@gmail.com", recipient);
+		
+		//2nd invalid address
+		recipient = new Recipient(-2, "");
+		recipient.addTitle("Empty TEST Title");
+		chunk.put("jmol..inas@conexion.com", recipient);
+		
+		//force mail address exception
+		recipient = new Recipient(-2, "");
+		recipient.addTitle("Empty TEST Title");
+		chunk.put("raise.mail.exception", recipient);
+		
+		//force exception
+		recipient = new Recipient(-2, "");
+		recipient.addTitle("Empty TEST Title");
+		chunk.put("raise.exception", recipient);
+		
+		
+		Iterator<Entry<String, Recipient>> iter = chunk.entrySet().iterator();
+		while (iter.hasNext()) {
+			MailUtils.senderExceptions.clear();
+			Entry<String, Recipient> entry = iter.next();
+			String emailAddr = entry.getKey();
+			if("raise.mail.exception".equals(emailAddr)) {
+				InternetAddress addr;
+				try {
+					addr = new InternetAddress("marcel.genzmehr@gmail.com");
+					MailUtils.senderExceptions.add(new MailSenderException(new SendFailedException("test 1", new SMTPAddressFailedException(addr, "", 550, "blupp")), new InternetAddress[]{addr}));
+					System.out.println("force invalid mail exception");
+				} catch (AddressException e) {
+				}				
+			}
+			else if("raise.exception".equals(emailAddr)) {
+				InternetAddress addr;
+				try {
+					addr = new InternetAddress("marcel.genzmehr@gmail.com");
+					MailUtils.senderExceptions.add(new MailSenderException(new IOException("test 2"), new InternetAddress[]{addr}));
+					System.out.println("force shutdown exception");
+				} catch (AddressException e) {
+				}	
+			}
+			else {
+				if (sendNotificationMail(emailAddr, entry.getValue())) {
+					iter.remove();
+					System.out.println(emailAddr);
+				}
+				else {
+					System.out.println("invalid mail address: "+ emailAddr);
+				}
+			}
 
+			if (MailUtils.senderExceptions.size() > 0) {
+				performEmergencyExit();
+			}
+		
+			try {
+				Thread.sleep(25 * 1000); //25sec
+			}
+			catch (InterruptedException e) {
+			}
+		}
+		System.out.println("regular shutdown");
+				
+	}
+	
 	private void performEmergencyExit() {
 		System.out.println("=== EMERGENCY EXIT ===");
 		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd_HH_mm_ss");
 		File senderExceptionsLog = new File(dateFormat.format(new Date()) + "__SenderExceptions.log");
-
+		boolean exit = false;
+		StringBuilder sb = new StringBuilder("\n");
+		
 		FileWriter fw = null;
-
 		try {
 			fw = new FileWriter(senderExceptionsLog, true);
+			StringWriter sw = new StringWriter();
 			for (MailSenderException exception : MailUtils.senderExceptions) {
-				fw.write(exception.toString());
-				fw.write(System.getProperty("line.separator"));
+				exit = !exception.isInvalidAddressException() || exit;
+				exception.print(sw);
+				sw.append(System.getProperty("line.separator"));
+				sw.flush();
 			}
+			sb.append(sw.toString());
+			fw.write(sb.toString());
 		}
 		catch (IOException e) {
 			e.printStackTrace();
@@ -116,26 +212,26 @@ public class ChunkedMailSender {
 				e.printStackTrace();
 			}
 		}
-
-		try {
-			SmtpMailConfiguration emergencyConfig = new SmtpMailConfiguration("mail.ovgu.de", "emergency@docear.org");
-			emergencyConfig.setAuthEnabled(true);
-			emergencyConfig.setPort(587);
-			emergencyConfig.setTLSEnabled(true);
-			emergencyConfig.setAuthenticator(new Authenticator() {
-
-				protected PasswordAuthentication getPasswordAuthentication() {
-					return new PasswordAuthentication("genzmehr", "FarbKopiererV49");
-				}
-			});			
-			MailUtils.sendMail("Docear document index notifier", "The service was stoped with an emergency. See the log files on the server for details.",
-					MailUtils.parseAddress("core@docear.org"), emergencyConfig);
+		if(exit) {
+			try {
+				SmtpMailConfiguration emergencyConfig = new SmtpMailConfiguration("mail.ovgu.de", "emergency@docear.org");
+				emergencyConfig.setAuthEnabled(true);
+				emergencyConfig.setPort(587);
+				emergencyConfig.setTLSEnabled(true);
+				emergencyConfig.setAuthenticator(new Authenticator() {
+	
+					protected PasswordAuthentication getPasswordAuthentication() {
+						return new PasswordAuthentication("genzmehr", "FarbKopiererV49");
+					}
+				});
+				MailUtils.sendMail("Docear document index notifier", "The service was stoped with an emergency.\n"+sb.toString()+"\n See the log files on the server for details.",
+						MailUtils.parseAddress("core@docear.org"), emergencyConfig);
+			}
+			catch (AddressException e) {
+				e.printStackTrace();
+			}
+			System.exit(100);
 		}
-		catch (AddressException e) {
-			e.printStackTrace();
-		}
-		
-		System.exit(100);
 	}
 
 	private void postNotificationUpdate(Recipient recipient, boolean resetOnly) {
@@ -145,7 +241,6 @@ public class ChunkedMailSender {
 				URL url = new URL(SERVICE_HOST + queryStr);
 				URLConnection conn = url.openConnection();
 				conn.setRequestProperty("accessToken", properties.getProperty("docear.mail.sender.token"));
-				System.out.println(conn.getContent());
 			}
 			catch (Exception e) {
 				e.printStackTrace();
@@ -190,7 +285,7 @@ public class ChunkedMailSender {
 	private boolean sendNotificationMail(String email, Recipient recipient) {
 		List<String> titleList = recipient.getTitleList();
 		
-		if (titleList.size() > 0 && titleList.size()<=150) {
+		if (MailUtils.isValidMailAddress(email) && titleList.size() > 0 && titleList.size()<=150) {
 			String message = properties.getProperty("docear.mail.message");
 			StringBuilder content = new StringBuilder();    			
 			for (String string : recipient.getTitleList()) {
