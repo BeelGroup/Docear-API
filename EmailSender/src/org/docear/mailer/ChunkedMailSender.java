@@ -3,6 +3,7 @@ package org.docear.mailer;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringWriter;
 import java.net.URL;
 import java.net.URLConnection;
@@ -181,7 +182,6 @@ public class ChunkedMailSender {
 	}
 	
 	private void performEmergencyExit() {
-		System.out.println("=== EMERGENCY EXIT ===");
 		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd_HH_mm_ss");
 		File senderExceptionsLog = new File(dateFormat.format(new Date()) + "__SenderExceptions.log");
 		boolean exit = false;
@@ -213,6 +213,7 @@ public class ChunkedMailSender {
 			}
 		}
 		if(exit) {
+			System.out.println("=== EMERGENCY EXIT ===");
 			try {
 				SmtpMailConfiguration emergencyConfig = new SmtpMailConfiguration("mail.ovgu.de", "emergency@docear.org");
 				emergencyConfig.setAuthEnabled(true);
@@ -241,6 +242,16 @@ public class ChunkedMailSender {
 				URL url = new URL(SERVICE_HOST + queryStr);
 				URLConnection conn = url.openConnection();
 				conn.setRequestProperty("accessToken", properties.getProperty("docear.mail.sender.token"));
+				Object o = conn.getContent();
+				if(o instanceof InputStream) {
+					InputStream is = (InputStream)o;
+					byte[] bytes = new byte[1024];
+					int len = -1;
+					while((len = is.read(bytes)) > -1) {
+						System.out.print(new String(bytes, 0, len));
+					}
+					System.out.println();
+				}
 			}
 			catch (Exception e) {
 				e.printStackTrace();
