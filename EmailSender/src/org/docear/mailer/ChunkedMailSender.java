@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Map.Entry;
 import java.util.Properties;
 
@@ -60,6 +61,8 @@ public class ChunkedMailSender {
 	private void performSending(int chunkSize, int maxChunkRequests) {
 		System.out.println("starting parameters [docear.mail.chunk.size="+chunkSize+"; docear.mail.chunk.requestnumber="+maxChunkRequests+"]");
 		
+		Random rand = new Random();
+		
 		// i==-1 --> infinite loop
 		for (int i=0; (maxChunkRequests<0 ? true : i<maxChunkRequests); i=(maxChunkRequests<0 ? -1 : i+1)) {
 			
@@ -91,7 +94,7 @@ public class ChunkedMailSender {
 				}
 				
 				try {
-					Thread.sleep(25 * 1000); //25sec
+					Thread.sleep((rand.nextInt(57)+2) * 1000); //wait from 2 to 58 seconds --> mean: 30 sec
 				}
 				catch (InterruptedException e) {
 				}
