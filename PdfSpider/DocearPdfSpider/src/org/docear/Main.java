@@ -153,9 +153,8 @@ public class Main {
 	}
 	
 	public static LinkedList<TaskItem> retrieveDocuments(Integer maxRank) throws IOException {
-		String query = DOCEAR_SERVICES+"/documents/?pdf_url=true&fulltext_indexed=false&number=" + NUMBER_OF_FILES;
-		
-		query = DOCEAR_SERVICES+"/internal/xrefs/pdf_urls/?number=" + NUMBER_OF_FILES;
+//		String query = DOCEAR_SERVICES+"/documents/?pdf_url=true&fulltext_indexed=false&number=" + NUMBER_OF_FILES;
+		String query = DOCEAR_SERVICES+"/internal/xrefs/pdf_urls/?number=" + NUMBER_OF_FILES;
 		
 		if (maxRank != null) {
 			query+="&max_rank="+maxRank;

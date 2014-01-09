@@ -1144,6 +1144,7 @@ public class InternalResource {
 		try {
 			Contact contact = Contact.getContact(session, mail);
 			Person person = contact.getPerson();
+			person.setSession(session);
 			
 			if (token == null || !token.equals(person.getDocidxIdToken())) {
 				return UserCommons.getHTTPStatusResponse(com.sun.jersey.api.client.ClientResponse.Status.UNAUTHORIZED, "no valid token.");
@@ -1238,6 +1239,7 @@ public class InternalResource {
 			return Tools.getHTTPStatusResponse(Status.OK, "OK");
 		}
 		catch (Exception e) {
+			e.printStackTrace();
 			try {
 				transaction.rollback();
 			} catch (Exception ex) {

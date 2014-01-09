@@ -222,7 +222,7 @@ public class DocumentQueries {
 	
 	@SuppressWarnings("unchecked")
 	public static List<Object[]> getDocumentNotIndexedDownloadUrls(Session session, Integer maxResults, Integer maxRank) {
-		String sql = "SELECT x.id, x.document_id, x.sources_id FROM document_xref x WHERE x.dl_attempts<=5 AND x.rank<=:maxRank AND (indexed IS NULL OR indexed=0) AND last_attempt<:attemptDelay ORDER BY x.dl_attempts ASC, x.last_attempt ASC, x.id DESC";
+		String sql = "SELECT x.id, x.document_id, x.sources_id FROM document_xref x WHERE x.dl_attempts<=5 AND (x.rank<=:maxRank OR x.rank IS NULL) AND (indexed IS NULL OR indexed=0) AND (last_attempt<:attemptDelay OR last_attempt IS NULL) ORDER BY x.dl_attempts ASC, x.rank ASC, x.last_attempt ASC, x.id DESC";
 		Query query = session.createSQLQuery(sql);
 		
 		if (maxRank != null) {
