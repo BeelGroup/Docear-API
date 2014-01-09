@@ -78,9 +78,9 @@ public class ChunkedMailSender {
 			while (iter.hasNext()) {
 				Entry<String, Recipient> entry = iter.next();
 				if (sendNotificationMail(entry.getKey(), entry.getValue())) {
-					postNotificationUpdate(entry.getValue(), false);
-					iter.remove();
 					System.out.println(entry.getKey());
+					postNotificationUpdate(entry.getValue(), false);
+					iter.remove();					
 				}
 				else {
 					postNotificationUpdate(entry.getValue(), true);
@@ -159,8 +159,8 @@ public class ChunkedMailSender {
 			}
 			else {
 				if (sendNotificationMail(emailAddr, entry.getValue())) {
-					iter.remove();
 					System.out.println(emailAddr);
+					iter.remove();					
 				}
 				else {
 					System.out.println("invalid mail address: "+ emailAddr);
@@ -313,8 +313,7 @@ public class ChunkedMailSender {
     			message = message.replaceAll("\\{PLURAL_THIS\\}", (plural ? "these" : "this"));
     			message = message.replaceAll("\\{PLURAL_IS\\}", (plural ? "are" : "is"));
     			message = message.replaceAll("\\{PLURAL_WAS\\}", (plural ? "were" : "was"));
-    			message = message.replaceAll("\\{INDEXING_SETTINGS_URL\\}",
-    					"https://www.doc-ear.org/my-docear/my-documents/?email=" + email + "&token=" + recipient.getToken());
+    			message = message.replaceAll("\\{INDEXING_SETTINGS_URL\\}", "http://www.doc-ear.org/my-docear/my-documents/?email=" + email + "&token=" + recipient.getToken());
     			if (System.getProperty("org.docear.debug") != null && System.getProperty("org.docear.debug").equals("true")) {
     				email = "marcel.genzmehr@gmail.com";
     			}
