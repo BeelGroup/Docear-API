@@ -32,6 +32,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.commons.io.IOUtils;
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -56,6 +57,7 @@ import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataBodyPart;
 import com.sun.jersey.multipart.FormDataMultiPart;
 import com.sun.jersey.multipart.FormDataParam;
+
 import org.mrdlib.index.Indexer;
 import org.sciplore.queries.DocumentsPdfHashQueries;
 import org.sciplore.resources.DocumentsPdfHash;
@@ -453,39 +455,48 @@ public class DocumentResource {
 		Document doc = DocumentQueries.getDocument(session, id);
 		if(doc == null) {
 			return Tools.getHTTPStatusResponse(Status.NOT_FOUND, "request document with id='"+id+"' does not exist.");
-		}
-		
+		}		
 		
 		try {
-			if("xml".equalsIgnoreCase(format)) {
+			if("xml".equalsIgnoreCase(format)) {				
+				try {
+					final String xtrString = IOUtils.toString(xtractStream, "UTF-8");
+    				
+    				AtomicOperation<Response> op = new AtomicOperation<Response>() {
+    					@Override
+    					public Response exec(Session session) {
+    						Document doc = DocumentQueries.getDocument(session, id);
+    						if(doc == null) {
+    							return Tools.getHTTPStatusResponse(Status.NOT_FOUND, "request document with id='"+id+"' does not exist.");
+    						}
+    						Transaction transaction = session.beginTransaction();
+    						try {
+    							
+    							DocumentCommons.updateDocumentData(session, doc, xtrString);
+    												
+    							transaction.commit();				
+    							return Tools.getHTTPStatusResponse(Status.OK, "OK");
+    						}
+    						catch (Exception e) {
+    							e.printStackTrace();
+    							return Tools.getHTTPStatusResponse(Status.INTERNAL_SERVER_ERROR, "could not add references: "+e.getMessage());
+    						}
+    						finally {
+    							if(transaction.isActive()) {
+    								transaction.rollback();
+    							}					
+    						}
+    					}
+    				};
+    				
+    				System.out.println("DB postReferences update queue: "+SessionProvider.atomicManager.size());
+    				AtomicOperationHandle<Response> handle = SessionProvider.atomicManager.addOperation(op);
+				}
+				catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 				
-				AtomicOperation<Response> op = new AtomicOperation<Response>() {
-					@Override
-					public Response exec(Session session) {
-						Document doc = DocumentQueries.getDocument(session, id);
-						if(doc == null) {
-							return Tools.getHTTPStatusResponse(Status.NOT_FOUND, "request document with id='"+id+"' does not exist.");
-						}
-						Transaction transaction = session.beginTransaction();
-						try {
-							DocumentCommons.updateDocumentData(session, doc, xtractStream);
-												
-							transaction.commit();				
-							return Tools.getHTTPStatusResponse(Status.OK, "OK");
-						}
-						catch (Exception e) {
-							e.printStackTrace();
-							return Tools.getHTTPStatusResponse(Status.INTERNAL_SERVER_ERROR, "could not add references: "+e.getMessage());
-						}
-						finally {
-							if(transaction.isActive()) {
-								transaction.rollback();
-							}					
-						}
-					}
-				};
-				
-				AtomicOperationHandle<Response> handle = SessionProvider.atomicManager.addOperation(op);
 				return Tools.getHTTPStatusResponse(Status.OK, "OK");
 			}
 		}

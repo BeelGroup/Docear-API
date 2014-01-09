@@ -1,13 +1,21 @@
 package org.sciplore.database;
 
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 public abstract class AtomicOperationManager {
 	private final ExecutorService queue;
 		
 	private AtomicOperationManager() {
-		queue = Executors.newSingleThreadExecutor();
+		queue =	new ThreadPoolExecutor(1, 1,
+                        0L, TimeUnit.MILLISECONDS,
+                        new LinkedBlockingQueue<Runnable>());
+	}
+	
+	public int size() {
+		return ((ThreadPoolExecutor)queue).getQueue().size();
 	}
 	
 	public static AtomicOperationManager newInstance() {

@@ -30,6 +30,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
@@ -891,7 +892,8 @@ public class InternalResource {
 			if ("xml".equalsIgnoreCase(format)) {
 				Transaction transaction = session.beginTransaction();
 				try {
-					DocumentCommons.updateDocumentData(session, doc, xtractStream);
+					String xtrString = IOUtils.toString(xtractStream, "UTF-8");
+					DocumentCommons.updateDocumentData(session, doc, xtrString);
 
 					transaction.commit();
 					Tools.getLuceneIndexer().updateDocument(doc, hash).commit();

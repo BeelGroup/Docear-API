@@ -5,7 +5,9 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.nio.channels.AlreadyConnectedException;
+import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -14,10 +16,12 @@ import java.util.UUID;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.apache.commons.io.IOUtils;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.sciplore.deserialize.mapper.MrDlibXmlMapper;
 import org.sciplore.deserialize.reader.XmlResourceReader;
+import org.sciplore.io.StringInputStream;
 import org.sciplore.queries.CitationsQueries;
 import org.sciplore.queries.DocumentQueries;
 import org.sciplore.resources.Citation;
@@ -229,13 +233,20 @@ public class DocumentCommons {
 		return false;
 	}
 
-	public static boolean updateDocumentData(Session session, Document doc, InputStream xmlStream) {
+	public static boolean updateDocumentData(Session session, Document doc, String xmlStream) {
 		if (xmlStream == null || session == null || doc == null || doc.getCitations().size() > 0 || doc.getPersons().size() > 0 || doc.getAbstract() != null) {
 			return false;
 		}
 		boolean isDirty = false;
 		XmlResourceReader reader = new XmlResourceReader(MrDlibXmlMapper.getDefaultMapper());
-		Document resource = (Document) reader.parse(xmlStream);
+		Document resource = null;
+		try {
+			InputStream is = new StringInputStream(xmlStream, "UTF-8");
+			resource = (Document) reader.parse(is);
+		}
+		catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
 		long time = System.currentTimeMillis();
 
 		if (resource != null && !CitationsQueries.areCitationsAlreadyStored(session, doc)) {
