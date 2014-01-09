@@ -161,38 +161,40 @@ public class DocumentCommons {
 		long time = System.currentTimeMillis();
 		Set<DocumentPerson> persons = document.getPersons();
 		for (String email : emails) {
-			Contact contact = Contact.getContact(session, email);
-			//if no existing contact was found create new one
-			if(contact == null) {
-				contact = new Contact(session, email, Contact.CONTACT_TYPE_EMAIL);
-				contact.setPerson(new Person(""));
-				session.save(contact.getPerson());
-				session.save(contact);
+			if(MailUtils.isValidMailAddress(email)) {
+				Contact contact = Contact.getContact(session, email);
+				//if no existing contact was found create new one
+				if(contact == null) {
+					contact = new Contact(session, email, Contact.CONTACT_TYPE_EMAIL);
+					contact.setPerson(new Person(""));
+					session.save(contact.getPerson());
+					session.save(contact);
+					session.flush();
+				}
+				// if no author with this contact data is already attached, create and add a new
+				if(!containsContact(persons, contact)) {
+					PersonHomonym homonym = new PersonHomonym(session, "");
+					homonym.setPerson(contact.getPerson());
+					homonym.setValid((short) 1);
+					session.save(homonym);
+					session.flush();
+					
+					DocumentPerson docPerson = new DocumentPerson(session, homonym);
+					docPerson.setPersonMain(contact.getPerson());
+					docPerson.setDocument(document);
+					session.save(docPerson);
+					session.flush();
+					isDirty = true;
+					
+					persons.add(docPerson);
+				}
+				contact.getPerson().setDocidxNewDocuments(true);
+				if(contact.getPerson().getDocidxIdToken() == null) {
+					contact.getPerson().setDocidxIdToken(UUID.randomUUID().toString());
+				}
+				session.update(contact.getPerson());
 				session.flush();
 			}
-			// if no author with this contact data is already attached, create and add a new
-			if(!containsContact(persons, contact)) {
-				PersonHomonym homonym = new PersonHomonym(session, "");
-				homonym.setPerson(contact.getPerson());
-				homonym.setValid((short) 1);
-				session.save(homonym);
-				session.flush();
-				
-				DocumentPerson docPerson = new DocumentPerson(session, homonym);
-				docPerson.setPersonMain(contact.getPerson());
-				docPerson.setDocument(document);
-				session.save(docPerson);
-				session.flush();
-				isDirty = true;
-				
-				persons.add(docPerson);
-			}
-			contact.getPerson().setDocidxNewDocuments(true);
-			if(contact.getPerson().getDocidxIdToken() == null) {
-				contact.getPerson().setDocidxIdToken(UUID.randomUUID().toString());
-			}
-			session.update(contact.getPerson());
-			session.flush();
 		}
 		if(isDirty) {
 			//document may be used elsewhere after running this method --> refreshing it

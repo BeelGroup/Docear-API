@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.mail.Address;
 import javax.mail.Authenticator;
@@ -21,6 +23,12 @@ import javax.mail.internet.MimeMessage;
 import org.sciplore.utilities.config.Config;
 
 public class MailUtils {
+
+	/**
+	 * <ul> <li>this will not work with UTF-8 characters in the email address --> ASCII is sufficient for us</li>   
+	 * <li>filter only works on 2-3 letter top-level-domain email addresses (e.g. edu, com, org, ...)</li></ul>
+	 */
+	private static final Pattern emailPattern = Pattern.compile("[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9]{2,3}", Pattern.CASE_INSENSITIVE);
 	
 	public interface MailConfiguration {
 
@@ -175,6 +183,16 @@ public class MailUtils {
 			}
 		}
 		return addrList.toArray(new InternetAddress[0]);
+	}
+	
+	public static boolean isValidMailAddress(String email) {
+		if(email != null) {
+			Matcher matcher = emailPattern.matcher(email);
+			if(matcher.matches()) {
+				return true;
+			}			
+		}
+		return false;
 	}
 
 }
