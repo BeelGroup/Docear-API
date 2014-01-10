@@ -48,7 +48,7 @@ public class GraphDbUserModelFactory {
 		model = new UserModel(session);
 		xml = createModel(session, user, algorithm);	
 		
-		if (xml == null) {
+		if (xml == null || xml.trim().length() == 0) {
 			Integer algId = null;
 			if (algorithm != null) {
 				algId = algorithm.getId();
