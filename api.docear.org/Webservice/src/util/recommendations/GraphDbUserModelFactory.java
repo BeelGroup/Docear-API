@@ -55,8 +55,9 @@ public class GraphDbUserModelFactory {
 			}
 			RecommendationCommons.logger.log("xml empty for user ["+user.getId()+"] and algorithm ["+algId+"]");
 		}
-
-		processXmlModel(session);
+		else {
+			processXmlModel(session);
+		}
 	}
 
 	private void processXmlModel(Session session) throws Exception {
@@ -82,6 +83,11 @@ public class GraphDbUserModelFactory {
 
 		Searcher searcher = new Searcher();
 		userModelItems = extractKeywordsFromResponse(searcher, parser.getKeywords(), model.getAlgorithm());
+		if (userModelItems == null || userModelItems.size() == 0) {
+			RecommendationCommons.logger.log("userModelItems empty for algorithm["+model.getAlgorithm().getId()+"] and xml:\n" + xml); 
+			return;
+		}
+		
 		userModelItems.addAll(extractReferencesFromResponse(session, searcher, parser.getReferences(), model.getAlgorithm()));
 
 		Collections.sort(userModelItems, new Comparator<UserModelItem>() {
