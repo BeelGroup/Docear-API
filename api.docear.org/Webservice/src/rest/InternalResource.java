@@ -48,6 +48,8 @@ import org.hibernate.Transaction;
 import org.mrdlib.index.Searcher;
 import org.sciplore.data.NameSeparator;
 import org.sciplore.data.NameSeparator.NameComponents;
+import org.sciplore.database.AtomicOperation;
+import org.sciplore.database.AtomicOperationHandle;
 import org.sciplore.database.SessionProvider;
 import org.sciplore.queries.DocumentQueries;
 import org.sciplore.queries.DocumentsBibtexPdfHashQueries;
@@ -746,12 +748,11 @@ public class InternalResource {
 	@POST
 	// @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 	@Path("/recommendations/document")
-	public Response newDocument(@FormParam("title") String title, @FormParam("link") String link, @FormParam("username") String userName,
-			@FormParam("source") String source, @FormParam("modelId") Integer modelId, @FormParam("year") Short year,
-			@FormParam("citeCount") Integer citeCount, @FormParam("rank") Integer rank, @Context HttpServletRequest request) {
+	public Response newDocument(@FormParam("title") final String title, @FormParam("link") final String link, @FormParam("username") String userName,
+			@FormParam("source") final String source, @FormParam("modelId") final Integer modelId, @FormParam("year") final Short year,
+			@FormParam("citeCount") final Integer citeCount, @FormParam("rank") final Integer rank, @Context HttpServletRequest request) {
 
 		final Session session = SessionProvider.sessionFactory.openSession();
-		Transaction transaction = session.beginTransaction();
 		try {
 			User user = new User(session).getUserByEmailOrUsername("pdfdownloader");
 			if (!("pdfdownloader".equals(userName)) | !ResourceCommons.authenticate(request, user)) {
@@ -759,48 +760,66 @@ public class InternalResource {
 				return UserCommons.getHTTPStatusResponse(com.sun.jersey.api.client.ClientResponse.Status.UNAUTHORIZED, "no valid access token.");
 			}
 
-			// save to database
-			Document document = new Document(session, title);
-			if (DocumentQueries.getValidCleanTitle(title) == null) {
-				return UserCommons.getHTTPStatusResponse(com.sun.jersey.api.client.ClientResponse.Status.BAD_REQUEST, "title is not valid");
-			}
-			document.setPublishedYear(year);
-
-			DocumentXref xref = new DocumentXref();
-			xref.setCiteCount(citeCount == null ? 0 : citeCount);
-			xref.setRank(rank);
-			xref.setSource(source.toLowerCase());
-			xref.setSourcesId(link);
-
-			xref.setDlAttempts(0);
-			xref.setDocument(document);
-			document.addXref(xref);
-
-			DocumentXref persistent = (DocumentXref) xref.getPersistentIdentity();
-			if (persistent != null) {
-				if (persistent.getRank() == null || persistent.getRank() > rank) {
-					persistent.setRank(rank);
-					session.update(persistent);
+			
+			AtomicOperation<Response> ao = new AtomicOperation<Response>() {
+				
+				@Override
+				public Response exec(Session session) {
+					Transaction transaction = session.beginTransaction();
+					try {
+    					// save to database
+    					Document document = new Document(session, title);
+    					if (DocumentQueries.getValidCleanTitle(title) == null) {
+    						return UserCommons.getHTTPStatusResponse(com.sun.jersey.api.client.ClientResponse.Status.BAD_REQUEST, "title is not valid");
+    					}
+    					document.setPublishedYear(year);   
+    					
+    					DocumentXref xref = new DocumentXref();
+    					xref.setCiteCount(citeCount == null ? 0 : citeCount);
+    					xref.setRank(rank);
+    					xref.setSource(source.toLowerCase());
+    					xref.setSourcesId(link);
+    
+    					xref.setDlAttempts(0);
+    					xref.setDocument(document);
+    					document.addXref(xref);
+    
+    					DocumentXref persistent = (DocumentXref) xref.getPersistentIdentity();
+    					if (persistent != null) {
+    						if (persistent.getRank() == null || persistent.getRank() > rank) {
+    							persistent.setRank(rank);
+    							session.update(persistent);
+    						}
+    					}
+    					else {
+    						session.setFlushMode(FlushMode.MANUAL);
+    						session.saveOrUpdate(xref);
+    					}
+    
+    					GoogleDocumentQuery model = (new GoogleDocumentQuery(session)).getGoogleDocumentQuery(modelId);
+    					model.setQuery_date(Calendar.getInstance().getTime());
+    					session.saveOrUpdate(model);
+    					session.flush();
+    					transaction.commit();
+    
+    					return Response.status(Status.ACCEPTED).build();
+    				}
+    				catch (Exception e) {
+    					e.printStackTrace();
+    					transaction.rollback();
+    					System.out.println(e);
+    					System.out.println("(GoogleQueryWorker) failed to update in database - this should not happen!");
+    					return Response.status(Status.BAD_REQUEST).build();
+    				}
 				}
-			}
-			else {
-				session.setFlushMode(FlushMode.MANUAL);
-				session.saveOrUpdate(xref);
-			}
+			};
+			
+			AtomicOperationHandle<Response> handle = SessionProvider.atomicManager.addOperation(ao);
 
-			GoogleDocumentQuery model = (new GoogleDocumentQuery(session)).getGoogleDocumentQuery(modelId);
-			model.setQuery_date(Calendar.getInstance().getTime());
-			session.saveOrUpdate(model);
-			session.flush();
-			transaction.commit();
-
-			return Response.status(Status.ACCEPTED).build();
+			return handle.getResult();
 		}
 		catch (Exception e) {
 			e.printStackTrace();
-			transaction.rollback();
-			System.out.println(e);
-			System.out.println("(GoogleQueryWorker) failed to update in database - this should not happen!");
 			return Response.status(Status.BAD_REQUEST).build();
 		}
 		finally {

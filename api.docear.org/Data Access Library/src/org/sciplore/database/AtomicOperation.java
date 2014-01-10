@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.concurrent.Callable;
 
 import org.apache.log4j.Logger;
+import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 
@@ -19,6 +20,7 @@ public abstract class AtomicOperation <T> {
 				@Override
 				public T call() throws Exception {
 					Session session = SessionProvider.getNewSession();
+					session.setFlushMode(FlushMode.MANUAL);
 					if (session != null) {
 						try {
 							return exec(session);
