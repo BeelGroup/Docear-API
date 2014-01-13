@@ -193,7 +193,11 @@ public class MailUtils {
 		    
 		    senderExceptions.clear();
 		    return true;
-		} catch (MessagingException mex) {
+		}
+		catch (SMTPAddressFailedException e) {
+			System.out.println("non critical exception in org.docear.mailer.MailUtils.sendMail(subject, message, recipients, config): "+e.getMessage());
+		}
+		catch (MessagingException mex) {
 		    System.out.println("\n--Exception handling in MailUtils.sendMail()");
 
 		    mex.printStackTrace();
