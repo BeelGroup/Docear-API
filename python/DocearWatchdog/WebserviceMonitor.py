@@ -11,6 +11,7 @@ import os
 import signal
 import urllib2
 import smtplib
+import time
 
 class TimeoutError(Exception):
     pass
@@ -33,12 +34,25 @@ def timeout(seconds=10, error_message=os.strerror(errno.ETIME)):
 
     return decorator
 
-@timeout(5, os.strerror(errno.ETIMEDOUT))
+@timeout(10, os.strerror(errno.ETIMEDOUT))
+def _request_graphdb():
+    try:            
+        resp = urllib2.urlopen("http://localhost:7474")            
+        return True        
+    except:
+        print("http://localhost:7474 not available")
+        return False
+
 def _test_graphdb():
     error_msg = ''
-    try:
-        resp = urllib2.urlopen("http://localhost:7474")
-    except:
+    valid = False
+    for i in range(5):
+        time.sleep(3)
+        valid = valid or _request_graphdb()
+        if valid:
+            break
+        
+    if not valid:
         error_msg += '- GraphDB is not available at http://localhost:7474 on fks01!' + os.linesep
         print('- GraphDB is not available at http://localhost:7474 on fks01!' + os.linesep)
     
