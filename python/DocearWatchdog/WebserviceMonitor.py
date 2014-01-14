@@ -37,7 +37,7 @@ def timeout(seconds=10, error_message=os.strerror(errno.ETIME)):
 @timeout(10, os.strerror(errno.ETIMEDOUT))
 def _request_graphdb():
     try:            
-        resp = urllib2.urlopen("http://localhost:7474")            
+        resp = urllib2.urlopen("http://localhost:7474/webadmin/")            
         return True        
     except:
         print("http://localhost:7474 not available")
