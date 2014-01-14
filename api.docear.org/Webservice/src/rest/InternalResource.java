@@ -59,6 +59,7 @@ import org.sciplore.queries.DocumentsPdfHashQueries;
 import org.sciplore.queries.InternalQueries;
 import org.sciplore.queries.MindmapsPdfHashQueries;
 import org.sciplore.resources.Algorithm;
+import org.sciplore.resources.Citation;
 import org.sciplore.resources.Contact;
 import org.sciplore.resources.Document;
 import org.sciplore.resources.DocumentPerson;
@@ -100,8 +101,29 @@ public class InternalResource {
 	@GET
 	@Path("/test")
 	public Response test(@Context UriInfo ui, @Context HttpServletRequest request) {
-		DocidxNotificationCommons commons = new DocidxNotificationCommons();
-		commons.getNotificationReceiverXMl();
+		
+		final Session session = SessionProvider.sessionFactory.openSession();
+		try {
+    		
+    		Document citedDocument = new Document(session, "Does Familiarity Breed Trust? The Implications of Repeated Ties for Contractual Choice in Alliances‟"); 
+    				
+    				citedDocument = DocumentCommons.getClearedDocumentFromEntities(citedDocument);
+    		Document citingDocument = new Document(session, "A Quantitative Model for Understanding Multiple Vendor IT Outsourcing"); 
+//    				DocumentCommons.getClearedDocumentFromEntities(doc);
+    		
+    		Citation ref = new Citation(session);
+    		ref.setCitedDocument(citedDocument);
+    		ref.setCitingDocument(citingDocument);
+    		session.saveOrUpdate(ref);
+    		session.flush();
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
+		finally {
+    		Tools.tolerantClose(session);
+		}
+		
 		return UserCommons.getHTTPStatusResponse(ClientResponse.Status.OK, "ok");
 	}
 	
@@ -772,9 +794,21 @@ public class InternalResource {
     					if (DocumentQueries.getValidCleanTitle(title) == null) {
     						return UserCommons.getHTTPStatusResponse(com.sun.jersey.api.client.ClientResponse.Status.BAD_REQUEST, "title is not valid");
     					}
-    					document.setPublishedYear(year);   
+    					document.setPublishedYear(year);
+    					
+    					Document doc = (Document) document.getPersistentIdentity();
+    					if (doc == null) {
+    						session.save(document);    						
+    						session.refresh(document);
+    					}
+    					else {
+    						document = doc;
+    					}
+    					
+    					document.setSession(session);
     					
     					DocumentXref xref = new DocumentXref();
+    					xref.setSession(session);
     					xref.setCiteCount(citeCount == null ? 0 : citeCount);
     					xref.setRank(rank);
     					xref.setSource(source.toLowerCase());
@@ -784,6 +818,7 @@ public class InternalResource {
     					xref.setDocument(document);
     					document.addXref(xref);
     
+    					session.setFlushMode(FlushMode.MANUAL);
     					DocumentXref persistent = (DocumentXref) xref.getPersistentIdentity();
     					if (persistent != null) {
     						if (persistent.getRank() == null || persistent.getRank() > rank) {
@@ -791,14 +826,13 @@ public class InternalResource {
     							session.update(persistent);
     						}
     					}
-    					else {
-    						session.setFlushMode(FlushMode.MANUAL);
-    						session.saveOrUpdate(xref);
+    					else {    					
+    						session.save(xref);
     					}
     
     					GoogleDocumentQuery model = (new GoogleDocumentQuery(session)).getGoogleDocumentQuery(modelId);
     					model.setQuery_date(Calendar.getInstance().getTime());
-    					session.saveOrUpdate(model);
+    					session.update(model);
     					session.flush();
     					transaction.commit();
     

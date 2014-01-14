@@ -367,7 +367,7 @@ public class DocumentResource {
 					transaction.commit();
 					
 					// try to index the plain text with lucene
-					FulltextCommons.requestPlainTextUpdate(doc, hash, xref_id);
+					FulltextCommons.requestPlainTextUpdate(doc.getId(), hash, xref_id);
 									
 					return Tools.getHTTPStatusResponse(Status.OK, "OK");
 				}
@@ -413,7 +413,7 @@ public class DocumentResource {
 					transaction.commit();
 					
 					// try to index the plain text with lucene
-					FulltextCommons.requestPlainTextUpdate(doc, hash, xref_id);						
+					FulltextCommons.requestPlainTextUpdate(doc.getId(), hash, xref_id);						
 					
 					return Tools.getHTTPStatusResponse(Status.OK, "OK");
 				} catch (Exception e) {
@@ -469,28 +469,25 @@ public class DocumentResource {
     						if(doc == null) {
     							return Tools.getHTTPStatusResponse(Status.NOT_FOUND, "request document with id='"+id+"' does not exist.");
     						}
-    						Transaction transaction = session.beginTransaction();
-    						try {
-    							
+    						try {    						
+    							System.out.println("requesting reference update for id: "+ id);
     							DocumentCommons.updateDocumentData(session, doc, xtrString);
-    												
-    							transaction.commit();				
+				
     							return Tools.getHTTPStatusResponse(Status.OK, "OK");
     						}
     						catch (Exception e) {
     							e.printStackTrace();
     							return Tools.getHTTPStatusResponse(Status.INTERNAL_SERVER_ERROR, "could not add references: "+e.getMessage());
     						}
-    						finally {
-    							if(transaction.isActive()) {
-    								transaction.rollback();
-    							}					
-    						}
+    						
     					}
     				};
     				
     				System.out.println("DB postReferences update queue: "+SessionProvider.atomicManager.size());
     				AtomicOperationHandle<Response> handle = SessionProvider.atomicManager.addOperation(op);
+    				
+    				//wait for operation to finish
+    				return handle.getResult();
 				}
 				catch (IOException e1) {
 					// TODO Auto-generated catch block

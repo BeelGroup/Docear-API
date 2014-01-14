@@ -17,8 +17,10 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import org.apache.commons.io.IOUtils;
+import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.sciplore.database.SessionProvider;
 import org.sciplore.deserialize.mapper.MrDlibXmlMapper;
 import org.sciplore.deserialize.reader.XmlResourceReader;
 import org.sciplore.io.StringInputStream;
@@ -237,45 +239,79 @@ public class DocumentCommons {
 		if (xmlStream == null || session == null || doc == null || doc.getCitations().size() > 0 || doc.getPersons().size() > 0 || doc.getAbstract() != null) {
 			return false;
 		}
-		boolean isDirty = false;
-		XmlResourceReader reader = new XmlResourceReader(MrDlibXmlMapper.getDefaultMapper());
-		Document resource = null;
+		
+		Transaction transaction = session.beginTransaction();
 		try {
-			InputStream is = new StringInputStream(xmlStream, "UTF-8");
-			resource = (Document) reader.parse(is);
+			
+    		boolean isDirty = false;
+    		XmlResourceReader reader = new XmlResourceReader(MrDlibXmlMapper.getDefaultMapper());
+    		Document resource = null;
+    		try {
+    			InputStream is = new StringInputStream(xmlStream, "UTF-8");
+    			resource = (Document) reader.parse(is);
+    		}
+    		catch (UnsupportedEncodingException e) {
+    			e.printStackTrace();
+    		}
+    		long time = System.currentTimeMillis();
+    
+    		if (resource != null && !CitationsQueries.areCitationsAlreadyStored(session, doc)) {
+    			// transfer citations
+    			for (Citation ref : resource.getCitations()) {
+    				// clear citedDocument from other entities to prevent from
+    				// unnecessary and costly loops during saveOrUpdate
+    				Document citingDocument = getClearedDocumentFromEntities(doc);
+    				Document citedDocument = getClearedDocumentFromEntities(ref.getCitedDocument());
+    				
+    				if (citedDocument == null || citingDocument == null) {
+    					continue;
+    				}
+    
+    				ref.setCitedDocument(citedDocument);
+    				ref.setCitingDocument(citingDocument);
+    				session.saveOrUpdate(ref);
+//    				try {
+//						Thread.sleep(10);
+//					}
+//					catch (InterruptedException e) {
+//					}
+    			}
+    			// update abstract text in original doc entry if necessary
+    			if (resource.getAbstract() != null && resource.getAbstract().trim().length() > 0) {
+    				doc.setAbstract(resource.getAbstract());
+    				session.update(doc);
+    				isDirty = true;
+    			}
+    			try {
+    				session.flush();
+    				transaction.commit();
+    			}
+    			catch (Exception e) {
+    				e.printStackTrace();
+    				System.out.println("dirty doc: "+doc.getTitle());
+    				transaction.rollback();
+//    				session.close();
+//    				
+//    				session = SessionProvider.getNewSession();
+//    				session.setFlushMode(FlushMode.MANUAL);
+//    				try {
+//    					isDirty = updateDocumentData(session, doc, xmlStream);
+//    				}
+//    				finally {
+//    					session.close();
+//    				}
+    				
+    			}
+    		}
+    		System.out.println("updating Reference time: " + (System.currentTimeMillis() - time));
+    
+    		return isDirty;
 		}
-		catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
+		finally {
+			if(transaction.isActive()) {
+				transaction.rollback();
+			}					
 		}
-		long time = System.currentTimeMillis();
-
-		if (resource != null && !CitationsQueries.areCitationsAlreadyStored(session, doc)) {
-			// transfer citations
-			for (Citation ref : resource.getCitations()) {
-				// clear citedDocument from other entities to prevent from
-				// unnecessary and costly loops during saveOrUpdate
-				Document citedDocument = getClearedDocumentFromEntities(ref.getCitedDocument());
-				Document citingDocument = getClearedDocumentFromEntities(doc);
-
-				if (citedDocument == null || citingDocument == null) {
-					continue;
-				}
-
-				ref.setCitedDocument(getClearedDocumentFromEntities(ref.getCitedDocument()));
-				ref.setCitingDocument(getClearedDocumentFromEntities(doc));
-				session.saveOrUpdate(ref);
-			}
-			// update abstract text in original doc entry if necessary
-			if (resource.getAbstract() != null && resource.getAbstract().trim().length() > 0) {
-				doc.setAbstract(resource.getAbstract());
-				session.saveOrUpdate(doc);
-				isDirty = true;
-			}
-			session.flush();
-		}
-		System.out.println("updating Reference time: " + (System.currentTimeMillis() - time));
-
-		return isDirty;
 	}
 
 	public static Document getClearedDocumentFromEntities(Document document) {

@@ -101,12 +101,12 @@ public class FulltextCommons {
 		return extractor.extractPlainText();
 	}
 
-	public static void requestPlainTextUpdate(Document document, final String hash, final Integer xref_id) {
+	public static void requestPlainTextUpdate(final Integer docId, final String hash, final Integer xref_id) {
 		// run the update task as a separate thread to keep the web service more responsive
-		final Integer docId = document.getId();
 		AsynchUtilities.executeAsynch(new Runnable() {
 			int tryCounter = 0;
 			public void run() {
+				System.out.println("requesting lucene update for id: "+docId);
 				long time = System.currentTimeMillis();
 				Session session = Tools.getSession();
 				Transaction transaction = session.beginTransaction();
@@ -158,7 +158,7 @@ public class FulltextCommons {
 	}
 
 	public static void requestPlainTextUpdate(final Document doc, final String hash) {
-		requestPlainTextUpdate(doc, hash, null);
+		requestPlainTextUpdate(doc.getId(), hash, null);
 	}
 
 }
