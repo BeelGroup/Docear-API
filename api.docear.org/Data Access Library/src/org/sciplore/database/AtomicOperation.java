@@ -20,8 +20,8 @@ public abstract class AtomicOperation <T> {
 				@Override
 				public T call() throws Exception {
 					Session session = SessionProvider.getNewSession();
-					session.setFlushMode(FlushMode.MANUAL);
 					if (session != null) {
+						session.setFlushMode(FlushMode.MANUAL);
 						try {
 							return exec(session);
 						}

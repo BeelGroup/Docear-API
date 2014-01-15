@@ -74,7 +74,6 @@ import org.sciplore.resources.Person;
 import org.sciplore.resources.User;
 
 import util.BibtexCommons;
-import util.DocidxNotificationCommons;
 import util.DocumentCommons;
 import util.InternalCommons;
 import util.RecommendationCommons;
@@ -126,6 +125,8 @@ public class InternalResource {
 		
 		return UserCommons.getHTTPStatusResponse(ClientResponse.Status.OK, "ok");
 	}
+	
+	
 	
 	@GET
 	@Path("/testAlg")
