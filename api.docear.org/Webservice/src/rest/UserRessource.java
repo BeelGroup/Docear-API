@@ -564,29 +564,29 @@ public class UserRessource {
 			SciploreResponseCode response = mindmap.create(user, app, allowBackup, allowContentResearch, allowInformationRetrieval, allowUsageResearch,
 					allowRecommendations, revision, mindmapID, filename, filepath, filesize, file.getPath());
 
-			boolean dirty = false;
-			if (mapType != null) {
-				mindmap.setMapType(mapType);
-				dirty = true;
-			}
-			if (isLibraryMap) {
-				mindmap.setAffiliation("library");
-				dirty = true;
-			}
-			if (dirty) {
-				mindmap.save();
-			}
-			if ((app.getBuildNumber() != null && app.getBuildNumber() >= 90 && "docear".equalsIgnoreCase(app.getName())) && mindmap.getAllowParsing()) {
-				try {
-					sendMindmapToParser(user.getId(), mindmap, absoluteFile);
-				}
-				catch (Exception e) {
-					e.printStackTrace();
-					return UserCommons.getHTTPStatusResponse(Status.INTERNAL_SERVER_ERROR, "error while storing the mindmap.");
-				}
-			}
-
-			if (response.getResponseCode() == SciploreResponseCode.OK && response.getResponseMessage() != null) {
+			if (response.getResponseCode() == SciploreResponseCode.OK && response.getResponseMessage() != null) {			
+    			boolean dirty = false;
+    			if (mapType != null) {
+    				mindmap.setMapType(mapType);
+    				dirty = true;
+    			}
+    			if (isLibraryMap) {
+    				mindmap.setAffiliation("library");
+    				dirty = true;
+    			}
+    			if (dirty) {
+    				mindmap.save();
+    			}			
+    			if ((app.getBuildNumber() != null && app.getBuildNumber() >= 90 && "docear".equalsIgnoreCase(app.getName())) && mindmap.getAllowParsing()) {
+    				try {
+    					sendMindmapToParser(user.getId(), mindmap, absoluteFile);
+    				}
+    				catch (Exception e) {
+    					e.printStackTrace();
+    					return UserCommons.getHTTPStatusResponse(Status.INTERNAL_SERVER_ERROR, "error while storing the mindmap.");
+    				}
+    			}
+			
 				RecommendationCommons.enqueueRecommendionsGeneratorTaskAfterNewMap(user);
 				return UserCommons.getHTTPStatusResponse(Status.OK, mindmapID);
 			}
