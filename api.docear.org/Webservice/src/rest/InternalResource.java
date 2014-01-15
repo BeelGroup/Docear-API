@@ -133,6 +133,8 @@ public class InternalResource {
 		return UserCommons.getHTTPStatusResponse(ClientResponse.Status.OK, "ok");
 	}
 	
+	
+	
 	@GET
 	@Path("/testAlg")
 	public Response testAlg(@Context UriInfo ui, @Context HttpServletRequest request) {

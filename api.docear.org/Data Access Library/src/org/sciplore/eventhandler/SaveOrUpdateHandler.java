@@ -33,6 +33,7 @@ public class SaveOrUpdateHandler extends DefaultSaveOrUpdateEventListener {
 	public void onSaveOrUpdate(SaveOrUpdateEvent event) {
 		final SessionImplementor source = event.getSession();
 		final Object object = event.getObject();
+		final EntityEntry entry = event.getEntry(); 
 		final Serializable requestedId = event.getRequestedId();
 
 		if ( requestedId != null ) {
@@ -57,12 +58,12 @@ public class SaveOrUpdateHandler extends DefaultSaveOrUpdateEventListener {
 				// increase context depth 
 				Resource.getResourceContext().incRecDepth();
 				
-//				System.out.println("");
-//				System.out.println("onSaveOrUpdate: "+object.getClass());
+				log.debug("\n");
+				log.debug("onSaveOrUpdate: "+object.getClass());
 				Resource toSync = (Resource) object;	
 				
 				if(Resource.getResourceContext().isPersistent(toSync)) {
-					//System.out.println("isPersistent");
+					log.debug("isPersistent");
 					Resource.getResourceContext().decRecDepth();
 					return;
 				}
@@ -76,7 +77,7 @@ public class SaveOrUpdateHandler extends DefaultSaveOrUpdateEventListener {
 				
 				if(ResourceManager.hasDependencies(toSync.getClass())) {					
 					for(DependencyItem item : ResourceManager.getDependenciesFor(toSync.getClass()) ) {
-//						System.out.println("process dependency: "+ item.getFieldName());
+						log.debug("process dependency: "+ item.getFieldName());
 						try {
 							
 							Object obj = BASIC_PROPERTY_ACCESSOR.getGetter(toSync.getClass(), item.getFieldName()).get(toSync);
@@ -170,7 +171,7 @@ public class SaveOrUpdateHandler extends DefaultSaveOrUpdateEventListener {
 		Resource res;
 		if(( res = toSync.syncResource(event.getSession())) != null) {
 			Resource.getResourceContext().addPersistentInstance(toSync, res);
-			//System.out.println("found Persistent");				
+			log.debug("found Persistent");				
 			cascadeSaveOrUpdateResource(res, event.getSession());
 			return true;
 		}
@@ -188,7 +189,7 @@ public class SaveOrUpdateHandler extends DefaultSaveOrUpdateEventListener {
 			}
 			Resource.getResourceContext().pushToCascadeStack(target);
 			ResourceProperty property = iter.next();
-//			System.out.println("Cascading: "+property.getFieldName());			
+			log.debug("Cascading: "+property.getFieldName());			
 			cascadeSaveOrUpdateSet(property, target, session);
 			Resource.getResourceContext().popFromCascadeStack();
 		}
@@ -219,18 +220,10 @@ public class SaveOrUpdateHandler extends DefaultSaveOrUpdateEventListener {
 		final Object entity = session.getPersistenceContext().unproxyAndReassociate( object );
 		
 		event.setEntity( entity );
-		event.setEntry( session.getPersistenceContext().getEntry( entity ) );
+		event.setEntry(session.getPersistenceContext().getEntry( entity ));
 		event.setEntry(null);
 		//return the id in the event object
-		try {
-			event.setResultId( performSaveOrUpdate( event ) );
-		}
-		catch (Throwable e) {
-			//System.err.println("Error in SaveOrUpdateHandler.performSaveOrUpdate(): "+ e.getMessage());
-			if ("could not insert: [org.sciplore.resources.DocumentXref]".equals(e.getMessage())) {
-				System.out.println("STOP!");
-			}
-		}
+		event.setResultId( performSaveOrUpdate( event ) );
 	}
 	
 }
