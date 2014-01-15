@@ -19,6 +19,7 @@ import org.hibernate.proxy.HibernateProxy;
 import org.sciplore.eventhandler.ResourceManager.DependencyItem;
 import org.sciplore.eventhandler.ResourceManager.ResourceProperty;
 import org.sciplore.resources.Resource;
+import org.sciplore.utilities.DocearLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -223,7 +224,14 @@ public class SaveOrUpdateHandler extends DefaultSaveOrUpdateEventListener {
 		event.setEntry(session.getPersistenceContext().getEntry( entity ));
 		event.setEntry(null);
 		//return the id in the event object
-		event.setResultId( performSaveOrUpdate( event ) );
+		
+		// do not remove! --> ignore concurrent modification exception
+		try {
+			event.setResultId( performSaveOrUpdate( event ) );
+		}
+		catch(Throwable e) {
+			DocearLogger.info(e);
+		}
 	}
 	
 }

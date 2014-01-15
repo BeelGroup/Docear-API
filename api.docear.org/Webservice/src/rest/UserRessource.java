@@ -61,7 +61,6 @@ import util.ResourceCommons;
 import util.Tools;
 import util.UserCommons;
 import util.recommendations.AsynchronousRecommendationsGeneratorAfterAutoRec;
-import util.recommendations.AsynchronousRecommendationsGeneratorAfterNewMap;
 import util.recommendations.AsynchronousRecommendationsGeneratorAfterRecRequest;
 
 import com.sun.jersey.api.client.ClientResponse.Status;
@@ -421,7 +420,8 @@ public class UserRessource {
 			}
 			catch (Exception ex) {
 				absoluteFile.delete();
-				return UserCommons.getHTTPStatusResponse(Status.INTERNAL_SERVER_ERROR, "could not open the uploaded .zip file.");
+				// use status.OK so that Docear deletes the broken ZIP file from the upload queue
+				return UserCommons.getHTTPStatusResponse(Status.OK, "could not open the uploaded .zip file.");
 			}
 
 			ZipEntry metaDataEntry = zipFile.getEntry("metadata.inf");
@@ -437,7 +437,7 @@ public class UserRessource {
 			}
 			catch (Exception ex) {
 				absoluteFile.delete();
-				return UserCommons.getHTTPStatusResponse(Status.INTERNAL_SERVER_ERROR, "error while loading meta information.");
+				return UserCommons.getHTTPStatusResponse(Status.OK, "error while loading meta information.");
 			}
 			finally {
 				try {
@@ -587,6 +587,7 @@ public class UserRessource {
 			}
 
 			if (response.getResponseCode() == SciploreResponseCode.OK && response.getResponseMessage() != null) {
+				RecommendationCommons.enqueueRecommendionsGeneratorTaskAfterNewMap(user);
 				return UserCommons.getHTTPStatusResponse(Status.OK, mindmapID);
 			}
 			else {
@@ -599,37 +600,7 @@ public class UserRessource {
 			e.printStackTrace();
 			return UserCommons.getHTTPStatusResponse(Status.INTERNAL_SERVER_ERROR, "sth went wrong.");
 		}
-		finally {
-			if (user.isAllowRecommendations()) {
-    			AsynchronousRecommendationsGeneratorAfterNewMap.executeAsynch(new Runnable() {				
-    				@Override
-    				public void run() {
-    					final Session session = SessionProvider.sessionFactory.openSession();
-    					RecommendationsDocumentsSet recDocSet = null;
-    					try {
-        					session.setFlushMode(FlushMode.MANUAL);
-        					User u = (User) session.get(User.class, user.getId());
-        					recDocSet = RecommendationsDocumentsSetQueries.getLatestRecommendationsSet(session, u, RecommendationsDocumentsSet.TRIGGER_TYPE_MINDMAP_UPLOAD);
-    					}
-    					catch(Exception e) {
-    						e.printStackTrace();
-    					}
-    					finally {
-    						Tools.tolerantClose(session);
-    					}
-    					
-    					//only generate new recommendations if the last time is more than 1 hour past
-    					long now = System.currentTimeMillis();
-    					if (recDocSet == null || recDocSet.getCreated().getTime() < (now - 3600000L)) {
-    						RecommendationCommons.forceComputeForSingleUser(user.getId(), RecommendationsDocumentsSet.TRIGGER_TYPE_MINDMAP_UPLOAD);
-    					}
-    					else {
-    						System.out.println("do not compute recommendations for user "+user.getId()+", last attempt has been "+ (now-recDocSet.getCreated().getTime()) + "ms ago.");
-    					}
-    				}
-    			});
-    			System.out.println("AsynchronousRecommendationsGeneratorAfterNewMap --> running recommendation generator tasks: "+AsynchronousRecommendationsGeneratorAfterNewMap.getSingleExecTaskCount());
-			}
+		finally {			
 			try {
 				if (transaction.isActive()) {
 					transaction.commit();

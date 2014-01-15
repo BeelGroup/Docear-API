@@ -29,6 +29,7 @@ import org.sciplore.resources.User;
 import org.sciplore.resources.UserModel;
 
 import rest.UserRessource;
+import util.recommendations.AsynchronousRecommendationsGeneratorAfterNewMap;
 import util.recommendations.GraphDbUserModelFactory;
 import util.recommendations.OfflineEvaluator;
 import util.recommendations.RecommendationLogger;
@@ -119,6 +120,39 @@ public class RecommendationCommons {
 		finally {
 			locked = false;		
 		}
+	}
+	
+	public static void enqueueRecommendionsGeneratorTaskAfterNewMap(final User user) {
+    	if (user.isAllowRecommendations()) {
+    		AsynchronousRecommendationsGeneratorAfterNewMap.executeAsynch(new Runnable() {				
+    			@Override
+    			public void run() {
+    				final Session session = SessionProvider.sessionFactory.openSession();
+    				RecommendationsDocumentsSet recDocSet = null;
+    				try {
+    					session.setFlushMode(FlushMode.MANUAL);
+    					User u = (User) session.get(User.class, user.getId());
+    					recDocSet = RecommendationsDocumentsSetQueries.getLatestRecommendationsSet(session, u, RecommendationsDocumentsSet.TRIGGER_TYPE_MINDMAP_UPLOAD);
+    				}
+    				catch(Exception e) {
+    					e.printStackTrace();
+    				}
+    				finally {
+    					Tools.tolerantClose(session);
+    				}
+    				
+    				//only generate new recommendations if the last time is more than 1 hour past
+    				long now = System.currentTimeMillis();
+    				if (recDocSet == null || recDocSet.getCreated().getTime() < (now - 3600000L)) {
+    					RecommendationCommons.forceComputeForSingleUser(user.getId(), RecommendationsDocumentsSet.TRIGGER_TYPE_MINDMAP_UPLOAD);
+    				}
+    				else {
+    					System.out.println("do not compute recommendations for user "+user.getId()+", last attempt has been "+ (now-recDocSet.getCreated().getTime()) + "ms ago.");
+    				}
+    			}
+    		});
+    		System.out.println("AsynchronousRecommendationsGeneratorAfterNewMap --> running recommendation generator tasks: "+AsynchronousRecommendationsGeneratorAfterNewMap.getSingleExecTaskCount());
+    	}
 	}
 	
 	private static boolean dryRunForSingleUser(Session session, User user) {
@@ -386,8 +420,9 @@ public class RecommendationCommons {
 			}
 			catch (Exception e) {
 				transaction.rollback();
-				e.printStackTrace();
-				logger.log("error when saving the model for user ["+recDocSet.getUser().getId()+"] with algorithm["+recDocSet.getUserModel().getAlgorithm().getId()+"] having no_days_since_max: "+recDocSet.getUserModel().getAlgorithm().getNoDaysSinceMax());
+				e.printStackTrace();				
+				System.out.println("error when saving the model for user ["+recDocSet.getUser().getId()+"] with algorithm["+recDocSet.getUserModel().getAlgorithm().getId()+"] having no_days_since_max: "+recDocSet.getUserModel().getAlgorithm().getNoDaysSinceMax());
+				System.out.println("error when saving the model for user ["+recDocSet.getUser().getId()+"] with algorithm["+recDocSet.getUserModel().getAlgorithm().getId()+"] having node_count_before_expanded: "+recDocSet.getUserModel().getNodeCountBeforeExpanded());
 			}
 			
 			
