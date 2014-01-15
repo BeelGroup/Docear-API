@@ -38,6 +38,7 @@ import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
+import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.util.Version;
 import org.docear.googleparser.GoogleScholarParser;
 import org.docear.googleparser.WebSearchResult;
@@ -59,7 +60,6 @@ import org.sciplore.queries.DocumentsPdfHashQueries;
 import org.sciplore.queries.InternalQueries;
 import org.sciplore.queries.MindmapsPdfHashQueries;
 import org.sciplore.resources.Algorithm;
-import org.sciplore.resources.Citation;
 import org.sciplore.resources.Contact;
 import org.sciplore.resources.Document;
 import org.sciplore.resources.DocumentPerson;
@@ -74,7 +74,6 @@ import org.sciplore.resources.Person;
 import org.sciplore.resources.User;
 
 import util.BibtexCommons;
-import util.DocidxNotificationCommons;
 import util.DocumentCommons;
 import util.InternalCommons;
 import util.RecommendationCommons;
@@ -98,24 +97,31 @@ public class InternalResource {
 	public static Integer HMA_GOOGLE_REQUESTS = 0;
 	private static String ipChani = "";
 	
-	@GET
+	@GET	
 	@Path("/test")
-	public Response test(@Context UriInfo ui, @Context HttpServletRequest request) {
-		
+	public Response test(@Context UriInfo ui, @Context HttpServletRequest request) {		
 		final Session session = SessionProvider.sessionFactory.openSession();
-		try {
-    		
-    		Document citedDocument = new Document(session, "Does Familiarity Breed Trust? The Implications of Repeated Ties for Contractual Choice in Alliances‟"); 
-    				
-    				citedDocument = DocumentCommons.getClearedDocumentFromEntities(citedDocument);
-    		Document citingDocument = new Document(session, "A Quantitative Model for Understanding Multiple Vendor IT Outsourcing"); 
-//    				DocumentCommons.getClearedDocumentFromEntities(doc);
-    		
-    		Citation ref = new Citation(session);
-    		ref.setCitedDocument(citedDocument);
-    		ref.setCitingDocument(citingDocument);
-    		session.saveOrUpdate(ref);
-    		session.flush();
+		try {			
+			SQLQuery query = (SQLQuery) session.createSQLQuery("select model from user_models U where id > 170000 order by rand() limit 10");
+			long time = System.currentTimeMillis();
+			for (Object o : query.list()) {
+				IndexReader ir = SessionProvider.getLuceneIndexer().getIndexReader(); //true=apply deletes (slower/costly); false=ignore deletes(if deleted docs are no problem)			
+				IndexSearcher is = new IndexSearcher(ir);	
+				System.out.println("\n---\n"+(String)o+"\n---\n");
+				Query q = new QueryParser(Version.LUCENE_34, "title", new StandardAnalyzer(Version.LUCENE_34)).parse((String) o);
+				TopDocs td = is.search(q, 1000);
+			}
+			System.out.println("TEST --> used 10 query in "+(System.currentTimeMillis()-time)+"ms.");
+			
+			String s  = "text:joeran text:finanzierung text:fremdkapital text:sichern text:optionen text:übersicht text:aktuell text:marketing text:recommender text:infrastruktur text:docear text:parser text:recs text:server text:recommendation text:sachsen text:pdf text:naher text:anhalt text:venture text:adjustments text:mäßig text:diss text:offline text:misc text:schreiben text:retrieval text:verlage text:1st text:zukunft text:ventures.com text:indexer text:forschung text:interessant text:stiftungen text:sponsored text:flood text:evaluator text:email text:scholar text:capital text:langfristig text:todos text:google text:nutzer text:www.hp text:labels text:captcha text:hackfwd.com text:outsorcing text:workflow text:www.bvp.com text:publish text:gewinnen text:ctrs text:möglichst text:fix text:tweaks text:journals text:recommendations text:decent text:notfallplan text:breaker text:neue text:surfstick text:angels text:versicherungen text:nutzern text:bmp text:alt text:evaluating text:werbung text:www.holtzbrinck.com text:finden text:www.holtzbrinck text:webservice text:bekommen text:todo text:laufen text:bugs text:umsatz text:future text:plattformen text:system text:3rd text:user text:companyinfo text:vielen text:viele text:brandenburg text:database text:logging text:ziel text:stefan text:paper text:timeout text:eigener text:help text:cbf text:store text:lassen text:user's text:mind text:bei text:jöran text:januar text:infrastructure text:dumont text:titles text:users text:http text:pdfs text:bibtex text:last_notification text:von text:www.intel.com text:maps text:posters text:papers text:bund text:frequencies text:beta8 text:stars text:blacklisted text:website text:business text:index text:person text:implement text:adding text:happens text:ctr text:much text:results text:timestamp text:hash text:clicked text:wir text:too text:table text:systems text:meta text:index.htm text:parsing text:xref text:document_title text:folded text:artikel text:unified text:clicks text:displaying text:add text:index.php text:für text:literature text:usability text:map text:get text:ignore text:index.html text:holding text:user_applications text:unregistered text:nicht text:verlinkte text:die text:dfg text:freeplane text:stop_word text:creator text:illustration text:presentation text:keyword text:parscit text:trigger text:registration text:hartz4 text:ich text:hashs text:optimize text:analyse text:irrelvant text:haben text:dateien text:accuracy text:concept text:citations text:berlin text:improve text:extraction text:nodes text:recommend text:instad text:passwort text:calculate text:moved text:monitoring text:wievielen text:nur text:entries text:types text:auch text:fulltextid text:prototypen.html text:how text:proxy text:title text:pappers text:wants text:2nd text:modelling text:opened text:detailid text:invalid text:sync text:machtes text:bug text:habe text:weilsie text:auf text:schließ text:paper.was text:empfehlungen text:graphdb text:tabelle text:einzahlen text:dlib text:sind text:müssen.und text:diplomiertem text:what text:sessions text:dbtotal text:beyond text:literaturordner text:titel text:der text:sindwir text:organic text:davon text:idf text:wieviele text:highlight text:document_id text:produktdesigner text:annotations text:intervall text:zuschuss text:analyze text:hochgeschoben text:gender text:kannst text:muss text:document text:ribbons text:internal text:oder text:node text:service text:und text:euro text:dsl text:nutzerein text:vertrag text:zypern text:reingucken text:null text:extrahiertem text:ist text:papern text:aber text:algorithm text:registered text:read text:setzen text:enhalten text:dass text:eine text:fachrichtung text:downloader text:header text:merkwürdigkeiten text:documentid text:edited text:update text:vielleicht text:runterladen text:parsed text:sein text:sollten text:annotation text:workspace text:never text:vermögen text:flag text:produktdesign text:startup text:machen text:process text:bookmarks text:webserver text:gehts text:influence text:method text:different text:search text:assume text:löschen text:falsches text:privater text:mit text:daad text:loged text:ego text:gleichen text:checker text:info text:shown text:bloß text:data text:mindmaps text:grüße text:benutzt text:referenzierte text:e.g text:text text:tech text:neu text:deleting text:sense text:verlinken text:das text:holistic text:anzahlen text:fixing text:wieder text:eingetragen text:dann text:model text:monat text:irgendwo text:lösung text:marcel text:volltext text:neuen text:conference text:seltsam text:abgeschaltet text:speichern text:maximum text:insgesamt text:filtering text:nochmal text:wundern text:decides text:wenn text:metadaten text:mal text:temporäre text:prototypen text:send text:referenzen text:dokumente text:hallo text:already text:sie text:keine text:classifying text:bisherige text:empfohlen text:aktiviert text:aufgefallen text:public text:when text:hin text:4th text:zuordnung text:created text:ein text:drin text:mehrfach text:hashes text:observation text:wieso text:lücken text:additional text:age text:prozentuale text:performance text:leichter text:structure text:zwischen text:easier text:übersehen text:eigentlich text:zusätzlich text:adjustment text:parse text:storing text:cancel text:check text:existiert text:immer text:duplicates text:connects text:mache text:absolutely text:bag text:gmbh text:use text:abend text:query text:inhalt text:förderung text:bibliographic text:algorithmus text:als text:classify text:hast text:collaborative text:turned text:downloading text:seite text:seitdem text:opens text:ziemlich text:vermutlich text:work text:entweder text:deliver text:wichtig text:finished text:ids text:sehen text:sammeln text:revisions text:sollen text:user’s text:incoming text:datenbank text:basierend text:convert text:gern text:etwas text:möglich text:überhaupt text:otherwise text:minuten text:mitglieder text:paar text:statistik text:still text:date text:real text:wurden text:ask text:meinen text:teste text:uns text:erzeugt text:counting text:mehr text:fehler text:letzte text:duplicate text:ranks text:erstellt text:sonst text:darüber text:falls text:einen text:unsere text:eher text:eigenen text:falle text:erhalten text:unserer text:einem text:werden text:sql text:wie text:jetzt text:wenige text:während text:make text:removal text:haut text:collect text:save text:zum text:url text:maybe text:unterschiede text:werte text:gesamten text:mich text:anhand text:kaum text:gemacht text:unterschiedliche text:join text:number text:displayed text:unterschiedlichen text:gerade text:wenig text:link text:den text:heute text:über";
+			
+			time = System.currentTimeMillis();
+			IndexReader ir = SessionProvider.getLuceneIndexer().getIndexReader(); //true=apply deletes (slower/costly); false=ignore deletes(if deleted docs are no problem)			
+			IndexSearcher is = new IndexSearcher(ir);			
+			Query q = new QueryParser(Version.LUCENE_34, "title", new StandardAnalyzer(Version.LUCENE_34)).parse(s);
+			TopDocs td = is.search(q, 1000);
+			System.out.println("TEST --> used special query in "+(System.currentTimeMillis()-time)+"ms.");
+			
 		}
 		catch(Exception e) {
 			e.printStackTrace();

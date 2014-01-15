@@ -59,6 +59,7 @@ public class Indexer {
 	private final static Logger logger = LoggerFactory.getLogger(Indexer.class);
 	private String indexDir = Config.getProperties("org.mrdlib").getProperty("indexDir");
 	public static File DOCUMENT_PLAINTEXT_DIRECTORY = new File(Config.getProperties("org.mrdlib").getProperty("plainTextDir"));
+	public static int RAM_BUFFER_SIZE_MB = Integer.parseInt(Config.getProperties("org.mrdlib").getProperty("RAMBufferSize", "64"));
 	private static IndexWriter iw;
 	static {
 		if (!DOCUMENT_PLAINTEXT_DIRECTORY.exists()) {
@@ -228,7 +229,8 @@ public class Indexer {
 	
 	private IndexWriter getIndexWriter() throws IOException {
 		if(iw == null) {
-			iw = new IndexWriter(FSDirectory.open(indexDirFile), new IndexWriterConfig(Version.LUCENE_34, new StandardAnalyzer(Version.LUCENE_34)).setRAMBufferSizeMB(64));
+			System.out.println("creating new IndexWriter with "+RAM_BUFFER_SIZE_MB+"MB as RAM buffer.");
+			iw = new IndexWriter(FSDirectory.open(indexDirFile), new IndexWriterConfig(Version.LUCENE_34, new StandardAnalyzer(Version.LUCENE_34)).setRAMBufferSizeMB(RAM_BUFFER_SIZE_MB));
 			Runtime.getRuntime().addShutdownHook(new Thread() {
 				public void run() {
 					try {

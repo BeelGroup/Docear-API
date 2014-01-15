@@ -145,6 +145,7 @@ public class UserRessource {
 		session.setFlushMode(FlushMode.MANUAL);
 
 		final User user = new User(session).getUserByEmailOrUsername(userName);
+				
 		if (!ResourceCommons.authenticate(request, user)) {
 			return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "no valid access token.");
 		}

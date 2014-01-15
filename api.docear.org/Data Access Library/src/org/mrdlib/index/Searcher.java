@@ -70,8 +70,11 @@ public class Searcher {
 	
 	public List<DocumentHashItem> search(Query query, int max) throws ParseException, IOException {
 		List<DocumentHashItem> r = new ArrayList<DocumentHashItem>();
-				
-		TopDocs td = is.search(query, max);		
+		
+		long time = System.currentTimeMillis();
+		TopDocs td = is.search(query, max);
+		System.out.println("LuceneQuery ["+query+"] executed in "+(System.currentTimeMillis()-time)+" ms");
+		
 		int rank = 1;
 		for (ScoreDoc sd : td.scoreDocs) {			
 			DocumentHashItem item = new DocumentHashItem();

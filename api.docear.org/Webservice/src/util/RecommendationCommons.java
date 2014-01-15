@@ -251,10 +251,10 @@ public class RecommendationCommons {
 			if (computeForSingleUser(userId, triggerType)) {
 				return;
 			}
-		}		
+		}	
 	}
 
-	public static boolean computeForSingleUser(int userId, int triggerType) {
+	public static boolean computeForSingleUser(int userId, int triggerType) {		
 		final Session session = SessionProvider.sessionFactory.openSession();
 		session.setFlushMode(FlushMode.MANUAL);
 		try {

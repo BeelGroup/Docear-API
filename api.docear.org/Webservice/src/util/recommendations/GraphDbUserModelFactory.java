@@ -9,11 +9,15 @@ import java.util.Random;
 
 import javax.ws.rs.core.MultivaluedMap;
 
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.queryParser.ParseException;
+import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.util.Version;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.mrdlib.index.Searcher;
@@ -264,7 +268,7 @@ public class GraphDbUserModelFactory {
 		System.out.println(booleanQuery.toString());
 	}
 
-	public BooleanQuery getLuceneQuery() {
+	public Query getLuceneQuery() {
 		BooleanQuery booleanQuery = new BooleanQuery();
 
 		// StringBuilder sbKeywords = new StringBuilder();
@@ -292,9 +296,17 @@ public class GraphDbUserModelFactory {
 				// sbReferences.append(item).append(" ");
 			}
 		}
+		
+		try {
+			Query q = new QueryParser(Version.LUCENE_34, "title", new StandardAnalyzer(Version.LUCENE_34)).parse(booleanQuery.toString());
+			return q;
+		}
+		catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
-		System.out.println("used LuceneQuery: " + booleanQuery);
-		return booleanQuery;
+		return null;
 	}
 
 	public UserModel getUserModel() {
