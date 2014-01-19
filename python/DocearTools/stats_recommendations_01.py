@@ -6,6 +6,8 @@ clicked recommendations on 1st, 2nd, 3rd, ... showing
 import _mysql
 
 db=_mysql.connect(host="localhost", port=3306, user="docear", passwd="ppLmQ8esxJtTGQtz", db="docear")
+date_lo = '2013-07-01'
+date_hi = '2014-02-01'
 
 def _create_tmp_rec_clicked(gap, auto, approach):    
     query = """DROP TABLE IF EXISTS tmp_rec_base"""
@@ -16,7 +18,7 @@ def _create_tmp_rec_clicked(gap, auto, approach):
           
     query = """INSERT INTO tmp_rec_base select 1 as iteration, user_id, fulltext_url_id, min(delivered) as delivered from recommendations_documents R 
                 JOIN user_models U ON (R.user_model_id = U.id) JOIN algorithms A ON (A.id = U.algorithm_id) 
-                where user_id not in (1,2,27) and delivered between '2012-12-01' and '2013-02-01'"""
+                where user_id not in (1,2,27) and delivered between '"""+date_lo+"""' and '"""+date_hi+"""'"""
     if auto >= 0:
         query += " AND auto="+str(auto)
     
@@ -34,7 +36,7 @@ def _create_tmp_rec_clicked(gap, auto, approach):
         query = """INSERT INTO tmp_rec_base SELECT """+str(i)+""", R.user_id, R.fulltext_url_id, min(R.delivered) as delivered from recommendations_documents R 
                 JOIN tmp_rec_base T ON (R.fulltext_url_id=T.fulltext_url_id AND R.user_id=T.user_id AND T.iteration="""+str(i-1)+""") 
                 JOIN user_models U ON (R.user_model_id = U.id) JOIN algorithms A ON (A.id = U.algorithm_id)
-                WHERE R.user_id not in (1,2,27) and R.delivered between '2012-12-01' and '2013-02-01' AND R.delivered > DATE_ADD(T.delivered, INTERVAL """+str(gap)+""" DAY)"""
+                WHERE R.user_id not in (1,2,27) and R.delivered between '"""+date_lo+"""' and '"""+date_hi+"""' AND R.delivered > DATE_ADD(T.delivered, INTERVAL """+str(gap)+""" DAY)"""
         if auto >= 0:
             query += " AND auto="+str(auto)               
         if approach == 0:
@@ -47,7 +49,7 @@ def _create_tmp_rec_clicked(gap, auto, approach):
         db.query(query)
         
     #CLEAN BASE DATA FROM SESSIONS WITH LESS THAN 10 DOCUMENTS   
-    query= """DELETE A FROM tmp_rec_base A JOIN (select user_id, delivered, count(*) from recommendations_documents WHERE delivered between '2012-12-01' and '2013-02-01'
+    query= """DELETE A FROM tmp_rec_base A JOIN (select user_id, delivered, count(*) from recommendations_documents WHERE delivered between '"""+date_lo+"""' and '"""+date_hi+"""'
             GROUP BY user_id, delivered having count(distinct fulltext_url_id) <>10) B
             ON (A.user_id=B.user_id AND A.delivered = B.delivered)"""
     db.query(query)
