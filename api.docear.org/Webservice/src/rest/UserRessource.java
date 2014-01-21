@@ -31,8 +31,11 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
+import org.glassfish.jersey.media.multipart.BodyPartEntity;
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -62,10 +65,6 @@ import util.Tools;
 import util.UserCommons;
 import util.recommendations.AsynchronousRecommendationsGeneratorAfterAutoRec;
 import util.recommendations.AsynchronousRecommendationsGeneratorAfterRecRequest;
-
-import com.sun.jersey.api.client.ClientResponse.Status;
-import com.sun.jersey.multipart.BodyPartEntity;
-import com.sun.jersey.multipart.FormDataMultiPart;
 
 @Path("/user")
 public class UserRessource {

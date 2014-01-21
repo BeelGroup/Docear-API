@@ -28,13 +28,13 @@ import org.apache.log4j.Layout;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
+import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.mrdlib.index.Indexer;
 import org.sciplore.database.SessionProvider;
 import org.sciplore.formatter.Bean;
 
-import com.sun.jersey.multipart.FormDataBodyPart;
 import java.io.File;
 import java.io.FileInputStream;
 

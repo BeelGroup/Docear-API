@@ -26,6 +26,9 @@ import javax.ws.rs.core.UriInfo;
 import javax.xml.bind.JAXBException;
 
 import org.apache.log4j.Level;
+import org.glassfish.jersey.media.multipart.BodyPartEntity;
+import org.glassfish.jersey.media.multipart.FormDataBodyPart;
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.hibernate.Session;
 import org.sciplore.database.SessionProvider;
 import org.sciplore.queries.DocumentQueries;
@@ -38,10 +41,6 @@ import org.sciplore.xml.XmlDocuments;
 import org.sciplore.xtract.Xtract;
 
 import util.Tools;
-
-import com.sun.jersey.multipart.BodyPartEntity;
-import com.sun.jersey.multipart.FormDataBodyPart;
-import com.sun.jersey.multipart.FormDataMultiPart;
 
 @Path("/service")
 public class ServiceRessource {

@@ -12,13 +12,10 @@ import java.io.StringWriter;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipInputStream;
 
-import javax.annotation.Resource;
-import javax.servlet.ServletContext;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
-import javax.xml.ws.WebServiceContext;
+import javax.ws.rs.core.Response.Status;
 
 import org.apache.log4j.Appender;
 import org.apache.log4j.ConsoleAppender;
@@ -32,23 +29,13 @@ import org.hibernate.Session;
 
 import util.MailUtils;
 
-import com.sun.jersey.api.client.ClientResponse.Status;
-
 public class Tools {
 	
 	static Logger logger = Logger.getLogger("RestWebserviceLogger");
 	static Level logLevel = Level.DEBUG;
 	static Layout layout = new PatternLayout("%d: %x - %m%n");
 	static Appender consoleAppender = new ConsoleAppender(layout);
-	static Appender fileAppender;
-	
-	@Context
-	static ServletContext context;
-	
-	@Resource
-	static  
-	WebServiceContext webServiceContext; 
-	
+	static Appender fileAppender;	
 	
 	public static void sendHTTPStatusResponse(Status responseStatus, Class<? extends Object> sender, Exception e, Level level) {
 		logger.setLevel(logLevel);

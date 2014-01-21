@@ -28,6 +28,7 @@ import net.n3.nanoxml.IXMLReader;
 import net.n3.nanoxml.StdXMLReader;
 import net.n3.nanoxml.XMLParserFactory;
 
+import org.apache.commons.configuration.Configuration;
 import org.docear.Logging.DocearLogger;
 import org.docear.graphdb.relationship.Type;
 import org.docear.graphdb.relationship.UserRelationship;
@@ -70,6 +71,10 @@ import org.neo4j.kernel.Traversal;
 import org.neo4j.kernel.Uniqueness;
 import org.neo4j.kernel.impl.util.FileUtils;
 import org.neo4j.server.WrappingNeoServerBootstrapper;
+import org.neo4j.server.configuration.Configurator;
+import org.neo4j.server.configuration.PropertyFileConfigurator;
+import org.neo4j.server.configuration.ServerConfigurator;
+import org.neo4j.server.configuration.ThirdPartyJaxRsPackage;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
@@ -138,7 +143,11 @@ public class GraphDbController implements KernelEventHandler, TransactionEventLi
 	public void init() {
 		graphDb = (AbstractGraphDatabase) new GraphDatabaseFactory().newEmbeddedDatabase(dbPath);
 
-		service = new WrappingNeoServerBootstrapper(graphDb);
+		Configurator config = new ServerConfigurator(graphDb); 
+		config.configuration().setProperty(Configurator.WEBSERVER_PORT_PROPERTY_KEY, 47474 );
+		config.configuration().setProperty(Configurator.SECURITY_RULES_KEY, "org.docear.graphdb.DocearSecurityRule");
+		
+		service = new WrappingNeoServerBootstrapper(graphDb, config);
 
 		registerShutdownHook(graphDb);
 		ControlServer ctrlServer;
