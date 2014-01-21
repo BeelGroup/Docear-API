@@ -94,7 +94,7 @@ public class ChunkedMailSender {
 				}
 				
 				try {
-					Thread.sleep((rand.nextInt(57)+2) * 1000); //wait from 2 to 58 seconds --> mean: 30 sec
+					Thread.sleep((rand.nextInt(26)+2) * 1000); //wait from 2 to 28 seconds --> mean: 15 sec + actual execution time
 				}
 				catch (InterruptedException e) {
 				}
