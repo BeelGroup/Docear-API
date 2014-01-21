@@ -12,6 +12,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
 import org.hibernate.FlushMode;
@@ -25,8 +26,6 @@ import org.sciplore.resources.Application;
 import util.ResourceCommons;
 import util.Tools;
 import util.UserCommons;
-
-import com.sun.jersey.api.client.ClientResponse.Status;
 
 @Path("/applications")
 public class ApplicationResource {

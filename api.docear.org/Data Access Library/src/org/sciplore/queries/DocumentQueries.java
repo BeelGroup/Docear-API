@@ -2,6 +2,7 @@ package org.sciplore.queries;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -22,8 +23,6 @@ import org.sciplore.resources.DocumentXref;
 import org.sciplore.resources.DocumentsPdfHash;
 import org.sciplore.resources.Person;
 import org.sciplore.tools.Tools;
-
-import com.ibm.icu.util.Calendar;
 
 public class DocumentQueries {
 	

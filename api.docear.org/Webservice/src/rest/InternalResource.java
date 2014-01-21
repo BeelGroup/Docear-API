@@ -42,6 +42,10 @@ import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.util.Version;
 import org.docear.googleparser.GoogleScholarParser;
 import org.docear.googleparser.WebSearchResult;
+import org.glassfish.jersey.media.multipart.FormDataBodyPart;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
+import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.hibernate.FlushMode;
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
@@ -82,12 +86,6 @@ import util.Tools;
 import util.UserCommons;
 import util.UserSessionProvider;
 import util.UserSessionProvider.UserSession;
-
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.core.header.FormDataContentDisposition;
-import com.sun.jersey.multipart.FormDataBodyPart;
-import com.sun.jersey.multipart.FormDataMultiPart;
-import com.sun.jersey.multipart.FormDataParam;
 
 @Path("/internal")
 public class InternalResource {
@@ -130,7 +128,7 @@ public class InternalResource {
     		Tools.tolerantClose(session);
 		}
 		
-		return UserCommons.getHTTPStatusResponse(ClientResponse.Status.OK, "ok");
+		return UserCommons.getHTTPStatusResponse(Status.OK, "ok");
 	}
 	
 	
@@ -161,7 +159,7 @@ public class InternalResource {
 			Tools.tolerantClose(session);
 		}
 		
-		return UserCommons.getHTTPStatusResponse(ClientResponse.Status.OK, "ok");
+		return UserCommons.getHTTPStatusResponse(Status.OK, "ok");
 	}
 	
 	@GET
@@ -171,15 +169,15 @@ public class InternalResource {
 		try {
 			User user = new User(session).getUserByEmailOrUsername("pdfdownloader");
 			if (!ResourceCommons.authenticate(request, user)) {
-				return UserCommons.getHTTPStatusResponse(com.sun.jersey.api.client.ClientResponse.Status.UNAUTHORIZED, "no valid access token.");
+				return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "no valid access token.");
 			}
 			
 			RecommendationCommons.computeForAllUsers(session);
-			return UserCommons.getHTTPStatusResponse(ClientResponse.Status.OK, "ok");
+			return UserCommons.getHTTPStatusResponse(Status.OK, "ok");
 		}
 		catch(RuntimeException e) {
 			e.printStackTrace();
-			return UserCommons.getHTTPStatusResponse(ClientResponse.Status.CONFLICT, e.getMessage());
+			return UserCommons.getHTTPStatusResponse(Status.CONFLICT, e.getMessage());
 		}
 		finally {
 			Tools.tolerantClose(session);
@@ -193,15 +191,15 @@ public class InternalResource {
 		try {
 			User user = new User(session).getUserByEmailOrUsername("pdfdownloader");
 			if (!ResourceCommons.authenticate(request, user)) {
-				return UserCommons.getHTTPStatusResponse(com.sun.jersey.api.client.ClientResponse.Status.UNAUTHORIZED, "no valid access token.");
+				return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "no valid access token.");
 			}
 			
 			RecommendationCommons.dryRun(session);
-			return UserCommons.getHTTPStatusResponse(ClientResponse.Status.OK, "ok");
+			return UserCommons.getHTTPStatusResponse(Status.OK, "ok");
 		}
 		catch(RuntimeException e) {
 			e.printStackTrace();
-			return UserCommons.getHTTPStatusResponse(ClientResponse.Status.CONFLICT, e.getMessage());
+			return UserCommons.getHTTPStatusResponse(Status.CONFLICT, e.getMessage());
 		}
 		finally {
 			Tools.tolerantClose(session);
@@ -215,15 +213,15 @@ public class InternalResource {
 		try {
 			User user = new User(session).getUserByEmailOrUsername("pdfdownloader");
 			if (!ResourceCommons.authenticate(request, user)) {
-				return UserCommons.getHTTPStatusResponse(com.sun.jersey.api.client.ClientResponse.Status.UNAUTHORIZED, "no valid access token.");
+				return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "no valid access token.");
 			}
 			
 			RecommendationCommons.stopOfflineRecommendations();
-			return UserCommons.getHTTPStatusResponse(ClientResponse.Status.OK, "ok");
+			return UserCommons.getHTTPStatusResponse(Status.OK, "ok");
 		}
 		catch(RuntimeException e) {
 			e.printStackTrace();
-			return UserCommons.getHTTPStatusResponse(ClientResponse.Status.CONFLICT, e.getMessage());
+			return UserCommons.getHTTPStatusResponse(Status.CONFLICT, e.getMessage());
 		}
 		finally {
 			Tools.tolerantClose(session);
@@ -238,7 +236,7 @@ public class InternalResource {
 		try {
 			User user = new User(session).getUserByEmailOrUsername("pdfdownloader");
 			if (!ResourceCommons.authenticate(request, user)) {
-				return UserCommons.getHTTPStatusResponse(com.sun.jersey.api.client.ClientResponse.Status.UNAUTHORIZED, "no valid access token.");
+				return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "no valid access token.");
 			}
 			
 			System.out.println("computing recommendations for user["+userId+"] and algorithm ["+algorithmId+"]");
@@ -247,11 +245,11 @@ public class InternalResource {
 			Algorithm algorithm = (Algorithm) session.get(Algorithm.class, algorithmId);
 			
 			RecommendationCommons.dryRunForSingleUser(session, user, algorithm);
-			return UserCommons.getHTTPStatusResponse(ClientResponse.Status.OK, "ok");
+			return UserCommons.getHTTPStatusResponse(Status.OK, "ok");
 		}
 		catch(RuntimeException e) {
 			e.printStackTrace();
-			return UserCommons.getHTTPStatusResponse(ClientResponse.Status.CONFLICT, e.getMessage());
+			return UserCommons.getHTTPStatusResponse(Status.CONFLICT, e.getMessage());
 		}
 		finally {
 			Tools.tolerantClose(session);
@@ -265,12 +263,12 @@ public class InternalResource {
 		try {
 			User user = new User(session).getUserByEmailOrUsername("stlanger");
 			if (!ResourceCommons.authenticate(request, user)) {
-				return UserCommons.getHTTPStatusResponse(ClientResponse.Status.UNAUTHORIZED, "no valid access token.");
+				return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "no valid access token.");
 			}
 
 			ipChani = ip;
 
-			return UserCommons.getHTTPStatusResponse(ClientResponse.Status.OK, "ok");
+			return UserCommons.getHTTPStatusResponse(Status.OK, "ok");
 		}
 		finally {
 			Tools.tolerantClose(session);
@@ -284,10 +282,10 @@ public class InternalResource {
 		try {
 			User user = new User(session).getUserByEmailOrUsername("stlanger");
 			if (!ResourceCommons.authenticate(request, user)) {
-				return UserCommons.getHTTPStatusResponse(ClientResponse.Status.UNAUTHORIZED, "no valid access token.");
+				return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "no valid access token.");
 			}
 
-			return UserCommons.getHTTPStatusResponse(ClientResponse.Status.OK, ipChani);
+			return UserCommons.getHTTPStatusResponse(Status.OK, ipChani);
 		}
 		finally {
 			Tools.tolerantClose(session);
@@ -301,7 +299,7 @@ public class InternalResource {
 		try {
 			User user = new User(session).getUserByEmailOrUsername("pdfdownloader");
 			if (!ResourceCommons.authenticate(request, user)) {
-				return UserCommons.getHTTPStatusResponse(com.sun.jersey.api.client.ClientResponse.Status.UNAUTHORIZED, "no valid access token.");
+				return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "no valid access token.");
 			}
 
 			String[] terms = csvTerms.split(" ");
@@ -341,7 +339,7 @@ public class InternalResource {
 
 			User user = new User(session).getUserByEmailOrUsername("pdfdownloader");
 			if (!ResourceCommons.authenticate(request, user)) {
-				return UserCommons.getHTTPStatusResponse(ClientResponse.Status.UNAUTHORIZED, "no valid access token.");
+				return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "no valid access token.");
 			}
 
 			StringBuilder sb = new StringBuilder();
@@ -358,7 +356,7 @@ public class InternalResource {
 					sb.append("freq: ").append(termDocs.freq()).append("\n").append(InternalCommons.getLuceneDocumentContent(doc)).append("\n\n");
 				}
 
-				return UserCommons.getHTTPStatusResponse(ClientResponse.Status.OK, sb.toString());
+				return UserCommons.getHTTPStatusResponse(Status.OK, sb.toString());
 			}
 			catch (Exception e) {
 				e.printStackTrace();
@@ -388,11 +386,11 @@ public class InternalResource {
 			User user = new User(session).getUserByEmailOrUsername("pdfdownloader");
 			if (!("pdfdownloader".equals(userName)) | !ResourceCommons.authenticate(request, user)) {
 				System.out.println("(GoogleQueryWorker) Rejected unauthorised attempt to update database");
-				return UserCommons.getHTTPStatusResponse(com.sun.jersey.api.client.ClientResponse.Status.UNAUTHORIZED, "no valid access token.");
+				return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "no valid access token.");
 			}
 
 			if (MindmapsPdfHashQueries.isRevisionAlreadyStored(session, mindmapId)) {
-				return UserCommons.getHTTPStatusResponse(com.sun.jersey.api.client.ClientResponse.Status.NOT_MODIFIED,
+				return UserCommons.getHTTPStatusResponse(Status.NOT_MODIFIED,
 						"hashes for this mindmap revision already in database");
 			}			
 			
@@ -582,7 +580,7 @@ public class InternalResource {
 						Document document = new Document(session);
 						document.setTitle(webSearchResult.getTitle());
 						if (DocumentQueries.getValidCleanTitle(title) == null) {
-							return UserCommons.getHTTPStatusResponse(com.sun.jersey.api.client.ClientResponse.Status.BAD_REQUEST, "The title you have entered is too short to process your query. Please use a title with at least 7 letters.");
+							return UserCommons.getHTTPStatusResponse(Status.BAD_REQUEST, "The title you have entered is too short to process your query. Please use a title with at least 7 letters.");
 						}
 						String year = null;
 						if (webSearchResult.getYear() != null) {
@@ -787,7 +785,7 @@ public class InternalResource {
 			User user = new User(session).getUserByEmailOrUsername("pdfdownloader");
 			if (!("pdfdownloader".equals(userName)) | !ResourceCommons.authenticate(request, user)) {
 				System.out.println("(GoogleQueryWorker) Rejected unauthorised attempt to update database");
-				return UserCommons.getHTTPStatusResponse(com.sun.jersey.api.client.ClientResponse.Status.UNAUTHORIZED, "no valid access token.");
+				return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "no valid access token.");
 			}
 
 			
@@ -800,7 +798,7 @@ public class InternalResource {
     					// save to database
     					Document document = new Document(session, title);
     					if (DocumentQueries.getValidCleanTitle(title) == null) {
-    						return UserCommons.getHTTPStatusResponse(com.sun.jersey.api.client.ClientResponse.Status.BAD_REQUEST, "title is not valid");
+    						return UserCommons.getHTTPStatusResponse(Status.BAD_REQUEST, "title is not valid");
     					}
     					document.setPublishedYear(year);
     					
@@ -878,7 +876,7 @@ public class InternalResource {
 			try {
 				User pdfdownloaderUser = new User(session).getUserByEmailOrUsername("pdfdownloader");
 				if (!ResourceCommons.authenticate(request, pdfdownloaderUser)) {
-					return UserCommons.getHTTPStatusResponse(ClientResponse.Status.UNAUTHORIZED, "(GoogleQueryWorker) no valid access token.");
+					return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "(GoogleQueryWorker) no valid access token.");
 				}
 
 				List<GoogleDocumentQuery> models = InternalQueries.retrieveKeywords(session, count);
@@ -994,7 +992,7 @@ public class InternalResource {
 		User user = new User(session).getUserByEmailOrUsername("pdfdownloader");
 		if (!ResourceCommons.authenticate(request, user)) {
 			System.out.println("(GoogleQueryWorker) Rejected unauthorised e to update database");
-			return UserCommons.getHTTPStatusResponse(com.sun.jersey.api.client.ClientResponse.Status.UNAUTHORIZED, "no valid access token.");
+			return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "no valid access token.");
 		}
 				
 		//maxMphId is for now: 1943258
@@ -1022,7 +1020,7 @@ public class InternalResource {
 		User user = new User(session).getUserByEmailOrUsername("pdfdownloader");
 		if (!ResourceCommons.authenticate(request, user)) {
 			System.out.println("(GoogleQueryWorker) Rejected unauthorised attempt to update database");
-			return UserCommons.getHTTPStatusResponse(com.sun.jersey.api.client.ClientResponse.Status.UNAUTHORIZED, "no valid access token.");
+			return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "no valid access token.");
 		}
 		
 		RecommendationCommons.offlineEvaluator.run();
@@ -1039,7 +1037,7 @@ public class InternalResource {
 		User user = new User(session).getUserByEmailOrUsername("pdfdownloader");
 		if (!ResourceCommons.authenticate(request, user)) {
 			System.out.println("(GoogleQueryWorker) Rejected unauthorised attempt to update database");
-			return UserCommons.getHTTPStatusResponse(com.sun.jersey.api.client.ClientResponse.Status.UNAUTHORIZED, "no valid access token.");
+			return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "no valid access token.");
 		}
 		
 		RecommendationCommons.offlineEvaluator.stop();
@@ -1067,7 +1065,7 @@ public class InternalResource {
 			try {
 				User user = new User(session).getUserByEmailOrUsername("pdfdownloader");
 				if (!ResourceCommons.authenticate(request, user)) {
-					return UserCommons.getHTTPStatusResponse(com.sun.jersey.api.client.ClientResponse.Status.UNAUTHORIZED, "no valid access token.");
+					return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "no valid access token.");
 				}
 				
 				Document document = DocumentQueries.getDocumentByHashOrTitle(session, hash, null);
@@ -1102,7 +1100,7 @@ public class InternalResource {
 			Person person = contact.getPerson();
 			
 			if (token == null || !token.equals(person.getDocidxIdToken())) {
-				return UserCommons.getHTTPStatusResponse(com.sun.jersey.api.client.ClientResponse.Status.UNAUTHORIZED, "no valid token.");
+				return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "no valid token.");
 			}
 			
 			person.setSession(session);			
@@ -1132,7 +1130,7 @@ public class InternalResource {
 			User user = new User(session).getUserByEmailOrUsername("pdfdownloader");
 			if (!ResourceCommons.authenticate(request, user)) {
 				System.out.println("Rejected unauthorized attempt to retrieve data");
-				return UserCommons.getHTTPStatusResponse(com.sun.jersey.api.client.ClientResponse.Status.UNAUTHORIZED, "no valid access token.");
+				return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "no valid access token.");
 			}
 			
 			Collection<Object[]> results = InternalCommons.getNextMailerChunk(session, (chunkSize == null ? 100 : chunkSize)); 
@@ -1157,7 +1155,7 @@ public class InternalResource {
 			User user = new User(session).getUserByEmailOrUsername("pdfdownloader");
 			if (!ResourceCommons.authenticate(request, user)) {
 				System.out.println("Rejected unauthorized attempt to retrieve data");
-				return UserCommons.getHTTPStatusResponse(com.sun.jersey.api.client.ClientResponse.Status.UNAUTHORIZED, "no valid access token.");
+				return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "no valid access token.");
 			}
 			
 			Person person = (Person) session.load(Person.class, personId); 
@@ -1210,7 +1208,7 @@ public class InternalResource {
 			person.setSession(session);
 			
 			if (token == null || !token.equals(person.getDocidxIdToken())) {
-				return UserCommons.getHTTPStatusResponse(com.sun.jersey.api.client.ClientResponse.Status.UNAUTHORIZED, "no valid token.");
+				return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "no valid token.");
 			}
 			//TODO: adjust to the new form field!!!!!
 			if((notification_option != null && "3".equals(notification_option)) || (ignoreAll != null && ignoreAll)) {

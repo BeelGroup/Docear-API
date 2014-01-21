@@ -18,6 +18,7 @@ import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.util.Version;
+import org.glassfish.jersey.internal.util.collection.MultivaluedStringMap;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.mrdlib.index.Searcher;
@@ -31,8 +32,6 @@ import org.sciplore.resources.UserModel;
 import util.RecommendationCommons;
 import util.recommendations.xml.XmlUserModelParser;
 import xml.XmlElement;
-
-import com.sun.jersey.core.util.MultivaluedMapImpl;
 
 public class GraphDbUserModelFactory {
 
@@ -389,7 +388,7 @@ public class GraphDbUserModelFactory {
 	}
 
 	private String requestUserModel(User user, Algorithm algorithm, String excludeHash) {
-		MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+		MultivaluedMap<String, String> params = new MultivaluedStringMap();
 		params.add("userId", "" + user.getId());
 		params.add("algorithmArguments", algorithm.toString());
 

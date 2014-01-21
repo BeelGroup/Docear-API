@@ -19,9 +19,9 @@ import java.util.Random;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 
 import org.hibernate.Session;
@@ -39,11 +39,6 @@ import org.sciplore.resources.User;
 import org.sciplore.resources.UserPasswordRequest;
 import org.sciplore.resources.UsersApplications;
 import org.sciplore.utilities.config.Config;
-
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.ClientResponse.Status;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
 
 public class UserCommons {
 	public static Properties docearEMailConfig;
@@ -321,23 +316,7 @@ public class UserCommons {
 		m.setModel(s);
 		models.add(m);
 	}
-
 	
-
-	private static ClientResponse requestKeywords(User user, Algorithm algorithm, WebResource res) {
-		MultivaluedMap<String, String> validateParams = new MultivaluedMapImpl();
-		validateParams.add("userId", "" + user.getId());
-		validateParams.add("algorithmArguments", algorithm.toString());
-		System.out.println(algorithm.toString());
-		try {
-			return res.accept(MediaType.TEXT_PLAIN_TYPE).post(ClientResponse.class, validateParams);
-		}
-		catch (Exception ex) {
-			ex.printStackTrace();
-		}
-		return null;
-	}
-
 	public static boolean parseBoolean(String string) {
 		if (string == null || string.equalsIgnoreCase("")) {
 			return false;

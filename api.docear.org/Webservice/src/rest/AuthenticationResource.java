@@ -14,14 +14,11 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
+import javax.ws.rs.core.Response.Status;
 
-import org.apache.log4j.Logger;
 import org.hibernate.Session;
 import org.sciplore.database.SessionProvider;
 import org.sciplore.resources.User;
-
-import com.sun.jersey.api.client.ClientResponse.Status;
-
 
 @Path("/authenticate")
 public class AuthenticationResource {

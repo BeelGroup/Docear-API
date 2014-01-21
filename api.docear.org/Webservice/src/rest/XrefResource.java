@@ -70,7 +70,7 @@ public class XrefResource {
 			User user = new User(session).getUserByEmailOrUsername("pdfdownloader");
 			if (!userName.equals("pdfdownloader") | !ResourceCommons.authenticate(request, user)) {
 				System.out.println("(PdfSpider) Rejected unauthorised attempt to update xrefid " + xrefid + " in database");
-				return UserCommons.getHTTPStatusResponse(com.sun.jersey.api.client.ClientResponse.Status.UNAUTHORIZED, "no valid access token.");
+				return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "no valid access token.");
 			}
 			Criteria criteria = session.createCriteria(DocumentXref.class, "xref").add(Restrictions.eq("id", xrefid));
 			DocumentXref xref = (DocumentXref) criteria.setMaxResults(1).uniqueResult();
