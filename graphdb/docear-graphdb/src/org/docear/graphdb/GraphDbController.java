@@ -143,7 +143,8 @@ public class GraphDbController implements KernelEventHandler, TransactionEventLi
 	public void init() {
 		graphDb = (AbstractGraphDatabase) new GraphDatabaseFactory().newEmbeddedDatabase(dbPath);
 
-		Configurator config = new ServerConfigurator(graphDb); 
+		Configurator config = new ServerConfigurator(graphDb);
+		config.configuration().addProperty(Configurator.WEBSERVER_ADDRESS_PROPERTY_KEY, "0.0.0.0");
 		config.configuration().setProperty(Configurator.WEBSERVER_PORT_PROPERTY_KEY, 47474 );
 		config.configuration().setProperty(Configurator.SECURITY_RULES_KEY, "org.docear.graphdb.DocearSecurityRule");
 		
