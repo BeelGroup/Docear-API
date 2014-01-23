@@ -8,12 +8,9 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -21,18 +18,20 @@ import java.util.zip.ZipInputStream;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
-import org.apache.lucene.document.Field.Index;
 import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.document.FieldType;
+import org.apache.lucene.document.IntField;
 import org.apache.lucene.document.StoredField;
+import org.apache.lucene.document.StringField;
+import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.CorruptIndexException;
+import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
-import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.FSDirectory;
@@ -41,10 +40,6 @@ import org.hibernate.Session;
 import org.sciplore.database.SessionProvider;
 import org.sciplore.queries.DocumentQueries;
 import org.sciplore.resources.Citation;
-import org.sciplore.resources.DocumentPerson;
-import org.sciplore.resources.DocumentXref;
-import org.sciplore.resources.Keyword;
-import org.sciplore.resources.PersonHomonym;
 import org.sciplore.utilities.config.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,11 +55,14 @@ public class Indexer {
 	private String indexDir = Config.getProperties("org.mrdlib").getProperty("indexDir");
 	public static File DOCUMENT_PLAINTEXT_DIRECTORY = new File(Config.getProperties("org.mrdlib").getProperty("plainTextDir"));
 	public static int RAM_BUFFER_SIZE_MB = Integer.parseInt(Config.getProperties("org.mrdlib").getProperty("RAMBufferSize", "64"));
+	public static final FieldType plainTextFieldType = new FieldType(TextField.TYPE_NOT_STORED);
 	private static IndexWriter iw;
 	static {
 		if (!DOCUMENT_PLAINTEXT_DIRECTORY.exists()) {
 			DOCUMENT_PLAINTEXT_DIRECTORY.mkdirs();
 		}
+		plainTextFieldType.setStoreTermVectors(true);
+		plainTextFieldType.freeze();
 	}
 	
 	private final File indexDirFile;
@@ -161,9 +159,9 @@ public class Indexer {
 	
 	private boolean addPlainTextFromFile(Document lucDoc, String hash) {
 		if(hash != null) {
-			lucDoc.add(new Field("text", loadPlainText(hash), Field.Store.NO, Field.Index.ANALYZED, Field.TermVector.YES));
-			lucDoc.add(new Field("hash", hash, Field.Store.YES, Field.Index.NOT_ANALYZED));
-			lucDoc.add(new Field("fulltext_type", "PDF", Field.Store.YES, Field.Index.NO));
+			lucDoc.add(new Field("text", loadPlainText(hash), plainTextFieldType));
+			lucDoc.add(new TextField("hash", hash, Store.YES));
+			lucDoc.add(new StoredField("fulltext_type", "PDF"));
 			return true;
 		}
 		return false;
@@ -220,8 +218,7 @@ public class Indexer {
 	public IndexReader getIndexReader() throws IOException {
 		IndexReader ir = null;
 		if(ir == null) {
-			//ir = IndexReader.open(FSDirectory.open(indexDirFile), true);
-			ir = IndexReader.open(getIndexWriter(), true); //true=apply deletes (slower/costly); false=ignore deletes(if deleted docs are no problem)
+			ir = DirectoryReader.open(getIndexWriter(), true); //true=apply deletes (slower/costly); false=ignore deletes(if deleted docs are no problem)
 		}
 		return ir;
 	}
@@ -253,52 +250,25 @@ public class Indexer {
 	
 	private Document createLuceneDocument(org.sciplore.resources.Document d, String hash) {
 		Document ld = new Document();
-		//thats how it should work
-		ld.add(new StoredField("id", d.getId()));
-				
-		ld.add(new Field("sid", Integer.toString(d.getId()), Store.YES, Index.NOT_ANALYZED));
+		
+		ld.add(new IntField("id", d.getId(), Store.YES));				
+		ld.add(new StringField("sid", Integer.toString(d.getId()), Store.YES));
 		
 		if (d.getType() != null) {
-			ld.add(new Field("type", d.getType(), Store.NO, Index.ANALYZED));
+			ld.add(new TextField("type", d.getType(), Store.NO));
 		}
 		
 		addPlainTextFromFile(ld, hash);
 		
 		if (d.getTitle() != null) {
-			ld.add(new Field("title", d.getTitle(), Store.YES, Index.ANALYZED));
-			ld.add(new Field("default", d.getTitle(), Store.YES, Index.ANALYZED));
+			ld.add(new TextField("title", d.getTitle(), Store.YES));
+			ld.add(new TextField("default", d.getTitle(), Store.NO));
 		}
 		
 		try {
 			if (d.getAbstract() != null) {
-				ld.add(new Field("abstract", d.getAbstract(), Store.NO, Index.ANALYZED));
+				ld.add(new TextField("abstract", d.getAbstract(), Store.NO));
 			}
-			
-//			for (DocumentPerson dp : d.getPersons()) {
-//				if (dp.getType() == DocumentPerson.DOCUMENTPERSON_TYPE_AUTHOR) {
-//					PersonHomonym ph = dp.getPersonHomonym();
-//					ld.add(new Field("author", ph.getNameFirst() + " " + ph.getNameMiddle() + " " + ph.getNameLastPrefix() + " " + ph.getNameLast() + " " + ph.getNameLastSuffix(), Store.YES, Index.ANALYZED));
-//					ld.add(new Field("default", ph.getNameFirst() + " " + ph.getNameMiddle() + " " + ph.getNameLastPrefix() + " " + ph.getNameLast() + " " + ph.getNameLastSuffix(), Store.YES, Index.ANALYZED));
-//					for (PersonHomonym p : dp.getPersonMain().getHomonyms()) {
-//						ld.add(new Field("author", p.getNameFirst() + " " + p.getNameMiddle() + " " + p.getNameLastPrefix() + " " + p.getNameLast() + " " + p.getNameLastSuffix(), Store.YES, Index.ANALYZED));
-//						ld.add(new Field("default", p.getNameFirst() + " " + p.getNameMiddle() + " " + p.getNameLastPrefix() + " " + p.getNameLast() + " " + p.getNameLastSuffix(), Store.YES, Index.ANALYZED));
-//					}
-//			
-//					if (dp.getPersonMain().getInstitution() != null) {
-//						ld.add(new Field("affiliation", dp.getPersonMain().getInstitution().getName(), Store.YES, Index.ANALYZED));
-//					}
-//				}
-//			}
-			
-//			for (Keyword k : d.getKeywords()) {
-//				ld.add(new Field("keyword", k.getKeyword(), Store.NO, Index.ANALYZED));
-//				ld.add(new Field("default", k.getKeyword(), Store.NO, Index.ANALYZED));
-//			}
-			
-//			if (d.getVenue() != null) {
-//				ld.add(new Field("publishedin", d.getVenue().getName(), Store.YES, Index.ANALYZED));
-//			}
-			
 			if (d.getPublishedYear() != null) {
 				String pubdate = d.getPublishedYear().toString();
 				if (d.getPublishedMonth() != null) {
@@ -307,80 +277,63 @@ public class Indexer {
 						pubdate+= d.getPublishedDay().toString();					
 					}
 				}
-				ld.add(new Field("pubdate", pubdate, Store.NO, Index.ANALYZED));
-//				ld.add(new Field("default", pubdate, Store.NO, Index.ANALYZED));
+				ld.add(new TextField("pubdate", pubdate, Store.NO));
+//				ld.add(new TextField("default", pubdate, Store.NO));
 			}
 			
 			if (d.getPublishedPlace() != null) {
-				ld.add(new Field("location", d.getPublishedPlace(), Store.NO, Index.ANALYZED));
+				ld.add(new TextField("location", d.getPublishedPlace(), Store.NO));
 			}
 			
 			if (d.getPublisher() != null) {
-				ld.add(new Field("publisher", d.getPublisher(), Store.NO, Index.ANALYZED));
+				ld.add(new TextField("publisher", d.getPublisher(), Store.NO));
 			}
 			
 			if (d.getEdition() != null) {
-				ld.add(new Field("edition", d.getEdition().toString(), Store.NO, Index.ANALYZED));
+				ld.add(new TextField("edition", d.getEdition().toString(), Store.NO));
 			}
 			
 			if (d.getNumber() != null) {
-				ld.add(new Field("number", d.getNumber().toString(), Store.NO, Index.ANALYZED));
+				ld.add(new TextField("number", d.getNumber().toString(), Store.NO));
 			}
 			
 			if (d.getVolume() != null) {
-				ld.add(new Field("volume", d.getVolume().toString(), Store.NO, Index.ANALYZED));
+				ld.add(new TextField("volume", d.getVolume().toString(), Store.NO));
 			}
 	
 			if (d.getPages() != null) {
-				ld.add(new Field("pages", d.getPages().toString(), Store.NO, Index.ANALYZED));
+				ld.add(new TextField("pages", d.getPages().toString(), Store.NO));
 			}
 			
 			if (d.getSeries() != null) {
-				ld.add(new Field("series", d.getSeries(), Store.NO, Index.ANALYZED));
+				ld.add(new TextField("series", d.getSeries(), Store.NO));
 			}
 			
 			if (d.getDoi() != null) {
-				ld.add(new Field("doi", d.getDoi(), Store.NO, Index.ANALYZED));
-				ld.add(new Field("default", d.getDoi(), Store.NO, Index.ANALYZED));
+				ld.add(new TextField("doi", d.getDoi(), Store.NO));
+				ld.add(new TextField("default", d.getDoi(), Store.NO));
 			}
 			
 			if (d.getIssn() != null) {
-				ld.add(new Field("issn", d.getIssn(), Store.NO, Index.ANALYZED));
+				ld.add(new TextField("issn", d.getIssn(), Store.NO));
 			}
 			
 			if (d.getIsbn() != null) {
-				ld.add(new Field("isbn", d.getIsbn(), Store.NO, Index.ANALYZED));
+				ld.add(new TextField("isbn", d.getIsbn(), Store.NO));
 			}
 			
 			if (d.getLanguage() != null) {
-				ld.add(new Field("lang", d.getLanguage(), Store.NO, Index.ANALYZED));
+				ld.add(new TextField("lang", d.getLanguage(), Store.NO));
 			}
-			
-	
-//			for (DocumentXref x : d.getXrefs()) {
-//				ld.add(new Field("oid", x.getSource() + "/" + x.getSourcesId(), Store.NO, Index.ANALYZED));
-//			}
 			StringBuilder refIdBuffer = new StringBuilder();
 			for (Citation c : d.getCitations()) {
-				String authors = "";
 				org.sciplore.resources.Document cd = c.getCitedDocument();
 				if(cd.getId() != null) {
 					refIdBuffer.append("dcr_doc_id_").append(cd.getId()).append(" ");
-				}
-//				for (DocumentPerson dp : cd.getPersons()) {
-//					if (dp.getType() == DocumentPerson.DOCUMENTPERSON_TYPE_AUTHOR) {
-//						PersonHomonym ph = dp.getPersonHomonym();
-//						ld.add(new Field("reflist", ph.getNameFirst() + " " + ph.getNameMiddle() + " " + ph.getNameLastPrefix() + " " + ph.getNameLast() + " " + ph.getNameLastSuffix(), Store.YES, Index.ANALYZED));
-//						for (PersonHomonym p : dp.getPersonMain().getHomonyms()) {
-//							ld.add(new Field("reflist", p.getNameFirst() + " " + p.getNameMiddle() + " " + p.getNameLastPrefix() + " " + p.getNameLast() + " " + p.getNameLastSuffix(), Store.YES, Index.ANALYZED));
-//						}
-//					}
-//				}
-//				ld.add(new Field("reflist", cd.getTitle() + " " + authors + " " + cd.getPublishedYear() + " " + cd.getDoi(), Store.NO, Index.ANALYZED)); // TODO more info into string
-				
+				}	
 			}
 			if(refIdBuffer.length() > 0) {
-				ld.add(new Field("references", refIdBuffer.toString(), Store.NO, Index.ANALYZED));
+				ld.add(new TextField("references", refIdBuffer.toString(), Store.NO));
 			}
 		}
 		catch (Throwable e) {
@@ -391,64 +344,6 @@ public class Indexer {
 		return ld;
 	}
 	
-	/********************************************
-	 * search functionality
-	 ********************************************/
-	
-	/**
-	 * @param search
-	 * @return
-	 * @throws ParseException
-	 * @throws IOException
-	 */
-	public List<DocumentHashItem> search(String search) throws ParseException, IOException {
-		return search(search, 100);
-	}
-	
-	/**
-	 * @param search
-	 * @param max
-	 * @return
-	 * @throws ParseException
-	 * @throws IOException
-	 */
-	public List<DocumentHashItem> search(String search, int max) throws ParseException, IOException {
-		List<DocumentHashItem> r = new ArrayList<DocumentHashItem>();
-		try {
-			if(search.startsWith("luceneMergeTo:")) {
-				String[] tok = search.trim().split(":");
-				getIndexWriter().forceMerge(Integer.parseInt(tok[1]), false);
-				return r;
-			}
-		} catch (Exception e) {
-		}
-		
-		IndexReader ir = getIndexReader();
-		IndexSearcher is = new IndexSearcher(ir);		
-		try {
-			Query q = new QueryParser(Version.LUCENE_34, "title", new StandardAnalyzer(Version.LUCENE_34)).parse(search);
-			TopDocs td = is.search(q, max);
-			int rank = 1;
-			for (ScoreDoc sd : td.scoreDocs) {
-				DocumentHashItem item = new DocumentHashItem();
-				try {
-					item.documentId = Integer.parseInt((is.doc(sd.doc).get("id")));
-					item.pdfHash = is.doc(sd.doc).get("hash");
-					item.rank = rank++;
-					r.add(item);
-				}
-				catch (Exception e) {
-					logger.info("Exception in org.mrdlib.index.Searcher.search(): "+e.getMessage());
-				}
-			}
-		}
-		finally {
-			is.close();
-			ir.close();
-		}
-		return r;
-	}
-	
 	public static void main(String args[]) throws IOException {
 		Indexer idx = new Indexer();
 		final Session session = SessionProvider.sessionFactory.openSession();
@@ -456,12 +351,6 @@ public class Indexer {
 			idx.updateDocument(d);
 			idx.commit();
 		}
-	}
-	
-	public class DocumentHashItem {
-		public Integer documentId;
-		public String pdfHash;
-		public int rank;
 	}
 	
 
