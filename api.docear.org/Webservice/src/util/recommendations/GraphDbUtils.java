@@ -1,5 +1,7 @@
 package util.recommendations;
 
+import java.util.Properties;
+
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -10,11 +12,16 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response.Status;
 
 import org.glassfish.jersey.client.ClientResponse;
+import org.sciplore.utilities.config.Config;
 
 public class GraphDbUtils {
-	public static final String NEO4JREST_URI = "http://localhost:7474";
+	public static final String NEO4JREST_URI; //= "http://localhost:47474";
 	private static final Client client = ClientBuilder.newClient();
-
+	static {
+		final Properties p = Config.getProperties("org.mrdlib");
+		NEO4JREST_URI = p.getProperty("docear.graphdb.host", "http://localhost:47474");		
+	}
+	
 	public static Client getClient() {
 		return client;
 	}
