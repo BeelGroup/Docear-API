@@ -30,7 +30,7 @@ public class DocearPlugin extends ServerPlugin {
 		return getRecommendationKeywords(graphDb, 2, args, null);
 	}
 	
-	// path: http://localhost:7474/db/data/ext/DocearPlugin/graphdb/keywords/
+	// path: /db/data/ext/DocearPlugin/graphdb/keywords/
 	@Name("keywords")
 	@Description("Get all nodes from the Neo4j graph database")
 	@PluginTarget(GraphDatabaseService.class)

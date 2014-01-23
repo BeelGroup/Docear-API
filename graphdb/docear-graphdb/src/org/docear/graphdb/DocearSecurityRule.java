@@ -18,17 +18,16 @@ public class DocearSecurityRule implements SecurityRule
     	else if("127.0.0.1".equals(request.getRemoteAddr())) {
     		return true;
     	}
-        return false; // always fails - a production implementation performs
-                      // deployment-specific authorization logic here
+        return false; 
     }
 
     @Override
     public String forUriPath() {
-        return SecurityRule.DEFAULT_DATABASE_PATH;
+        return "/*";//SecurityRule.DEFAULT_DATABASE_PATH;
     }
 
     @Override
     public String wwwAuthenticateHeader() {
-        return SecurityFilter.basicAuthenticationResponse(REALM);
+        return "";//SecurityFilter.basicAuthenticationResponse(REALM);
     }
 }
