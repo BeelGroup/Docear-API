@@ -8,6 +8,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -22,14 +23,13 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.Field.Index;
 import org.apache.lucene.document.Field.Store;
-import org.apache.lucene.document.NumericField;
+import org.apache.lucene.document.FieldType;
+import org.apache.lucene.document.StoredField;
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.queryParser.ParseException;
-import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
@@ -209,7 +209,6 @@ public class Indexer {
 				}
 			}
 			finally {
-				is.close();
 				ir.close();
 			}
 		}
@@ -230,7 +229,7 @@ public class Indexer {
 	private IndexWriter getIndexWriter() throws IOException {
 		if(iw == null) {
 			System.out.println("creating new IndexWriter with "+RAM_BUFFER_SIZE_MB+"MB as RAM buffer.");
-			iw = new IndexWriter(FSDirectory.open(indexDirFile), new IndexWriterConfig(Version.LUCENE_34, new StandardAnalyzer(Version.LUCENE_34)).setRAMBufferSizeMB(RAM_BUFFER_SIZE_MB));
+			iw = new IndexWriter(FSDirectory.open(indexDirFile), new IndexWriterConfig(Version.LUCENE_46, new StandardAnalyzer(Version.LUCENE_46)).setRAMBufferSizeMB(RAM_BUFFER_SIZE_MB));
 			Runtime.getRuntime().addShutdownHook(new Thread() {
 				public void run() {
 					try {
@@ -254,7 +253,9 @@ public class Indexer {
 	
 	private Document createLuceneDocument(org.sciplore.resources.Document d, String hash) {
 		Document ld = new Document();
-		ld.add(new NumericField("id", Store.YES, false).setIntValue(d.getId()));		
+		//thats how it should work
+		ld.add(new StoredField("id", d.getId()));
+				
 		ld.add(new Field("sid", Integer.toString(d.getId()), Store.YES, Index.NOT_ANALYZED));
 		
 		if (d.getType() != null) {

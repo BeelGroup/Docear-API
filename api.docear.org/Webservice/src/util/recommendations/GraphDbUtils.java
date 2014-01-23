@@ -20,8 +20,7 @@ public class GraphDbUtils {
 	}
 	
 	public static String getXmlFromRequest(String path, MultivaluedMap<String, String> params) {
-		WebTarget target = client.target(NEO4JREST_URI).path(path);
-		
+		WebTarget target = client.target(NEO4JREST_URI).path(path);		
 		for (String s : params.keySet()) {
 			System.out.println("param --> "+s+" : "+params.get(s));
 		}

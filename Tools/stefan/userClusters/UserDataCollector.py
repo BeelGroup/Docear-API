@@ -41,6 +41,17 @@ def write_data_file(cursor):
 
 
 def Main():
+INSERT INTO tmp_clustering_mindmaps
+SELECT X.max_rev_id, user AS user_id, filesize, rev_count FROM mindmaps M 
+JOIN 
+(SELECT MAX(XM.id) as max_rev_id, COUNT(DISTINCT XM.mindmap_id) as rev_count FROM mindmaps XM
+JOIN recommendations_documents_set S ON (S.user_id = XM.user AND S.delivered IS NOT NULL AND S.delivered>'2013-07-01')
+GROUP BY mindmap_id) X 
+ON (M.id = X.max_rev_id)
+ORDER BY max_rev_id
+
+
+
     query = """SELECT U.id, DATEDIFF(NOW(), registrationdate) AS days_registered, COUNT(DISTINCT mindmap_id) AS mm_count, COUNT(*) AS rev_count, DATEDIFF(MAX(revision),MIN(revision)) AS mm_max_days_diff, SUM(M.filesize) AS size
 FROM users U
 JOIN mindmaps M ON (M.user = U.id AND M.revision>='2013-06-01' AND U.allow_recommendations=1)

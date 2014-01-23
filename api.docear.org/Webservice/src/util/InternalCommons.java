@@ -29,8 +29,8 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-import org.apache.lucene.document.Fieldable;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.TermQuery;
@@ -160,7 +160,7 @@ public class InternalCommons {
 	public static String getLuceneDocumentContent(org.apache.lucene.document.Document doc) {
 		StringBuilder sb = new StringBuilder();
 
-		for (Fieldable field : doc.getFields()) {
+		for (IndexableField field : doc.getFields()) {
 			String value = doc.get(field.name());
 			sb.append(field.name()).append(": ").append(value).append("\n");
 		}

@@ -265,18 +265,19 @@ public class DocumentCommons {
     				}
     
     				ref.setCitingDocument(citingDocument);
-    				ref.setCitedDocument(citedDocument);
-    				session.saveOrUpdate(ref);
+    				//automatic procedure
+//    				ref.setCitedDocument(citedDocument);
+//    				session.saveOrUpdate(ref);
     				//by hand procedure
-//    				Document persDoc = (Document) citedDocument.getPersistentIdentity();
-//    				if(persDoc != null) {
-//    					ref.setCitedDocument(persDoc);
-//    				}
-//    				else {
-//    					session.save(citedDocument);
-//    					ref.setCitedDocument(citedDocument);
-//    				}
-//    				session.save(ref);
+    				Document persDoc = (Document) citedDocument.getPersistentIdentity();
+    				if(persDoc != null) {
+    					ref.setCitedDocument(persDoc);
+    				}
+    				else {
+    					session.save(citedDocument);
+    					ref.setCitedDocument(citedDocument);
+    				}
+    				session.save(ref);
     			}
     			// update abstract text in original doc entry if necessary
     			if (resource.getAbstract() != null && resource.getAbstract().trim().length() > 0) {
