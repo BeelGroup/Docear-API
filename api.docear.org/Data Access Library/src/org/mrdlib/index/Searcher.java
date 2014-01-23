@@ -13,8 +13,8 @@ import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.queryParser.ParseException;
-import org.apache.lucene.queryParser.QueryParser;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
@@ -51,7 +51,6 @@ public class Searcher {
 		if (!indexDir.isDirectory()) {
 			throw new FileNotFoundException("Index directory does not exist.");
 		}
-//		ir = IndexReader.open(FSDirectory.open(indexDir), true);
 		ir = SessionProvider.getLuceneIndexer().getIndexReader();
 		is = new IndexSearcher(ir);
 		
@@ -62,8 +61,8 @@ public class Searcher {
 		return search(search, "title", 100);
 	}
 	
-	public List<DocumentHashItem> search(String search, String field, int max) throws ParseException, IOException {		
-		Query q = new QueryParser(Version.LUCENE_34, field, new StandardAnalyzer(Version.LUCENE_34)).parse(search);		
+	public List<DocumentHashItem> search(String search, String field, int max) throws IOException, org.apache.lucene.queryparser.classic.ParseException {	
+		Query q = new QueryParser(Version.LUCENE_46, field, new StandardAnalyzer(Version.LUCENE_46)).parse(search);				
 		
 		return search(q, max);
 	}
@@ -114,9 +113,8 @@ public class Searcher {
 		return getIDF(terms, field)[0];		
 	}
 	
-	public Searcher close() throws IOException {
-		is.close();
-//		ir.close();
+	public Searcher close() throws IOException {		
+		ir.close();
 		return this;
 	}
 }
