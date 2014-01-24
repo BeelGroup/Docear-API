@@ -47,18 +47,44 @@ public class Config {
 		
 		File propFile = new File(confDir + File.separator + name + ".properties");
 		if (propFile.canRead()) {
+			p = addProperties(p, propFile);
+		}
+		
+		//try to find local settings
+		try {
+			File location = new File("").getAbsoluteFile();
+			propFile = new File(location, name + ".properties");
+			System.out.println("looking for config: " + propFile);
+			p = addProperties(p, propFile);
+			
+		}
+		catch (Exception e) {			
+		}
+		// load Properties end
+		
+		return p;		
+	}
+
+	/**
+	 * @param p
+	 * @param propFile
+	 * @return
+	 */
+	private static Properties addProperties(Properties p, File propFile) {
+		if (propFile.canRead()) {
 			p = new Properties(p);
 			try {
-				p.load(new FileReader(propFile));
+				FileReader reader = new FileReader(propFile);
+				p.load(reader);
+				reader.close();
+				System.out.println("properties successfully loaded from "+propFile);
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		}
-		// load Properties end
-		
-		return p;		
+		return p;
 	}
 	
 	public static Properties getProperties(String name) {

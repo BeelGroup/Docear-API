@@ -57,6 +57,11 @@ public class MailUtils {
 					return true;
 				}
 			}
+			else if(exception instanceof SMTPAddressFailedException) {
+				if(((SMTPAddressFailedException)exception).getReturnCode() == 550) {
+					return true;
+				}
+			}
 			return false;
 		}
 		
@@ -159,7 +164,7 @@ public class MailUtils {
 	
 	public static SmtpMailConfiguration DOCEAR_MAIL_CONFIGURATION;
 	static {
-		final Properties p = Config.getProperties("mail.sender");
+		final Properties p = Config.getProperties("mail.sender", MailUtils.class);
 		try {
 			DOCEAR_MAIL_CONFIGURATION = new SmtpMailConfiguration(p.getProperty("docear.mail.host"), p.getProperty("docear.mail.from"));
 			DOCEAR_MAIL_CONFIGURATION.setFromAlias(p.getProperty("docear.mail.fromAlias"));
@@ -180,6 +185,7 @@ public class MailUtils {
 
 	public static boolean sendMail(String subject, String message, InternetAddress[] recipients, MailConfiguration config) {
 		try {
+			senderExceptions.clear();
 		    // create a message
 		    MimeMessage msg = new MimeMessage(config.getSession());
 		    msg.setFrom(config.getFrom());
@@ -189,13 +195,8 @@ public class MailUtils {
 		    
 		    msg.setText(message, "UTF-8");
 		    
-		    Transport.send(msg);
-		    
-		    senderExceptions.clear();
+		    Transport.send(msg);		    
 		    return true;
-		}
-		catch (SMTPAddressFailedException e) {
-			System.out.println("non critical exception in org.docear.mailer.MailUtils.sendMail(subject, message, recipients, config): "+e.getMessage());
 		}
 		catch (MessagingException mex) {
 		    System.out.println("\n--Exception handling in MailUtils.sendMail()");
@@ -204,34 +205,34 @@ public class MailUtils {
 		    System.out.println();
 		    Exception ex = mex;
 		    do {
-			if (ex instanceof SendFailedException) {
-				senderExceptions.add(new MailSenderException(ex, recipients));
-				
-			    SendFailedException sfex = (SendFailedException)ex;
-			    Address[] invalid = sfex.getInvalidAddresses();
-			    if (invalid != null) {
-				System.out.println("    ** Invalid Addresses");
-				for (int i = 0; i < invalid.length; i++) 
-				    System.out.println("         " + invalid[i]);
-			    }
-			    Address[] validUnsent = sfex.getValidUnsentAddresses();
-			    if (validUnsent != null) {
-				System.out.println("    ** ValidUnsent Addresses");
-				for (int i = 0; i < validUnsent.length; i++) 
-				    System.out.println("         "+validUnsent[i]);
-			    }
-			    Address[] validSent = sfex.getValidSentAddresses();
-			    if (validSent != null) {
-				System.out.println("    ** ValidSent Addresses");
-				for (int i = 0; i < validSent.length; i++) 
-				    System.out.println("         "+validSent[i]);
-			    }
-			}
-			System.out.println();
-			if (ex instanceof MessagingException)
-			    ex = ((MessagingException)ex).getNextException();
-			else
-			    ex = null;
+				if (ex instanceof SendFailedException) {
+					senderExceptions.add(new MailSenderException(ex, recipients));
+					
+				    SendFailedException sfex = (SendFailedException)ex;
+				    Address[] invalid = sfex.getInvalidAddresses();
+				    if (invalid != null) {
+					System.out.println("    ** Invalid Addresses");
+					for (int i = 0; i < invalid.length; i++) 
+					    System.out.println("         " + invalid[i]);
+				    }
+				    Address[] validUnsent = sfex.getValidUnsentAddresses();
+				    if (validUnsent != null) {
+					System.out.println("    ** ValidUnsent Addresses");
+					for (int i = 0; i < validUnsent.length; i++) 
+					    System.out.println("         "+validUnsent[i]);
+				    }
+				    Address[] validSent = sfex.getValidSentAddresses();
+				    if (validSent != null) {
+					System.out.println("    ** ValidSent Addresses");
+					for (int i = 0; i < validSent.length; i++) 
+					    System.out.println("         "+validSent[i]);
+				    }
+				}
+				System.out.println();
+				if (ex instanceof MessagingException)
+				    ex = ((MessagingException)ex).getNextException();
+				else
+				    ex = null;
 		    } while (ex != null);
 		}
 		

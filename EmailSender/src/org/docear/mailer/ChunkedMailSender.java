@@ -35,9 +35,11 @@ import org.w3c.dom.NodeList;
 import com.sun.mail.smtp.SMTPAddressFailedException;
 
 public class ChunkedMailSender {
-	private final Properties properties = Config.getProperties("mail.sender");
+	private final Properties properties = Config.getProperties("mail.sender", ChunkedMailSender.class);
 	private final static String SERVICE_HOST = "https://api.docear.org";
-
+	//default wait from 2 to 28 seconds --> mean: 15 sec + actual execution time
+	private final int WAIT_TIME_SECONDS = Integer.parseInt(properties.getProperty("docear.mail.wait", "26"));
+	
 	public void start() {
 		new Thread() {
 			public void run() {
@@ -94,7 +96,7 @@ public class ChunkedMailSender {
 				}
 				
 				try {
-					Thread.sleep((rand.nextInt(26)+2) * 1000); //wait from 2 to 28 seconds --> mean: 15 sec + actual execution time
+					Thread.sleep((rand.nextInt(WAIT_TIME_SECONDS)+2) * 1000);
 				}
 				catch (InterruptedException e) {
 				}
