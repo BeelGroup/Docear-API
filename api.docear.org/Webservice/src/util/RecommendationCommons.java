@@ -12,6 +12,7 @@ import java.util.Set;
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.mrdlib.index.DocumentHashItem;
 import org.mrdlib.index.Searcher;
 import org.sciplore.database.SessionProvider;
 import org.sciplore.queries.DocumentQueries;
@@ -481,7 +482,7 @@ public class RecommendationCommons {
 		Set<RecommendationsDocuments> recommendationDocuments = new HashSet<RecommendationsDocuments>();
 
 		Searcher searcher = new Searcher();		
-		List<Searcher.DocumentHashItem> items = searcher.search(factory.getLuceneQuery(), 1000);
+		List<DocumentHashItem> items = searcher.search(factory.getLuceneQuery(), 1000);
 
 		if (items == null || items.size() == 0) {
 			return null;
@@ -518,7 +519,7 @@ public class RecommendationCommons {
 		int recOriginalRankMin = recOriginalRankMax;
 		
 		int rankSum = 0;
-		for (Searcher.DocumentHashItem item : items) {
+		for (DocumentHashItem item : items) {
 			if (item.rank < recOriginalRankMin) {
 				recOriginalRankMin = item.rank;
 			}

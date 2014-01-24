@@ -249,19 +249,23 @@ public class InternalCommons {
     					Document document = DocumentQueries.getDocument(session, docId.intValue());
     					if (document != null) {
     						IndexReader ir = Tools.getLuceneIndexer().getIndexReader();
-    						if (getByDocumentId(docId.intValue(), ir).size() > 0) {
-    							List<DocumentsPdfHash> hashes = DocumentsPdfHashQueries.getPdfHashes(session, document);
-    							if (hashes != null && hashes.size()>0) {
-    								indexer.updateDocument(document, hashes.get(0).getHash());
-    							}
-    							else {
-    								indexer.updateDocument(document, null);
-    							}
+    						try {
+        						if (getByDocumentId(docId.intValue(), ir).size() > 0) {
+        							List<DocumentsPdfHash> hashes = DocumentsPdfHashQueries.getPdfHashes(session, document);
+        							if (hashes != null && hashes.size()>0) {
+        								indexer.updateDocument(document, hashes.get(0).getHash());
+        							}
+        							else {
+        								indexer.updateDocument(document, null);
+        							}
+        						}
+        						else {
+        							System.out.println("lucene update skipped for document: "+docId.intValue());
+        						}
     						}
-    						else {
-    							System.out.println("lucene update skipped for document: "+docId.intValue());
+    						finally {
+    							ir.close();
     						}
-    						ir.close();
     					}
     				}
     				else {
@@ -285,18 +289,13 @@ public class InternalCommons {
 		
 		Set<org.apache.lucene.document.Document> lucDocs = new HashSet<org.apache.lucene.document.Document>();
 		try {
-			IndexSearcher is = new IndexSearcher(ir);
-			try {
-				TopDocs td = is.search(q, 100);		
-				if(td.totalHits > 0) {
-					for (int i = 0; i < td.scoreDocs.length; i++) {
-						lucDocs.add(is.doc(td.scoreDocs[i].doc));
-					}
+			IndexSearcher is = new IndexSearcher(ir);			
+			TopDocs td = is.search(q, 100);		
+			if(td.totalHits > 0) {
+				for (int i = 0; i < td.scoreDocs.length; i++) {
+					lucDocs.add(is.doc(td.scoreDocs[i].doc));
 				}
-			}
-			finally {
-				is.close();				
-			}
+			}					
 		}
 		catch (Throwable e) {
 		}

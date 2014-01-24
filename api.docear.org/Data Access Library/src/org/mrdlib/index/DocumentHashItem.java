@@ -4,4 +4,5 @@ public class DocumentHashItem {
 	public Integer documentId;
 	public String pdfHash;
 	public int rank;
+	public Float relevance;
 }

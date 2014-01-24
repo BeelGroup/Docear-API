@@ -9,9 +9,9 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import org.glassfish.jersey.client.ClientResponse;
 import org.sciplore.utilities.config.Config;
 
 public class GraphDbUtils {
@@ -32,7 +32,8 @@ public class GraphDbUtils {
 			System.out.println("param --> "+s+" : "+params.get(s));
 		}
 		Form form = new Form(params);
-		ClientResponse response = target.request().accept(MediaType.TEXT_PLAIN_TYPE).post(Entity.form(form), ClientResponse.class);
+		
+		Response response = target.request().accept(MediaType.TEXT_PLAIN_TYPE).post(Entity.form(form));
 		if (response == null || response.getStatus() != (Status.OK.getStatusCode())) {
 			return null;
 		}

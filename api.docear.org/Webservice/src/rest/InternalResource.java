@@ -308,44 +308,44 @@ public class InternalResource {
 	}
 
 	
-	@GET
-	@Path("/index/search")
-	public Response search(@Context UriInfo ui, @Context HttpServletRequest request, @QueryParam("query") String query,
-			@QueryParam("number") int maxResults) {
-		final Session session = SessionProvider.sessionFactory.openSession();
-		try {
-			session.setFlushMode(FlushMode.MANUAL);
-
-			User user = new User(session).getUserByEmailOrUsername("pdfdownloader");
-			if (!ResourceCommons.authenticate(request, user)) {
-				return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "no valid access token.");
-			}
-
-			StringBuilder sb = new StringBuilder();
-			try {
-				Query q = new QueryParser(Version.LUCENE_46, "title", new StandardAnalyzer(Version.LUCENE_46)).parse(query);
-				IndexReader ir = SessionProvider.getLuceneIndexer().getIndexReader();
-				IndexSearcher is = new IndexSearcher(ir);
-			
-				Term term = new Term(query.split(":")[0], query.split(":")[1]);
-				TermDocs termDocs = ir..termDocs();
-				termDocs.seek(term);
-				while (termDocs.next()) {
-					org.apache.lucene.document.Document doc = is.doc(termDocs.doc());
-					sb.append("freq: ").append(termDocs.freq()).append("\n").append(InternalCommons.getLuceneDocumentContent(doc)).append("\n\n");
-				}
-
-				return UserCommons.getHTTPStatusResponse(Status.OK, sb.toString());
-			}
-			catch (Exception e) {
-				e.printStackTrace();
-				return Tools.getHTTPStatusResponse(Status.INTERNAL_SERVER_ERROR, e.getMessage());
-			}
-		}
-		finally {
-			Tools.tolerantClose(session);
-		}
-	}
+//	@GET
+//	@Path("/index/search")
+//	public Response search(@Context UriInfo ui, @Context HttpServletRequest request, @QueryParam("query") String query,
+//			@QueryParam("number") int maxResults) {
+//		final Session session = SessionProvider.sessionFactory.openSession();
+//		try {
+//			session.setFlushMode(FlushMode.MANUAL);
+//
+//			User user = new User(session).getUserByEmailOrUsername("pdfdownloader");
+//			if (!ResourceCommons.authenticate(request, user)) {
+//				return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "no valid access token.");
+//			}
+//
+//			StringBuilder sb = new StringBuilder();
+//			try {
+//				Query q = new QueryParser(Version.LUCENE_46, "title", new StandardAnalyzer(Version.LUCENE_46)).parse(query);
+//				IndexReader ir = SessionProvider.getLuceneIndexer().getIndexReader();
+//				IndexSearcher is = new IndexSearcher(ir);
+//			
+//				Term term = new Term(query.split(":")[0], query.split(":")[1]);
+//				TermDocs termDocs = ir.termDocs();
+//				termDocs.seek(term);
+//				while (termDocs.next()) {
+//					org.apache.lucene.document.Document doc = is.doc(termDocs.doc());
+//					sb.append("freq: ").append(termDocs.freq()).append("\n").append(InternalCommons.getLuceneDocumentContent(doc)).append("\n\n");
+//				}
+//
+//				return UserCommons.getHTTPStatusResponse(Status.OK, sb.toString());
+//			}
+//			catch (Exception e) {
+//				e.printStackTrace();
+//				return Tools.getHTTPStatusResponse(Status.INTERNAL_SERVER_ERROR, e.getMessage());
+//			}
+//		}
+//		finally {
+//			Tools.tolerantClose(session);
+//		}
+//	}
 
 	@POST
 	@Path("/mindmaps/{id}/pdf_hashes")

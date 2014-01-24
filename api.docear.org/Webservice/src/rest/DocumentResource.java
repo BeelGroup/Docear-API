@@ -40,15 +40,19 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.mrdlib.index.Indexer.DocumentHashItem;
+import org.mrdlib.index.DocumentHashItem;
+import org.mrdlib.index.Indexer;
+import org.mrdlib.index.Searcher;
 import org.sciplore.data.BeanFactory;
 import org.sciplore.database.AtomicOperation;
 import org.sciplore.database.AtomicOperationHandle;
 import org.sciplore.database.SessionProvider;
 import org.sciplore.formatter.Bean;
 import org.sciplore.queries.DocumentQueries;
+import org.sciplore.queries.DocumentsPdfHashQueries;
 import org.sciplore.resources.Document;
 import org.sciplore.resources.DocumentXref;
+import org.sciplore.resources.DocumentsPdfHash;
 import org.sciplore.resources.FulltextUrl;
 import org.sciplore.resources.User;
 
@@ -56,10 +60,6 @@ import util.DocumentCommons;
 import util.FulltextCommons;
 import util.ResourceCommons;
 import util.Tools;
-
-import org.mrdlib.index.Indexer;
-import org.sciplore.queries.DocumentsPdfHashQueries;
-import org.sciplore.resources.DocumentsPdfHash;
 
 @Path("/documents")
 public class DocumentResource {
@@ -533,7 +533,7 @@ public class DocumentResource {
 		try {
 			List<Integer> docIds = new ArrayList<Integer>();
 			long time = System.currentTimeMillis();
-			List<DocumentHashItem> items = Tools.getLuceneIndexer().search(q);
+			List<DocumentHashItem> items = new Searcher().search(q);
 			System.out.println("lucene search time: "+(System.currentTimeMillis()-time));
 			
 			if (number == null) {

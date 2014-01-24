@@ -9,6 +9,7 @@
 		    <param-name>javax.ws.rs.Application</param-name>
             <param-value>org.docear.api.DocearLoader</param-value>
         </init-param>
+        <load-on-startup>1</load-on-startup>        
     </servlet>
     <servlet-mapping>
         <servlet-name>api.docear.org</servlet-name>

@@ -31,15 +31,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author Mario Lipinski <a href="mailto:lipinski@sciplore.org">lipinski@sciplore.org</a>
  */
-public class Searcher {
-	
-	public class DocumentHashItem {
-		public Integer documentId;
-		public String pdfHash;
-		public int rank;
-		public Float relevance;
-	}
-	
+public class Searcher {	
 	private final static Logger logger = LoggerFactory.getLogger(Searcher.class);
 	private String indexDir = Config.getProperties("org.mrdlib").getProperty("indexDir");
 	private IndexReader ir;
