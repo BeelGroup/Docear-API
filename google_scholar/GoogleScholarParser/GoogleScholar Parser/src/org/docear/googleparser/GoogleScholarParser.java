@@ -32,12 +32,11 @@ import net.htmlparser.jericho.Segment;
 import net.htmlparser.jericho.Source;
 import net.htmlparser.jericho.StartTag;
 
+import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.methods.GetMethod;
-
-import com.sun.jersey.client.apache.ApacheHttpClient;
-import com.sun.jersey.client.apache.config.DefaultApacheHttpClientConfig;
-import com.sun.jersey.multipart.impl.MultiPartWriter;
+import org.apache.commons.httpclient.params.HttpClientParams;
+import org.apache.http.conn.params.ConnRoutePNames;
 
 public class GoogleScholarParser {
 	private String COOKIE_STORE_PATH = null;
@@ -53,9 +52,13 @@ public class GoogleScholarParser {
 	private static String currentProxy = null;
 	private static int localCount = 0;
 
-	private static ApacheHttpClient client = ApacheHttpClient.create();
+//	private static ApacheHttpClient client = ApacheHttpClient.create();
+	private static HttpClient client = new HttpClient();
+	
+	
 
-	private String[] USER_AGENTS = new String[] {
+	private String[] USER_AGENTS = new String[] {	
+			
 			"Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:14.0) Gecko/20100101 Firefox/14.0.1"
 			,"Mozilla/5.0 (Windows NT 6.1; WOW64; rv:19.0) Gecko/20100101 Firefox/19.0"
 			,"Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:19.0) Gecko/20100101 Firefox/19.0"
@@ -397,13 +400,12 @@ public class GoogleScholarParser {
 		final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
 		Thread.currentThread().setContextClassLoader(GoogleScholarParser.class.getClassLoader());
 		try {
-			DefaultApacheHttpClientConfig cc = new DefaultApacheHttpClientConfig();
+			HttpClientParams cc = new HttpClientParams();			
 			if (getCurrentProxy() != null) {
-				cc.getProperties().put(DefaultApacheHttpClientConfig.PROPERTY_PROXY_URI, "http://" + getCurrentProxy() + "/");
-			}
-
-			cc.getClasses().add(MultiPartWriter.class);
-			client = ApacheHttpClient.create(cc);
+				cc.setParameter(ConnRoutePNames.DEFAULT_PROXY, "http://" + getCurrentProxy() + "/");
+			}		
+//			cc.getClasses().add(MultiPartWriter.class);
+			client = new HttpClient(cc);
 		}
 		finally {
 			Thread.currentThread().setContextClassLoader(contextClassLoader);
@@ -440,7 +442,7 @@ public class GoogleScholarParser {
 				+ "&num=" + this.maxResultsPerPage + "&btnG=");
 		getMethod.addRequestHeader("User-Agent", getCurrentUserAgent());
 		getMethod.addRequestHeader("Host", "scholar.google.com");
-		lastReponseCode = client.getClientHandler().getHttpClient().executeMethod(getMethod);
+		lastReponseCode = client.executeMethod(getMethod);
 		if (lastReponseCode == 200) {
 			increaseCount();
 		}
