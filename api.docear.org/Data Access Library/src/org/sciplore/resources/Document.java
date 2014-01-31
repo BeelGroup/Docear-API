@@ -62,7 +62,7 @@ public class Document extends Resource {
 	@Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
 	private Institution institution;
 	private String isbn;
-	private String issn;
+	private String issn;	
 	@OneToMany(mappedBy = "document", fetch = FetchType.LAZY)
 	@Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
 	private Set<Keyword> keywords = new HashSet<Keyword>();

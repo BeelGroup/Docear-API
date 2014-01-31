@@ -300,6 +300,7 @@ public class BeanFactory {
 		Recommendations recommendations = new Recommendations();
 		recommendations.addActiveAttribute("href", this.baseURL + baseUrlSuffix + Tools.getQueryParamsAsString(this.uriInfo));
 		recommendations.addActiveAttribute("descriptor", settings.getRecommendationLabel().getValue());
+		recommendations.addActiveAttribute("recommendationsSetId", String.valueOf(recDocSet.getId()));
 		
 		Iterator<RecommendationsDocuments> iterator = recDocSet.getRecommendationsDocuments().iterator();
 		

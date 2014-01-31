@@ -85,6 +85,8 @@ public class RecommendationsDocumentsSet extends Resource {
     private Integer userSetsDelivered;
     private Integer offlineEvaluatorPaperPosition;
     
+    private Integer userRating;
+    
     @OneToMany(mappedBy = "recommentationsDocumentsSet", fetch = FetchType.LAZY)
 	@Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)    
 	private Set<RecommendationsDocuments> recommendationsDocuments = new HashSet<RecommendationsDocuments>();
@@ -307,9 +309,13 @@ public class RecommendationsDocumentsSet extends Resource {
 	public void setOfflineEvaluatorPaperPosition(Integer offlineEvaluatorPaperPosition) {
 		this.offlineEvaluatorPaperPosition = offlineEvaluatorPaperPosition;
 	}
-	
-	
 
-	
+	public Integer getUserRating() {
+		return userRating;
+	}
+
+	public void setUserRating(Integer userRating) {
+		this.userRating = userRating;
+	}	
 	
 }

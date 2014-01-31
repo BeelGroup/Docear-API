@@ -25,6 +25,7 @@ import javax.ws.rs.DefaultValue;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
@@ -58,6 +59,7 @@ import org.sciplore.resources.RecommendationsUsersSettings;
 import org.sciplore.resources.User;
 import org.sciplore.resources.UserPasswordRequest;
 import org.sciplore.tools.SciploreResponseCode;
+import org.sciplore.utilities.DocearLogger;
 
 import util.RecommendationCommons;
 import util.ResourceCommons;
@@ -133,6 +135,40 @@ public class UserRessource {
 		return UserCommons.getHTTPStatusResponse(Status.INTERNAL_SERVER_ERROR, "unexpected exception when trying to fetch recommendation's url");
 	}	
 
+	@PUT
+	@Path("/{username}/recommendations/documents/")
+	public Response putLiteratureRecommendationsUserStatus(@Context UriInfo ui, @Context HttpServletRequest request, 
+			@PathParam("username") String userName, @QueryParam("recommendationsSetId") Integer recommendationsDocumentsSetId,
+			@QueryParam("userRating") Integer userRating) {
+		
+		final Session session = SessionProvider.getNewSession();
+		session.setFlushMode(FlushMode.MANUAL);
+		
+		final User user = new User(session).getUserByEmailOrUsername(userName);		
+		if (!ResourceCommons.authenticate(request, user)) {
+			return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "no valid access token.");
+		}
+		
+		try {
+			RecommendationsDocumentsSet recDocSet = (RecommendationsDocumentsSet) session.get(RecommendationsDocumentsSet.class, recommendationsDocumentsSetId);
+			if (recDocSet == null) {
+				return UserCommons.getHTTPStatusResponse(Status.BAD_REQUEST, "");
+			}
+			
+			recDocSet.setUserRating(userRating);
+			session.update(recDocSet);
+		}
+		catch(Exception e) {
+			DocearLogger.error(e);
+			return UserCommons.getHTTPStatusResponse(Status.BAD_REQUEST, "");
+		}
+		finally {
+			Tools.tolerantClose(session);
+		}
+		
+		return UserCommons.getHTTPStatusResponse(Status.OK, "OK");
+	}
+	
 	@GET
 	@Path("/{username}/recommendations/documents/")
 	public Response getLiteratureRecommendations(@PathParam("username") String userName, @Context UriInfo uriInfo, @Context HttpServletRequest request,
