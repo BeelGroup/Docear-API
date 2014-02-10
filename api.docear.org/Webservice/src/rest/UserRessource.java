@@ -136,10 +136,10 @@ public class UserRessource {
 	}	
 
 	@PUT
-	@Path("/{username}/recommendations/documents/")
+	@Path("/{username}/recommendations/{recommendationsSetId}")
 	public Response putLiteratureRecommendationsUserStatus(@Context UriInfo ui, @Context HttpServletRequest request, 
-			@PathParam("username") String userName, @QueryParam("recommendationsSetId") Integer recommendationsDocumentsSetId,
-			@QueryParam("userRating") Integer userRating) {
+			@PathParam("username") String userName, @PathParam("recommendationsSetId") Integer recommendationsDocumentsSetId,
+			@QueryParam("rating") Integer rating) {
 		
 		final Session session = SessionProvider.getNewSession();
 		session.setFlushMode(FlushMode.MANUAL);
@@ -153,9 +153,16 @@ public class UserRessource {
 			RecommendationsDocumentsSet recDocSet = (RecommendationsDocumentsSet) session.get(RecommendationsDocumentsSet.class, recommendationsDocumentsSetId);
 			if (recDocSet == null) {
 				return UserCommons.getHTTPStatusResponse(Status.BAD_REQUEST, "");
+			}			
+			
+			if (rating == null && recDocSet.getReceived() == null) {
+				recDocSet.setReceived(new Date());
 			}
 			
-			recDocSet.setUserRating(userRating);
+			if (rating != null) {
+				recDocSet.setUserRating(rating);
+			}
+			
 			session.update(recDocSet);
 		}
 		catch(Exception e) {

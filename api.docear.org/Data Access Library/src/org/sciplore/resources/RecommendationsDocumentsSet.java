@@ -56,6 +56,9 @@ public class RecommendationsDocumentsSet extends Resource {
     private Date delivered;
     
     @Column()
+    private Date received;
+    
+    @Column()
     private Boolean auto;
     
     @Column()
@@ -180,6 +183,14 @@ public class RecommendationsDocumentsSet extends Resource {
 
 	public void setDeliveryTime(Long deliveryTime) {
 		this.deliveryTime = deliveryTime;
+	}
+	
+	public Date getReceived() {
+		return received;
+	}
+
+	public void setReceived(Date received) {
+		this.received = received;
 	}
 
 	public Boolean getOld() {

@@ -25,6 +25,11 @@ public class RecommendationsUsersSettings extends Resource {
 	@Required
 	private RecommendationsLabel recommendationLabel;
 	
+	@ManyToOne
+	@JoinColumn(name = "recommendations_ratings_labels_id")
+	@Required
+	private RecommendationsRatingsLabel recommendationRatingLabel;
+	
 	@Column(name = "use_prefix")
 	private Boolean usePrefix;
 	
@@ -46,9 +51,16 @@ public class RecommendationsUsersSettings extends Resource {
 		return recommendationLabel;
 	}
 
-
 	public void setRecommendationLabel(RecommendationsLabel recommendationLabel) {
 		this.recommendationLabel = recommendationLabel;
+	}
+	
+	public RecommendationsRatingsLabel getRecommendationRatingLabel() {
+		return recommendationRatingLabel;
+	}
+
+	public void setRecommendationRatingLabel(RecommendationsRatingsLabel recommendationRatingLabel) {
+		this.recommendationRatingLabel = recommendationRatingLabel;
 	}
 
 
