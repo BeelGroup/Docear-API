@@ -11,8 +11,6 @@ import java.net.URLDecoder;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.zip.ZipEntry;
@@ -41,14 +39,15 @@ import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.sciplore.data.BeanFactory;
+import org.sciplore.database.AtomicOperation;
+import org.sciplore.database.AtomicOperationHandle;
 import org.sciplore.database.SessionProvider;
-import org.sciplore.formatter.Bean;
 import org.sciplore.queries.ApplicationQueries;
+import org.sciplore.queries.DocumentQueries;
 import org.sciplore.queries.MindmapQueries;
 import org.sciplore.queries.RecommendationsDocumentsQueries;
 import org.sciplore.queries.RecommendationsDocumentsSetQueries;
 import org.sciplore.resources.Application;
-import org.sciplore.resources.Citation;
 import org.sciplore.resources.Contact;
 import org.sciplore.resources.Document;
 import org.sciplore.resources.FulltextUrl;
@@ -61,6 +60,8 @@ import org.sciplore.resources.UserPasswordRequest;
 import org.sciplore.tools.SciploreResponseCode;
 import org.sciplore.utilities.DocearLogger;
 
+import util.DocumentCommons;
+import util.InternalCommons;
 import util.RecommendationCommons;
 import util.ResourceCommons;
 import util.Tools;
@@ -138,42 +139,57 @@ public class UserRessource {
 	@PUT
 	@Path("/{username}/recommendations/{recommendationsSetId}")
 	public Response putLiteratureRecommendationsUserStatus(@Context UriInfo ui, @Context HttpServletRequest request, 
-			@PathParam("username") String userName, @PathParam("recommendationsSetId") Integer recommendationsDocumentsSetId,
-			@QueryParam("rating") Integer rating) {
+			@PathParam("username") String userName, @PathParam("recommendationsSetId") final Integer recommendationsDocumentsSetId,
+			@QueryParam("rating") final Integer rating) {
 		
 		final Session session = SessionProvider.getNewSession();
 		session.setFlushMode(FlushMode.MANUAL);
-		
-		final User user = new User(session).getUserByEmailOrUsername(userName);		
-		if (!ResourceCommons.authenticate(request, user)) {
-			return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "no valid access token.");
-		}
-		
 		try {
-			RecommendationsDocumentsSet recDocSet = (RecommendationsDocumentsSet) session.get(RecommendationsDocumentsSet.class, recommendationsDocumentsSetId);
-			if (recDocSet == null) {
-				return UserCommons.getHTTPStatusResponse(Status.BAD_REQUEST, "");
-			}			
-			
-			if (rating == null && recDocSet.getReceived() == null) {
-				recDocSet.setReceived(new Date());
-			}
-			
-			if (rating != null) {
-				recDocSet.setUserRating(rating);
-			}
-			
-			session.update(recDocSet);
-		}
-		catch(Exception e) {
-			DocearLogger.error(e);
-			return UserCommons.getHTTPStatusResponse(Status.BAD_REQUEST, "");
+    		final User user = new User(session).getUserByEmailOrUsername(userName);		
+    		if (!ResourceCommons.authenticate(request, user)) {
+    			return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "no valid access token.");
+    		}
 		}
 		finally {
 			Tools.tolerantClose(session);
 		}
-		
-		return UserCommons.getHTTPStatusResponse(Status.OK, "OK");
+    		
+		AtomicOperation<Response> op = new AtomicOperation<Response>() {
+			@Override
+			public Response exec(Session session) {
+				try {    				
+    				RecommendationsDocumentsSet recDocSet = (RecommendationsDocumentsSet) session.get(RecommendationsDocumentsSet.class, recommendationsDocumentsSetId);
+    				if (recDocSet == null) {
+    					return UserCommons.getHTTPStatusResponse(Status.BAD_REQUEST, "");
+    				}			
+    				
+    				if (rating == null && recDocSet.getReceived() == null) {
+    					recDocSet.setReceived(new Date());
+    				}
+    				
+    				if (rating != null) {
+    					recDocSet.setUserRating(rating);
+    				}
+    				
+    				session.update(recDocSet);
+    				session.flush();
+    			}
+    			catch(Exception e) {
+    				DocearLogger.error(e);
+    				return UserCommons.getHTTPStatusResponse(Status.BAD_REQUEST, "");
+    			}
+				return UserCommons.getHTTPStatusResponse(Status.OK, "OK");
+				
+			}
+		};
+		AtomicOperationHandle<Response> handle = SessionProvider.atomicManager.addOperation(op);
+		try {
+			return handle.getResult();
+		}
+		catch (IOException e) {
+			DocearLogger.error(e);
+			return UserCommons.getHTTPStatusResponse(Status.INTERNAL_SERVER_ERROR, e.getMessage());
+		}		
 	}
 	
 	@GET
@@ -194,10 +210,6 @@ public class UserRessource {
 		try {
 			RecommendationsUsersSettings settings = UserCommons.getRecommendationsUsersSettings(session, user);
 
-			// serialize the resulting collection
-			BeanFactory factory = new BeanFactory(uriInfo, request);
-			factory.setNormalizeTitle(true);
-
 			final RecommendationsDocumentsSet recDocSet = RecommendationsDocumentsSetQueries.getLatestUnusedRecommendationsSet(session, user);
 			if (recDocSet.getRecommendationsDocuments().size() == 0) {
 				return UserCommons.getHTTPStatusResponse(Status.NO_CONTENT, "");
@@ -207,60 +219,65 @@ public class UserRessource {
 			Transaction transaction = session.beginTransaction();
 			// STEFAN retrieve applicationnumber only with buildnumber and application name
 
-			Iterator<RecommendationsDocuments> iterator = recDocSet.getRecommendationsDocuments().iterator();
 			try {
-				while (iterator.hasNext()) {
-					RecommendationsDocuments recDoc = iterator.next();
-					Document d = recDoc.getFulltextUrl().getDocument();
-					d.setCitations(new HashSet<Citation>());
-				}	
-				Bean bean = factory.getRecommendationsBean(recDocSet, "user/" + user.getUsername() + "/", settings);
+				String xml = RecommendationCommons.buildRecommendationsXML(recDocSet, settings, uriInfo, userName);
 				Integer build = UserCommons.getClientVersionFromRequest(request);
 				recDocSet.setApplication(ApplicationQueries.getApplicationByBuildNumber(session, build));
 				recDocSet.setDelivered(new Date());
 				Long execution_time = System.currentTimeMillis() - overAll;
 				recDocSet.setDeliveryTime(execution_time);
 				recDocSet.setAuto(auto);
-				if (execution_time > getTimeout(build)) {
-					recDocSet.setDelivered(null);
-				}				
-				session.saveOrUpdate(recDocSet);
+								
+				session.update(recDocSet);
 				session.flush();
 				transaction.commit();
 				
-				new Thread(new Runnable() {					
+				final int recId = recDocSet.getId();
+				AtomicOperation<Response> op = new AtomicOperation<Response>() {
 					@Override
-					public void run() {
-						RecommendationCommons.computeDeliveryVariables(recDocSet.getId());
+					public Response exec(Session session) {
+						try {    				
+							RecommendationCommons.computeDeliveryVariables(recId);
+		    			}
+		    			catch(Exception e) {
+		    				DocearLogger.error(e);
+		    				return UserCommons.getHTTPStatusResponse(Status.BAD_REQUEST, "");
+		    			}
+						return UserCommons.getHTTPStatusResponse(Status.OK, "OK");
+						
 					}
-				}).start();
+				};
+				SessionProvider.atomicManager.addOperation(op);
 								
-				return Tools.getSerializedResponse(format, bean, stream);
+				return UserCommons.getHTTPStatusResponse(Status.OK, xml);
 			}
 			catch (Exception e) {
 				e.printStackTrace();
 				transaction.rollback();
 				return UserCommons.getHTTPStatusResponse(Status.INTERNAL_SERVER_ERROR, "unexpected error");
-			}			
+			}
+			
 		}
 		finally {
-			if (auto) {
-    			AsynchronousRecommendationsGeneratorAfterAutoRec.executeAsynch(new Runnable() {
-    				@Override
-    				public void run() {
-    					RecommendationCommons.forceComputeForSingleUser(user.getId(), RecommendationsDocumentsSet.TRIGGER_TYPE_AUTO_RECOMMENDATION);
-    				}
-    			});
-    			System.out.println("AsynchronousRecommendationsGeneratorAfterAutoRec --> running recommendation generator tasks: "+AsynchronousRecommendationsGeneratorAfterAutoRec.getSingleExecTaskCount());
-			}
-			else {
-				AsynchronousRecommendationsGeneratorAfterRecRequest.executeAsynch(new Runnable() {
-    				@Override
-    				public void run() {
-    					RecommendationCommons.forceComputeForSingleUser(user.getId(), RecommendationsDocumentsSet.TRIGGER_TYPE_RECOMMENDATION_REQUEST);
-    				}
-    			});
-				System.out.println("AsynchronousRecommendationsGeneratorAfterRecRequest --> running recommendation generator tasks: "+AsynchronousRecommendationsGeneratorAfterRecRequest.getSingleExecTaskCount());
+			if (System.getProperty("docear_debug") == null || System.getProperty("docear_debug").equals("false")) {			
+    			if (auto) {
+        			AsynchronousRecommendationsGeneratorAfterAutoRec.executeAsynch(new Runnable() {
+        				@Override
+        				public void run() {
+        					RecommendationCommons.forceComputeForSingleUser(user.getId(), RecommendationsDocumentsSet.TRIGGER_TYPE_AUTO_RECOMMENDATION);
+        				}
+        			});
+        			System.out.println("AsynchronousRecommendationsGeneratorAfterAutoRec --> running recommendation generator tasks: "+AsynchronousRecommendationsGeneratorAfterAutoRec.getSingleExecTaskCount());
+    			}
+    			else {
+    				AsynchronousRecommendationsGeneratorAfterRecRequest.executeAsynch(new Runnable() {
+        				@Override
+        				public void run() {
+        					RecommendationCommons.forceComputeForSingleUser(user.getId(), RecommendationsDocumentsSet.TRIGGER_TYPE_RECOMMENDATION_REQUEST);
+        				}
+        			});
+    				System.out.println("AsynchronousRecommendationsGeneratorAfterRecRequest --> running recommendation generator tasks: "+AsynchronousRecommendationsGeneratorAfterRecRequest.getSingleExecTaskCount());
+    			}			
 			}
 			
 			Tools.tolerantClose(session);
