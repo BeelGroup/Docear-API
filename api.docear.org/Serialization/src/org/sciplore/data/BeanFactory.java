@@ -6,9 +6,7 @@ import java.net.URI;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -51,8 +49,6 @@ import org.sciplore.beans.Occurence;
 import org.sciplore.beans.Occurences;
 import org.sciplore.beans.Organization;
 import org.sciplore.beans.Photo;
-import org.sciplore.beans.Recommendation;
-import org.sciplore.beans.Recommendations;
 import org.sciplore.beans.Reference;
 import org.sciplore.beans.References;
 import org.sciplore.beans.ReleaseDate;
@@ -72,9 +68,6 @@ import org.sciplore.resources.FulltextUrl;
 import org.sciplore.resources.Person;
 import org.sciplore.resources.PersonHomonym;
 import org.sciplore.resources.PersonXref;
-import org.sciplore.resources.RecommendationsDocuments;
-import org.sciplore.resources.RecommendationsDocumentsSet;
-import org.sciplore.resources.RecommendationsUsersSettings;
 
 public class BeanFactory {
 	private ArrayList<String> showList;
@@ -292,62 +285,7 @@ public class BeanFactory {
 			}
 		}
 		return applicationsBean;
-	}
-
-	public Recommendations getRecommendationsBean(RecommendationsDocumentsSet recDocSet, String baseUrlSuffix,
-			RecommendationsUsersSettings settings) {
-		baseUrlSuffix += "recommendations/";
-		Recommendations recommendations = new Recommendations();
-		recommendations.addActiveAttribute("href", this.baseURL + baseUrlSuffix + Tools.getQueryParamsAsString(this.uriInfo));
-		recommendations.addActiveAttribute("descriptor", settings.getRecommendationLabel().getValue());
-		recommendations.addActiveAttribute("id", String.valueOf(recDocSet.getId()));
-		recommendations.addActiveAttribute("evaluationLabel", settings.getRecommendationRatingLabel().getValue());
-		
-		Iterator<RecommendationsDocuments> iterator = recDocSet.getRecommendationsDocuments().iterator();
-		
-		// bring documents in correct order, i is fallback for tuples without presentation rank
-		Map<Integer, RecommendationsDocuments> recDocMap = new HashMap<Integer, RecommendationsDocuments>();
-		for (int i=0; iterator.hasNext(); i++) {
-			RecommendationsDocuments recDoc = iterator.next();
-			recDocMap.put(recDoc.getPresentationRank()==null ? i:recDoc.getPresentationRank(), recDoc);
-		}
-		
-		for (int i=1; i<=recDocMap.size(); i++) {
-			RecommendationsDocuments recDoc = recDocMap.get(i);
-			if (recDoc != null) {
-				recommendations.add(getRecommendationBean(recDoc, baseUrlSuffix, i==0 ? settings : null));
-			}
-		}
-		
-		return recommendations;
-
-	}
-
-	public Bean getRecommendationBean(RecommendationsDocuments recDoc, String baseUrlSuffix, RecommendationsUsersSettings settings) {
-		Recommendation recommendation = new Recommendation();
-		recommendation.addActiveAttribute("href", this.baseURL + baseUrlSuffix + recDoc.getId() + "/" + Tools.getQueryParamsAsString(this.uriInfo));
-		recommendation.addActiveAttribute("fulltext", this.baseURL + baseUrlSuffix + "fulltext/" + recDoc.getHashId() + "/");
-		
-		if (settings != null) {
-			if (settings.getUsePrefix() != null && settings.getUsePrefix()) {
-				recommendation.addActiveAttribute("prefix", "[Sponsored]");
-			}
-			if (settings.getHighlight() != null && settings.getHighlight()) {
-				recommendation.addActiveAttribute("highlighted", "true");
-			}
-		}
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		recommendation.addActiveAttribute("created", sdf.format(recDoc.getRecommentationsDocumentsSet().getCreated()));
-
-		Date clicked = recDoc.getClicked();
-		if (clicked != null) {
-			recommendation.addActiveAttribute("clicked", sdf.format(clicked));
-		}
-		
-		recommendation.addActiveElement(getDocumentBean(recDoc.getFulltextUrl().getDocument()));
-
-		return recommendation;
-	}
+	}	
 
 	public Documents getDocumentsBean(List<org.sciplore.resources.Document> documents, Long totalAmount, String baseUrlSuffix) {
 		Documents documentsBean = new Documents();
