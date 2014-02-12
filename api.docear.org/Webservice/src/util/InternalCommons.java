@@ -558,6 +558,7 @@ public class InternalCommons {
 		"LEFT JOIN documents_persons dp ON (p.id=dp.person_id) " + 
 		"LEFT JOIN document_xref dx ON (dp.document_id=dx.document_id AND dx.indexed=1 AND (p.docidx_last_notified IS NULL OR p.docidx_last_notified < dx.last_attempt) AND (p.docidx_last_displayed IS NULL OR p.docidx_last_displayed < dx.last_attempt)) " + 
 		"LEFT JOIN documents d ON (dx.document_id=d.id) " +
+		"WHERE title IS NOT NULL " + 
 		"ORDER BY p.id";
 		Query query = session.createSQLQuery(sql);
 		
