@@ -28,12 +28,14 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.sciplore.queries.ApplicationQueries;
 import org.sciplore.queries.RecommendationsLabelQueries;
+import org.sciplore.queries.RecommendationsRatingsLabelQueries;
 import org.sciplore.queries.RecommendationsUsersSettingsQueries;
 import org.sciplore.queries.UserQueries;
 import org.sciplore.resources.Algorithm;
 import org.sciplore.resources.Application;
 import org.sciplore.resources.GoogleDocumentQuery;
 import org.sciplore.resources.RecommendationsLabel;
+import org.sciplore.resources.RecommendationsRatingsLabel;
 import org.sciplore.resources.RecommendationsUsersSettings;
 import org.sciplore.resources.User;
 import org.sciplore.resources.UserPasswordRequest;
@@ -473,14 +475,17 @@ public class UserCommons {
 	
 	
 	
-	public static RecommendationsUsersSettings getRecommendationsUsersSettings(Session session, User user) {
+	public static synchronized RecommendationsUsersSettings getRecommendationsUsersSettings(Session session, User user) {
 		RecommendationsUsersSettings settings = RecommendationsUsersSettingsQueries.getRecommendationsUsersSettings(session, user);
 		if (settings == null) {
 			settings = new RecommendationsUsersSettings();
 			
 			RecommendationsLabel label = RecommendationsLabelQueries.getRandomLabel(session);
-			label.setSession(session);			
+			RecommendationsRatingsLabel ratingLabel = RecommendationsRatingsLabelQueries.getRandomLabel(session);
+			label.setSession(session);
+			ratingLabel.setSession(session);
 			settings.setRecommendationLabel(label);
+			settings.setRecommendationRatingLabel(ratingLabel);
 			settings.setUser(user);	
 			user.setSession(session);
 			settings.setSession(session);
@@ -489,6 +494,9 @@ public class UserCommons {
 				settings.setUsePrefix(random.nextBoolean());
 				if (settings.getUsePrefix()) {
 					settings.setHighlight(random.nextBoolean());
+				}
+				else {
+					settings.setHighlight(false);
 				}
 			}
 			else {

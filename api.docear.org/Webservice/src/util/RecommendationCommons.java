@@ -675,11 +675,12 @@ public class RecommendationCommons {
 			
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 			String baseUri = uriInfo.getBaseUri().toString();
+			boolean first = true;
 			for (RecommendationsDocuments recDoc : recDocSet.getRecommendationsDocuments()) {
 				Element recommendation = dom.createElement("recommendation");
 				recommendation.setAttribute("id", String.valueOf(recDoc.getId()));
 				recommendation.setAttribute("fulltext", baseUri+"user/"+userName+"/recommendations/fulltext/" + recDoc.getHashId() + "/");
-				if (settings != null) {
+				if (first && settings != null) {
 					if (settings.getUsePrefix() != null && settings.getUsePrefix()) {
 						recommendation.setAttribute("prefix", "[Sponsored]");
 					}
@@ -687,6 +688,7 @@ public class RecommendationCommons {
 						recommendation.setAttribute("highlighted", "true");
 					}
 				}				
+				first = false;
 				recommendation.setAttribute("created", sdf.format(recDoc.getRecommentationsDocumentsSet().getCreated()));
 
 				Date clicked = recDoc.getClicked();
