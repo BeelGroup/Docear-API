@@ -133,7 +133,7 @@ public class AlgorithmCommons {
 		
         
 		// set the node_info_source only if the mindmap nodes are considered
-		if (alg.getDataElementType() == 1) {
+		if (alg.getDataElementType() != 2) {
 			// 0=all; 1=mind maps; 2=references; 3=pdfs; 4=mind maps and references; 5=mind maps and pdfs; 6=references and pdfs
 			alg.setNodeInfoSource(r.nextInt(7));
 		}
