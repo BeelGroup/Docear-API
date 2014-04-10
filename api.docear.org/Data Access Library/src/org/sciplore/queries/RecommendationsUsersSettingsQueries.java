@@ -12,7 +12,7 @@ public class RecommendationsUsersSettingsQueries {
 		return (RecommendationsUsersSettings) getCriteria(session, user).uniqueResult();
 	}
 	
-	private static Criteria getCriteria(Session session, User user) {
+	private static synchronized Criteria getCriteria(Session session, User user) {
 		Criteria criteria = session.createCriteria(RecommendationsUsersSettings.class);
 		
 		if (user != null) {
