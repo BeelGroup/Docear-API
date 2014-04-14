@@ -85,7 +85,7 @@ public class RecommendationsUsersSettings extends Resource {
 
 
 	@Override
-	public Resource getPersistentIdentity() {
+	public synchronized Resource getPersistentIdentity() {
 		return RecommendationsUsersSettingsQueries.getRecommendationsUsersSettings(getSession(), getUser());
 	}
 
