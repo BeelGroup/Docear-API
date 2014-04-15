@@ -71,7 +71,8 @@ public class ChunkedMailSender {
 			Map<String, Recipient> chunk = getNextChunk(chunkSize);
 			if (chunk.isEmpty()) {						
 				try {
-					Thread.sleep(24 * 3600 * 1000);//24h
+//					Thread.sleep(24 * 3600 * 1000);//24h
+					Thread.sleep(3600 * 1000); // wait 1h (sufficient - may happen through cleaning #100)
 				}
 				catch (InterruptedException e) {
 				}

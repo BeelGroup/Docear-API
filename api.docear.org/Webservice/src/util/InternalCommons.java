@@ -567,26 +567,33 @@ public class InternalCommons {
 		
 		for (Object[] tuple : persons) {
 			long person_id = Long.valueOf(String.valueOf(tuple[0]));
-			String email = String.valueOf(tuple[1]);
-			String docidx_id_token = String.valueOf(tuple[2]);
-			String docidx_last_notified = String.valueOf(tuple[3]);
-			String docidx_last_displayed = String.valueOf(tuple[4]);
+			String email = (tuple[1]==null ? null : String.valueOf(tuple[1]));
+			String docidx_id_token = (tuple[2]==null ? null : String.valueOf(tuple[2]));
+			String docidx_last_notified = (tuple[3]==null ? null : String.valueOf(tuple[3]));
+			String docidx_last_displayed = (tuple[4]==null ? null : String.valueOf(tuple[4]));
 			
 			sql = "SELECT :email, d.title, :person_id, :docidx_id_token, dx.sources_id FROM documents d "
 					+ "JOIN documents_persons dp ON (dp.document_id = d.id AND dp.person_id = :person_id) "
 					+ "JOIN document_xref dx ON "
-					+ "(dp.document_id=dx.document_id AND dx.indexed=1 AND "
-					+ "(:docidx_last_notified IS NULL OR :docidx_last_notified < dx.last_attempt) "
-					+ "AND (:docidx_last_displayed IS NULL OR :docidx_last_displayed < dx.last_attempt)) "
-					+ "WHERE title IS NOT NULL";
+					+ "(dp.document_id=dx.document_id AND dx.indexed=1 ";
+			if (docidx_last_notified != null) {
+				sql += "AND :docidx_last_notified < dx.last_attempt ";
+			}
+			if (docidx_last_displayed != null) {
+				sql += "AND :docidx_last_displayed < dx.last_attempt ";
+			}			
+			sql += ") WHERE title IS NOT NULL";
 			
 			query = session.createSQLQuery(sql);
 			query.setParameter("person_id", person_id);
 			query.setParameter("email", email);
 			query.setParameter("docidx_id_token", docidx_id_token);
-			query.setParameter("docidx_last_notified", docidx_last_notified);
-			query.setParameter("docidx_last_displayed", docidx_last_displayed);
-			
+			if (docidx_last_notified != null) {
+				query.setParameter("docidx_last_notified", docidx_last_notified);
+			}
+			if (docidx_last_displayed != null) {
+				query.setParameter("docidx_last_displayed", docidx_last_displayed);
+			}
 			
 			List<Object[]> chunkSnippet = query.list();
 			if (chunkSnippet == null || chunkSnippet.size() ==0) {
@@ -612,7 +619,7 @@ public class InternalCommons {
 		
 		return chunk;
 //		String sql = "Select p.uri, d.title, p.id, p.docidx_id_token, dx.sources_id FROM " + 
-//		"(SELECT p.id, p.docidx_last_notified, p.docidx_last_displayed, c.uri, p.docidx_id_token FROM persons p JOIN contacts c ON (p.id=c.person_id) WHERE (p.docidx_last_notified IS NULL OR DATE_ADD(p.docidx_last_notified, INTERVAL 3 MONTH)<NOW()) AND (p.docidx_last_displayed IS NULL OR DATE_ADD(p.docidx_last_displayed, INTERVAL 3 MONTH)<NOW()) AND (p.docidx_notify IS NULL OR p.docidx_notify=1) AND p.docidx_new_documents=1 Limit :chunksize) p " +   
+//		"(SELECT p.id, p.docidx_last_notified, p.docidx_last_displayed, c.uri, p.docidx_id_token FROM persons p JOIN contacts c ON (p.id=c.person_id) WHERE (p.docidx_last_notified IS NULL OR DATE_ADD(p.docidx_last_notified, INTERVAL 3 MONTH)<NOW()) AND (p.docidx_last_displayed IS NULL OR DATE_ADD(p.docidx_last_displayed, INTERVAL 3 MONTH)<NOW()) AND (p.docidx_notify IS NULL OR p.docidx_notify=1) AND <=1 Limit :chunksize) p " +   
 //		"LEFT JOIN documents_persons dp ON (p.id=dp.person_id) " + 
 //		"LEFT JOIN document_xref dx ON (dp.document_id=dx.document_id AND dx.indexed=1 AND (p.docidx_last_notified IS NULL OR p.docidx_last_notified < dx.last_attempt) AND (p.docidx_last_displayed IS NULL OR p.docidx_last_displayed < dx.last_attempt)) " + 
 //		"LEFT JOIN documents d ON (dx.document_id=d.id) " +

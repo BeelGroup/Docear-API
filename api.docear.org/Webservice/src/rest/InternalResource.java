@@ -1105,6 +1105,7 @@ public class InternalResource {
 	public Response getNextMailerChunk(@Context UriInfo ui, @Context HttpServletRequest request, @QueryParam("chunksize") Integer chunkSize) {
 		Session session = Tools.getSession();
 		session.setFlushMode(FlushMode.MANUAL);
+		System.out.println("debug nextMailerChunk");
 		try {
 			User user = new User(session).getUserByEmailOrUsername("pdfdownloader");
 			if (!ResourceCommons.authenticate(request, user)) {
