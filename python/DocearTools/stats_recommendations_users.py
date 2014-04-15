@@ -324,8 +324,11 @@ def update_user_person_table():
     db.query(query)
     
     target_query = "CREATE TABLE tmp_user_person AS SELECT "
-    target_query += rename_table_id_columns('users', 'U') + ', ' + rename_table_id_columns('persons', 'P') + ',' + rename_table_id_columns('tmp_rec_users', 'T')
-    target_query += " FROM users U JOIN persons P ON (U.person_id = P.id) JOIN tmp_rec_users T ON (T.user_id = U.id)"
+    target_query += rename_table_id_columns('users', 'U') + ', ' + rename_table_id_columns('persons', 'P') + ',' + rename_table_id_columns('tmp_rec_users', 'T') + ',' + rename_table_id_columns('recommendations_users_settings', 'S')
+    target_query += " FROM users U "
+    target_query += " JOIN persons P ON (U.person_id = P.id)" 
+    target_query += " JOIN tmp_rec_users T ON (T.user_id = U.id)"
+    target_query += " JOIN recommendations_users_settings S ON (S.user_id = U.id)"
     
     print target_query
     db.query(target_query)
