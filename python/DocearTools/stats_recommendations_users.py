@@ -53,13 +53,6 @@ def main():
             SET T.sets_total=X.counter""";
     db.query(query)
 
-# old and erroneous --> see fix above    
-#     #insert users and sets_total    
-#     query = """INSERT INTO tmp_rec_users(user_id, sets_total) 
-#             SELECT user_id, count(*) AS counter FROM recommendations_documents_set S 
-#             WHERE user_id NOT IN (1, 2, 27) AND S.delivered IS NOT NULL AND (offline_evaluator IS NULL || offline_evaluator = 0) GROUP BY user_id""";
-#     db.query(query)
-    
     #insert recs_total
     query = """UPDATE tmp_rec_users X JOIN
             (SELECT S.user_id, count(*) AS counter from recommendations_documents_set S JOIN recommendations_documents R ON (R.recommendations_documents_set_id = S.id)
