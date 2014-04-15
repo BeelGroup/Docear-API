@@ -375,6 +375,9 @@ public class UserRessource {
 			if (remoteAddr == null) {
 				remoteAddr = request.getRemoteAddr();
 			}
+			if (userType==User.USER_TYPE_ANONYMOUS) {
+				System.out.println("debug user creation spammer with IP: "+remoteAddr);
+			}
 
 			SciploreResponseCode response = new User(session).createUser(userName, password, retypedPassword, eMail, firstName, middleName, lastName,
 					birthYear, generalNewsLetterBool, searchNewsLetterBool, splmmNewsLetterBool, (short) userType, isMale, remoteAddr);

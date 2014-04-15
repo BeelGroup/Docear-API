@@ -198,8 +198,8 @@ public class User extends Resource {
 			return new SciploreResponseCode(SciploreResponseCode.USERNAME_NOT_AVAILABLE, "This user name is already in use. Please choose another one.");
 		
 		switch(userType){
-			case User.USER_TYPE_ANONYMOUS:
-				return createAnonymousUser(username, remoteAddress);
+//			case User.USER_TYPE_ANONYMOUS:
+//				return createAnonymousUser(username, remoteAddress);
 			case User.USER_TYPE_EXTERNAL:
 				return createExternalUser(username, userType, remoteAddress);
 			case User.USER_TYPE_NORMAL:
@@ -339,17 +339,17 @@ public class User extends Resource {
 		return new SciploreResponseCode(SciploreResponseCode.OK, "User created.");
 	}
 	
-	private  SciploreResponseCode createAnonymousUser(String username, String remoteAddress){		
-		this.setUsername(username);		
-		this.setPassword(null);	
-		this.setLang(USER_DEFAULT_LANG);
-		this.setRegistrationdate(new GregorianCalendar().getTime());
-		this.setType(USER_TYPE_ANONYMOUS);
-		this.setRegistrationIPAddress(remoteAddress);
-		this.getSession().save(this);
-		
-		return new SciploreResponseCode(SciploreResponseCode.OK, "User created.");
-	}
+//	private  SciploreResponseCode createAnonymousUser(String username, String remoteAddress){		
+//		this.setUsername(username);		
+//		this.setPassword(null);	
+//		this.setLang(USER_DEFAULT_LANG);
+//		this.setRegistrationdate(new GregorianCalendar().getTime());
+//		this.setType(USER_TYPE_ANONYMOUS);
+//		this.setRegistrationIPAddress(remoteAddress);
+//		this.getSession().save(this);
+//		
+//		return new SciploreResponseCode(SciploreResponseCode.OK, "User created.");
+//	}
 	
 	private  SciploreResponseCode createExternalUser(String username, Short userType, String remoteAddress){		
 		this.setUsername(username);		
