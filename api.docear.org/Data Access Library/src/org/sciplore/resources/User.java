@@ -124,11 +124,11 @@ public class User extends Resource {
 	
 	@Column(nullable = true)
 	private String accessToken;
-	private Short allowBackup = 0;
-	private Short allowContentResearch = 0;
-	private Short allowInformationRetrieval = 0;
-	private Short allowUsageResearch = 0;
-	private Short allowRecommendations = 0;
+	private Short allowBackup = null;
+	private Short allowContentResearch = null;
+	private Short allowInformationRetrieval = null;
+	private Short allowUsageResearch = null;
+	private Short allowRecommendations= null;
 	
 	@Column(nullable = true)
 	private String remote_address;
@@ -467,7 +467,7 @@ public class User extends Resource {
 
 
 	public boolean isAllowBackup() {
-		return allowBackup>0;
+		return allowBackup != null && allowBackup>0;
 	}
 
 	public void setAllowBackup(boolean allowBackup) {
@@ -475,7 +475,7 @@ public class User extends Resource {
 	}
 
 	public boolean isAllowContentResearch() {
-		return allowContentResearch>0;
+		return allowContentResearch != null && allowContentResearch>0;
 	}
 
 	public void setAllowContentResearch(boolean allowContentResearch) {
@@ -483,7 +483,7 @@ public class User extends Resource {
 	}
 
 	public boolean isAllowInformationRetrieval() {
-		return allowInformationRetrieval>0;
+		return allowInformationRetrieval!=null && allowInformationRetrieval>0;
 	}
 
 	public void setAllowInformationRetrieval(boolean allowInformationRetrieval) {
@@ -491,7 +491,7 @@ public class User extends Resource {
 	}
 
 	public boolean isAllowUsageResearch() {
-		return allowUsageResearch>0;
+		return allowUsageResearch!=null && allowUsageResearch>0;
 	}
 
 	public void setAllowUsageResearch(boolean allowUsageResearch) {
@@ -499,7 +499,7 @@ public class User extends Resource {
 	}
 
 	public boolean isAllowRecommendations() {
-		return allowRecommendations>0;
+		return allowRecommendations!=null && allowRecommendations>0;
 	}
 
 	public void setAllowRecommendations(boolean allowRecommendations) {
