@@ -45,11 +45,20 @@ def main():
     query = """INSERT INTO tmp_rec_users(user_id) SELECT id FROM users WHERE id NOT IN (1, 2, 27)""";
     db.query(query)
     
-    #insert users and sets_total    
-    query = """INSERT INTO tmp_rec_users(user_id, sets_total) 
-            SELECT user_id, count(*) AS counter FROM recommendations_documents_set S 
-            WHERE user_id NOT IN (1, 2, 27) AND S.delivered IS NOT NULL AND (offline_evaluator IS NULL || offline_evaluator = 0) GROUP BY user_id""";
+    #update users with sets_total    
+    query = """UPDATE tmp_rec_users T JOIN 
+            (SELECT user_id, count(*) AS counter FROM recommendations_documents_set S 
+            WHERE user_id NOT IN (1, 2, 27) AND S.delivered IS NOT NULL AND (offline_evaluator IS NULL || offline_evaluator = 0) GROUP BY user_id) X
+            ON (X.user_id=T.user_id)
+            SET T.sets_total=X.counter""";
     db.query(query)
+
+# old and erroneous --> see fix above    
+#     #insert users and sets_total    
+#     query = """INSERT INTO tmp_rec_users(user_id, sets_total) 
+#             SELECT user_id, count(*) AS counter FROM recommendations_documents_set S 
+#             WHERE user_id NOT IN (1, 2, 27) AND S.delivered IS NOT NULL AND (offline_evaluator IS NULL || offline_evaluator = 0) GROUP BY user_id""";
+#     db.query(query)
     
     #insert recs_total
     query = """UPDATE tmp_rec_users X JOIN
