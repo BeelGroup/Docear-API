@@ -28,9 +28,10 @@ def main():
           `received_recs_x_days_ago` int(10) unsigned DEFAULT NULL,
           `stated_docear_on_x_days` int(10) unsigned DEFAULT NULL,
           `mindmaps_total` int(10) unsigned DEFAULT NULL,
+          `papers_total` int(10) unsigned DEFAULT NULL,
           `revisions_total` int(10) unsigned DEFAULT NULL,
           `active` int(10) unsigned DEFAULT NULL COMMENT '1 for users who have started docear within the past 30 days and registered at least 30 days earlier',
-          `max_mindmap_application_id` int(10) unsigned DEFAULT NULL,
+          `max_mindmap_application_id` int(10) unsigned DEFAULT NULL,          
           PRIMARY KEY (`id`),
           KEY `FK__rec_users_id` (`user_id`),
           CONSTRAINT `FK__rec_users_id` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
@@ -193,6 +194,13 @@ def main():
             GROUP BY M.user) Y
             ON (X.user_id = Y.user_id)
             SET X.mindmaps_total = Y.mm_counter, X.revisions_total = Y.rev_counter"""
+    db.query(query)
+    
+    #update papers_total and revisions_total
+    query = """UPDATE tmp_rec_users X JOIN
+            (SELECT user AS user_id, COUNT(distinct pdfhash) AS paper_counter from mindmaps_pdfhash P JOIN mindmaps M ON (P.mindmap_id = M.id) GROUP BY M.user) Y
+            ON (X.user_id = Y.user_id)
+            SET X.papers_total = Y.paper_counter"""
     db.query(query)
     
     #update active
