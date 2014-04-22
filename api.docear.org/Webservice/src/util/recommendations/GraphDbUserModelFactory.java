@@ -53,10 +53,8 @@ public class GraphDbUserModelFactory {
 				algId = algorithm.getId();
 			}
 			RecommendationCommons.logger.log("xml empty for user ["+user.getId()+"] and algorithm ["+algId+"]");
-		}
-		else {
-			processXmlModel(session);
-		}
+		}		
+		processXmlModel(session);		
 	}
 
 	private void processXmlModel(Session session) throws Exception {
