@@ -82,12 +82,11 @@ public class GraphDbUserModelFactory {
 
 		Searcher searcher = new Searcher();
 		userModelItems = extractKeywordsFromResponse(searcher, parser.getKeywords(), model.getAlgorithm());
+		userModelItems.addAll(extractReferencesFromResponse(session, searcher, parser.getReferences(), model.getAlgorithm()));
 		if (userModelItems == null || userModelItems.size() == 0) {
 			RecommendationCommons.logger.log("userModelItems empty for algorithm["+model.getAlgorithm().getId()+"] and xml:\n" + xml); 
 			return;
 		}
-		
-		userModelItems.addAll(extractReferencesFromResponse(session, searcher, parser.getReferences(), model.getAlgorithm()));
 
 		Collections.sort(userModelItems, new Comparator<UserModelItem>() {
 			public int compare(UserModelItem o1, UserModelItem o2) {
