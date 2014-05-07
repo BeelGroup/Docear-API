@@ -65,7 +65,8 @@ public class RecommendationsDocumentsSetQueries {
 		crit.add(Restrictions.isNotNull("delivered"));
 		crit.setProjection(Projections.rowCount());
 		
-		return ((Number) crit.uniqueResult()).intValue();
+		//substract 1 since the current dataset should not be counted (delivered is already set)
+		return ((Number) crit.uniqueResult()).intValue()-1;
 	}
 
 }
