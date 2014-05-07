@@ -230,13 +230,25 @@ public class GraphDbUserModelFactory {
 			model.setUmFeatureWeightTop3Avg(model.getUmFeatureWeightTop3Avg() / 3);
 			model.setUmFeatureWeightLast3Avg(model.getUmFeatureWeightLast3Avg() / 3);
 		}
+		else {
+			model.setUmFeatureWeightTop3Avg(null);
+			model.setUmFeatureWeightLast3Avg(null);
+		}
 		if (userModelItems.size() >= 5) {
 			model.setUmFeatureWeightTop5Avg(model.getUmFeatureWeightTop5Avg() / 5);
 			model.setUmFeatureWeightLast5Avg(model.getUmFeatureWeightLast5Avg() / 5);
 		}
+		else {
+			model.setUmFeatureWeightTop5Avg(null);
+			model.setUmFeatureWeightLast5Avg(null);
+		}
 		if (userModelItems.size() >= 10) {
 			model.setUmFeatureWeightTop10Avg(model.getUmFeatureWeightTop10Avg() / 10);
 			model.setUmFeatureWeightLast10Avg(model.getUmFeatureWeightLast10Avg() / 10);
+		}
+		else {
+			model.setUmFeatureWeightTop10Avg(null);
+			model.setUmFeatureWeightLast10Avg(null);
 		}
 
 	}
