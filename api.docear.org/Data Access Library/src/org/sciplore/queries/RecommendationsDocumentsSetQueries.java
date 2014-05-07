@@ -7,6 +7,7 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.sciplore.resources.RecommendationsDocumentsSet;
 import org.sciplore.resources.User;
+import org.sciplore.tools.SimpleRestrictions;
 
 public class RecommendationsDocumentsSetQueries {
 
@@ -57,10 +58,11 @@ public class RecommendationsDocumentsSetQueries {
 		return (RecommendationsDocumentsSet) crit.uniqueResult();
 	}
 	
-	public static Integer getCount(Session session, User user) {
+	public static Integer getCountDeliveredBefore(Session session, User user) {
 		Criteria crit = session.createCriteria(RecommendationsDocumentsSet.class);
 		crit.add(Restrictions.eq("user", user));
 		crit.add(Restrictions.eq("offlineEvaluator", false));
+		crit.add(Restrictions.isNotNull("delivered"));
 		crit.setProjection(Projections.rowCount());
 		
 		return ((Number) crit.uniqueResult()).intValue();

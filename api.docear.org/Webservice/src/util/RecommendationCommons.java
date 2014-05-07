@@ -644,7 +644,7 @@ public class RecommendationCommons {
 		long timeSinceRegistration = System.currentTimeMillis() - recDocSet.getUser().getRegistrationdate().getTime();
 		recDocSet.setUserDaysSinceRegistered((int) (timeSinceRegistration / 1000 / 3600 / 24));
 		
-		recDocSet.setUserSetsDelivered(RecommendationsDocumentsSetQueries.getCount(session, recDocSet.getUser()));
+		recDocSet.setUserSetsDelivered(RecommendationsDocumentsSetQueries.getCountDeliveredBefore(session, recDocSet.getUser()));
 		
 		for (RecommendationsDocuments recDoc : recDocSet.getRecommendationsDocuments()) {
 			recDoc.setShownBefore(RecommendationsDocumentsQueries.getShownBefore(session, recDoc).intValue());
