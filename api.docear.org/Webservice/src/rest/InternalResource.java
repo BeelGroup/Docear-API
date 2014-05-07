@@ -1,7 +1,6 @@
 package rest;
 
 import java.io.InputStream;
-import java.math.BigInteger;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -31,13 +30,6 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.queryparser.classic.QueryParser;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.util.Version;
 import org.docear.googleparser.GoogleScholarParser;
 import org.docear.googleparser.WebSearchResult;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
@@ -45,7 +37,6 @@ import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.hibernate.FlushMode;
-import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.mrdlib.index.Searcher;
@@ -73,6 +64,7 @@ import org.sciplore.resources.DocumentsPdfHash;
 import org.sciplore.resources.GoogleDocumentQuery;
 import org.sciplore.resources.MindmapsPdfHash;
 import org.sciplore.resources.Person;
+import org.sciplore.resources.RecommendationsDocumentsSet;
 import org.sciplore.resources.User;
 
 import util.BibtexCommons;
@@ -84,6 +76,7 @@ import util.Tools;
 import util.UserCommons;
 import util.UserSessionProvider;
 import util.UserSessionProvider.UserSession;
+import util.recommendations.GraphDbUserModelFactory;
 
 @Path("/internal")
 public class InternalResource {
@@ -94,48 +87,26 @@ public class InternalResource {
 	private static String ipChani = "";
 	
 	@GET	
-	@Path("/test")
-	public Response test(@Context UriInfo ui, @Context HttpServletRequest request) {		
+	@Path("/test/{id}")
+	public Response test(@Context UriInfo ui, @Context HttpServletRequest request, @PathParam(value = "id") int id) {		
 		final Session session = SessionProvider.sessionFactory.openSession();
 		try {			
-//			test("text:joeran text:finanzierung text:fremdkapital text:sichern text:optionen text:übersicht text:aktuell text:marketing text:recommender text:infrastruktur text:docear text:parser text:recs text:server text:recommendation text:sachsen text:pdf text:naher text:anhalt text:venture text:adjustments text:mäßig text:diss text:offline text:misc text:schreiben text:retrieval text:verlage text:1st text:zukunft text:ventures.com text:indexer text:forschung text:interessant text:stiftungen text:sponsored text:flood text:evaluator text:email text:scholar text:capital text:langfristig text:todos text:google text:nutzer text:www.hp text:labels text:captcha text:hackfwd.com text:outsorcing text:workflow text:www.bvp.com text:publish text:gewinnen text:ctrs text:möglichst text:fix text:tweaks text:journals text:recommendations text:decent text:notfallplan text:breaker text:neue text:surfstick text:angels text:versicherungen text:nutzern text:bmp text:alt text:evaluating text:werbung text:www.holtzbrinck.com text:finden text:www.holtzbrinck text:webservice text:bekommen text:todo text:laufen text:bugs text:umsatz text:future text:plattformen text:system text:3rd text:user text:companyinfo text:vielen text:viele text:brandenburg text:database text:logging text:ziel text:stefan text:paper text:timeout text:eigener text:help text:cbf text:store text:lassen text:user's text:mind text:bei text:jöran text:januar text:infrastructure text:dumont text:titles text:users text:http text:pdfs text:bibtex text:last_notification text:von text:www.intel.com text:maps text:posters text:papers text:bund text:frequencies text:beta8 text:stars text:blacklisted text:website text:business text:index text:person text:implement text:adding text:happens text:ctr text:much text:results text:timestamp text:hash text:clicked text:wir text:too text:table text:systems text:meta text:index.htm text:parsing text:xref text:document_title text:folded text:artikel text:unified text:clicks text:displaying text:add text:index.php text:für text:literature text:usability text:map text:get text:ignore text:index.html text:holding text:user_applications text:unregistered text:nicht text:verlinkte text:die text:dfg text:freeplane text:stop_word text:creator text:illustration text:presentation text:keyword text:parscit text:trigger text:registration text:hartz4 text:ich text:hashs text:optimize text:analyse text:irrelvant text:haben text:dateien text:accuracy text:concept text:citations text:berlin text:improve text:extraction text:nodes text:recommend text:instad text:passwort text:calculate text:moved text:monitoring text:wievielen text:nur text:entries text:types text:auch text:fulltextid text:prototypen.html text:how text:proxy text:title text:pappers text:wants text:2nd text:modelling text:opened text:detailid text:invalid text:sync text:machtes text:bug text:habe text:weilsie text:auf text:schließ text:paper.was text:empfehlungen text:graphdb text:tabelle text:einzahlen text:dlib text:sind text:müssen.und text:diplomiertem text:what text:sessions text:dbtotal text:beyond text:literaturordner text:titel text:der text:sindwir text:organic text:davon text:idf text:wieviele text:highlight text:document_id text:produktdesigner text:annotations text:intervall text:zuschuss text:analyze text:hochgeschoben text:gender text:kannst text:muss text:document text:ribbons text:internal text:oder text:node text:service text:und text:euro text:dsl text:nutzerein text:vertrag text:zypern text:reingucken text:null text:extrahiertem text:ist text:papern text:aber text:algorithm text:registered text:read text:setzen text:enhalten text:dass text:eine text:fachrichtung text:downloader text:header text:merkwürdigkeiten text:documentid text:edited text:update text:vielleicht text:runterladen text:parsed text:sein text:sollten text:annotation text:workspace text:never text:vermögen text:flag text:produktdesign text:startup text:machen text:process text:bookmarks text:webserver text:gehts text:influence text:method text:different text:search text:assume text:löschen text:falsches text:privater text:mit text:daad text:loged text:ego text:gleichen text:checker text:info text:shown text:bloß text:data text:mindmaps text:grüße text:benutzt text:referenzierte text:e.g text:text text:tech text:neu text:deleting text:sense text:verlinken text:das text:holistic text:anzahlen text:fixing text:wieder text:eingetragen text:dann text:model text:monat text:irgendwo text:lösung text:marcel text:volltext text:neuen text:conference text:seltsam text:abgeschaltet text:speichern text:maximum text:insgesamt text:filtering text:nochmal text:wundern text:decides text:wenn text:metadaten text:mal text:temporäre text:prototypen text:send text:referenzen text:dokumente text:hallo text:already text:sie text:keine text:classifying text:bisherige text:empfohlen text:aktiviert text:aufgefallen text:public text:when text:hin text:4th text:zuordnung text:created text:ein text:drin text:mehrfach text:hashes text:observation text:wieso text:lücken text:additional text:age text:prozentuale text:performance text:leichter text:structure text:zwischen text:easier text:übersehen text:eigentlich text:zusätzlich text:adjustment text:parse text:storing text:cancel text:check text:existiert text:immer text:duplicates text:connects text:mache text:absolutely text:bag text:gmbh text:use text:abend text:query text:inhalt text:förderung text:bibliographic text:algorithmus text:als text:classify text:hast text:collaborative text:turned text:downloading text:seite text:seitdem text:opens text:ziemlich text:vermutlich text:work text:entweder text:deliver text:wichtig text:finished text:ids text:sehen text:sammeln text:revisions text:sollen text:user’s text:incoming text:datenbank text:basierend text:convert text:gern text:etwas text:möglich text:überhaupt text:otherwise text:minuten text:mitglieder text:paar text:statistik text:still text:date text:real text:wurden text:ask text:meinen text:teste text:uns text:erzeugt text:counting text:mehr text:fehler text:letzte text:duplicate text:ranks text:erstellt text:sonst text:darüber text:falls text:einen text:unsere text:eher text:eigenen text:falle text:erhalten text:unserer text:einem text:werden text:sql text:wie text:jetzt text:wenige text:während text:make text:removal text:haut text:collect text:save text:zum text:url text:maybe text:unterschiede text:werte text:gesamten text:mich text:anhand text:kaum text:gemacht text:unterschiedliche text:join text:number text:displayed text:unterschiedlichen text:gerade text:wenig text:link text:den text:heute text:über");
-//			test("references:dcr_doc_id_12755846^97242.0 references:dcr_doc_id_12769384^41797.0 references:dcr_doc_id_6026571^853.0 text:gas^4.4813547 text:production^3.0256474 text:natural^2.1239343 text:synthetic^2.045223 text:vandermeijden^1.9716612 text:gasiﬁer^1.7491374 text:biomass^1.3092216 text:bed^1.0892586 text:sng^1.0445466 text:allothermal^1.0033104 text:documents text:dry^0.98150617 text:technology^0.90468514 text:coal^0.82221675 text:biollaz^0.78567594 text:review_kopycinsky^0.78567594 text:schilhauer^0.78567594 text:producer^0.7439212 text:steam^0.69042695 text:wood^0.6170586 text:sulphur^0.5485504 text:air^0.51869047 text:oil^0.5170379 text:methanation^0.47721237 text:removed^0.46796024 text:material^0.46470514 text:heat^0.44490322 text:tar^0.44256753 text:combustor^0.43480498 text:stripper^0.42938468 text:olga^0.39687 text:fig^0.39375135 text:riser^0.3872543 text:heated^0.35774627 text:milena^0.33428213 text:low^0.31542808 text:ﬂuidized^0.31373155 text:ﬂue^0.31269318 text:table^0.2942062 text:based^0.2871497 text:gasiﬁers^0.28673875 text:cleaning^0.28252897 text:concentration^0.28078845 text:dust^0.2758703 text:calculated^0.27081975 text:removal^0.26911142 text:carbon^0.2602304 text:pre^0.25802752 text:section^0.25242472 text:fuel^0.2515773 text:absorber^0.24737337 text:operated^0.24737337 text:cfb^0.24561659 text:water^0.23609044 text:gasiﬁcation^0.23269832 text:char^0.23235257 text:particles^0.23235257 text:fluidized^0.22853743 text:scale^0.22798336 text:leaving^0.22718143 text:ecn^0.2269223 text:temperature^0.22477642 text:tars^0.22407858 text:converted^0.21986036 text:ash^0.21548003 text:typically^0.21259026 text:heavy^0.21133995 text:fed^0.21020252 text:formation^0.2084654 text:soot^0.2084654 text:approximately^0.1943083 text:relation^0.19194621 text:bubbling^0.19169584 text:chloride^0.18852381 text:cooled^0.17994784 text:reactor^0.17877206 text:light^0.17849259 text:input^0.17583503 text:assumed^0.17036587 text:figs^0.16927268 text:stage^0.16927268 text:balance^0.16638148 text:conversion^0.15490171 text:feeding^0.15490171 text:heats^0.15490171 text:lab^0.15490171 text:leaves^0.15490171 text:nitrogen^0.15490171 text:silvagas^0.15490171 text:velocity^0.15490171 text:vertical^0.15490171 text:clean^0.15478368 text:combustion^0.15369375 text:catalysts^0.153094 text:sorbent^0.15060356 text:zno^0.15060356 text:neglected^0.15050814 text:prevent^0.14995077 text:study^0.14799035 text:cyclone^0.14505285 text:remaining^0.14505285 text:heating^0.14340985 text:consumption^0.14085104 text:relations^0.1403508 text:methane^0.13914359 text:enters^0.13762984 text:added^0.13577548 text:measured^0.1351394 text:selected^0.13224798 text:hcl^0.12980701 text:basis^0.12933305 text:equilibrium^0.12792182 text:required^0.12515192 text:ashes^0.123426676 text:4ch^0.12035797 text:dhr^0.12035797 text:mol^0.12035797 text:dissolved^0.12016797 text:larger^0.11900918 text:mixture^0.11850361 text:inlet^0.1153771 text:processes^0.1153771 text:regenerative^0.1153771 text:published^0.11424498 text:systems^0.10617514 text:ﬁrst^0.10576498 text:energy^0.104538135 text:entrained^0.10394582 text:flow^0.10394582 text:cleaned^0.10234946 text:prior^0.10234946 text:reactors^0.10234946 text:dew^0.09986196 text:bag^0.09946685 text:house^0.09946685 text:ﬁlter^0.09946685 text:compounds^0.098830774 text:organic^0.098830774 text:remove^0.098830774 text:components^0.0970698 text:cooling^0.09674787 text:gwth^0.09422937 text:results^0.09405576 text:scrubbing^0.09117199 text:ratios^0.08810743 text:raw^0.08796049 text:guard^0.08228445 text:values^0.078813165 text:basic^0.07745086 text:battelle^0.07745086 text:burnt^0.07745086 text:carry^0.07745086 text:causing^0.07745086 text:chamber^0.07745086 text:content^0.07745086 text:create^0.07745086 text:data^0.07745086 text:degasify^0.07745086 text:degasiﬁed^0.07745086 text:downcomer^0.07745086 text:estimate^0.07745086 text:experimental^0.07745086 text:hole^0.07745086 text:hot^0.07745086 text:leading^0.07745086 text:leakage^0.07745086 text:leaking^0.07745086 text:linear^0.07745086 text:located^0.07745086 text:loss^0.07745086 text:measurement^0.07745086 text:minimizing^0.07745086 text:principles^0.07745086 text:purging^0.07745086 text:reduced^0.07745086 text:regime^0.07745086 text:sand^0.07745086 text:separate^0.07745086 text:settling^0.07745086 text:shown^0.07745086 text:similar^0.07745086 text:solids^0.07745086 text:superheated^0.07745086 text:turbulent^0.07745086 text:vol^0.07745086 text:ﬂuidization^0.07745086 text:compositions^0.07651146 text:types^0.075947404");
-//			test("references:dcr_doc_id_7632257^178124.69 references:dcr_doc_id_9140860^115781.055 references:dcr_doc_id_1283784^13396.728 text:innate^101.29845 text:immunity^79.6203 text:immune^74.02773 text:imd^60.00574 text:drosophila^55.512535 text:adaptive^48.69232 text:ubiquitination^45.216934 text:caspase^41.039707 text:iap^34.26688 text:bumble^32.68712 text:humoral^30.428432 text:activate^25.695845 text:cells^25.05623 text:suppress^24.41345 text:cleavage^23.215286 text:diap2^23.04944 text:signaling^22.902084 text:bees^22.51943 text:impairs^20.643127 text:pathway^20.273888 text:pgrp^18.637157 text:k63^18.088648 text:flying^16.88896 text:ubiquitin^14.470883 text:mediated^13.350337 text:activation^12.976692 text:binding^12.573263 text:linking^12.418453 text:crucial^9.933969 text:infection^9.694735 text:cd4^9.394518 text:head12^9.214762 text:peptidoglycan^8.751259 text:prr's^8.430329 text:transducing^8.06188 text:lymphocytes^7.8517075 text:proteasome^7.848605 text:learning^7.118843 text:mechanisms^7.056616 text:suppression^6.9736285 text:tlrs^6.6476917 text:cd25^6.5257487 text:immunological^6.451488 text:dredd^6.192816 text:mice^5.9373765 text:compensation^5.89845 text:tlr^5.7914824 text:decoy^5.751255 text:regulation^5.570263 text:prg^5.39705 text:polyubiquitination^5.3836703 text:tak1^5.2659416 text:cd8^5.1687303 text:inﬂammatory^5.1195526 text:regulators^5.097805 text:pamps^5.0792937 text:nude^4.877123 text:psychoneuroimmunology^4.7991786 text:rag^4.774462 text:assays^4.704334 text:unre^4.372858 text:knockout^4.324676 text:response^4.237297 text:cytokine^4.167061 text:rejection^4.0790944 text:monoclonal^3.9284067 text:vivo^3.8579116 text:cytokines^3.8541338 text:negative^3.8351004 text:secreted^3.7807586 text:relish^3.7314749 text:receptor^3.6636806 text:antibacterial^3.5943768 text:antigen^3.4471374 text:strained^3.372751 text:control^3.3264534 text:free^3.322385 text:antibodies^3.3052125 text:intracellular^3.2731445 text:regula^3.2345643 text:anti^3.183718 text:storm^3.001956 text:depletion^2.948721 text:protein^2.9466102 text:soluble^2.9346938 text:bypass^2.90904 text:replicated^2.8229845 text:collaborate^2.7534935 text:peptides^2.7343764 text:endocrine^2.6962078 text:hosts^2.6791275 text:reciprocal^2.6778035 text:signal^2.6644096 text:inhibitor^2.6242516 text:catalytic^2.6071687 text:recognising^2.5902963 text:intro^2.4909463 text:nucleus^2.3877258 text:tagging^2.3664663 text:tors^2.3589606 text:node^2.3264308 text:wild^2.283571 text:acts^2.2659862 text:inhibition^2.215401 text:acute^2.1990855 text:perspectives^2.1439488 text:speciﬁc^2.111102 text:regulatory^2.0614688 text:prime^2.0242996 text:recognition^1.9974319 text:survival^1.9215761 text:early^1.920943 text:interactions^1.9071712 text:behavioural^1.8998666 text:proteins^1.8660328 text:introduces^1.8094562 text:host^1.7947191 text:encoding^1.7394753 text:genes^1.7087768 text:fashion^1.7047088 text:injection^1.6895555 text:protect^1.6510972 text:three^1.629766 text:neural^1.5645515 text:conditioning^1.5372403 text:role^1.4602102 text:phase^1.4510623 text:constant^1.4303306 text:ins^1.4144577 text:amounts^1.3886105 text:cell^1.3805757 text:modification^1.354015 text:conclusions^1.2548293 text:positive^1.1911591 text:exists^1.1833968 text:acknowledgments^1.1768669 text:bacterial^1.1247596 text:child^1.1216121 text:charge^1.1108193 text:induced^0.9904104 text:treatment^0.95963293 text:distinct^0.90127295 text:discussion^0.9009765 text:procedures^0.8691755 text:training^0.8234179 text:reported^0.79313374 text:select^0.790969 text:involves^0.7870181 text:what^0.76462585 text:future^0.7554587");			
+			User user = new User(session).getUserByEmailOrUsername("pdfdownloader");
+			if (!ResourceCommons.authenticate(request, user)) {
+				return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "no valid access token.");
+			}
+			
+			RecommendationsDocumentsSet set = (RecommendationsDocumentsSet) session.get(RecommendationsDocumentsSet.class, id);			
+			GraphDbUserModelFactory factory = new GraphDbUserModelFactory(session, set.getUser(), set.getUserModel().getAlgorithm());
+			String xml = factory.getXml();
+			System.out.println(xml);
+			
 		}
 		catch(Exception e) {
 			e.printStackTrace();
 		}
 		finally {
     		Tools.tolerantClose(session);
-		}
-		
-		return UserCommons.getHTTPStatusResponse(Status.OK, "ok");
-	}
-	
-	@GET
-	@Path("/testAlg")
-	public Response testAlg(@Context UriInfo ui, @Context HttpServletRequest request) {
-		final Session session = SessionProvider.sessionFactory.openSession();
-		try {
-			SQLQuery query = session.createSQLQuery("SELECT DISTINCT user_id FROM recommendations_documents_set WHERE created IS NOT NULL AND created >='2013-09-01' ORDER BY created DESC");
-			List<BigInteger> result = query.list();		
-			
-			int counter = 0;
-			for (BigInteger userId : result) {
-				RecommendationCommons.logger.log("computing test recommendation for user ["+userId+"] ("+counter+" of "+result.size()+")");
-				RecommendationCommons.computeForSingleUser(userId.intValue(), 0);
-				try {
-					Thread.sleep(10000);
-				}
-				catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-				
-				counter++;
-			}
-		}
-		finally {
-			Tools.tolerantClose(session);
 		}
 		
 		return UserCommons.getHTTPStatusResponse(Status.OK, "ok");
