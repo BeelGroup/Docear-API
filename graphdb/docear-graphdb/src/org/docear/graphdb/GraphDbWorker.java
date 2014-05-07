@@ -251,9 +251,10 @@ public class GraphDbWorker {
 		return getUserNodesInfo(getRelevantNodes(userId, args, userModel, pdfHash), args);
 	}
 	
-	public String getUserText(int userId, AlgorithmArguments args, UserModel userModel, String pdfHash) {
-		return getUserText(getRelevantNodes(userId, args, userModel, pdfHash));
-	}
+	// never called - deactivating for now
+//	public String getUserText(int userId, AlgorithmArguments args, UserModel userModel, String pdfHash) {
+//		return getUserText(getRelevantNodes(userId, args, userModel, pdfHash));
+//	}
 	
 	public void fillUserReferences(int userId, AlgorithmArguments args, UserModel userModel, String pdfHash) {		
 		extractReferences(getRelevantNodes(userId, args, userModel, pdfHash), userModel);
