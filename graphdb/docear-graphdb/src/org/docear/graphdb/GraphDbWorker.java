@@ -159,7 +159,8 @@ public class GraphDbWorker {
 					appendSiblings(revNode, nodes, ((Integer) args.getArgument(AlgorithmArguments.DATA_ELEMENT_TYPE) == 2), minExcludeDate);
 				}
 								
-				nodes.add(revNode.getNode());				
+				nodes.add(revNode.getNode());
+				session.addToNodesBeforeExpanded(revNode.getNode());
 				
 				// only depth 1 for now
 				if (new Integer(1).equals(args.getArgument(AlgorithmArguments.CHILDREN))) {
@@ -175,9 +176,10 @@ public class GraphDbWorker {
 			}
 		}
 		
-		//remove demo nodes
+		//remove demo nodes & set Variable for research
 		Set<Node> foundDemoNodes = new HashSet<Node>();		
 		for (Node node : nodes) {
+			session.addToNodesExpanded(node);
 			if (node.hasProperty("ID") && DEMO_NODES.contains(node.getProperty("ID").toString())) {
 				foundDemoNodes.add(node);
 				amount--;
@@ -188,27 +190,14 @@ public class GraphDbWorker {
 		}
 		DocearLogger.info("demo-nodes: "+foundDemoNodes.size()+" of "+nodes.size());
 		
-		saveNodesForVariablesInSession(session, nodeSet, nodes);
-		
 		Integer method = (Integer) args.getArgument(AlgorithmArguments.ELEMENT_SELECTION_METHOD); 		
 		if (new Integer(2).equals(args.getArgument(AlgorithmArguments.DATA_ELEMENT)) && method != null && method > 0) 
 			// get randomly the number of last days for which the nodes will be considered
 			GraphDbHelper.filterByDaysSinceLastForNodes(nodes, args, userModel);
 		
 		return nodes;
-	}
+	}	
 	
-	//node references have to be saved for Terms and References - since both collections can intersect, we need to collect both in one set and evaluate later
-	private void saveNodesForVariablesInSession(QuerySession session, Collection<NodeRevision> nodeSetBeforeExpanded, Set<Node> nodeSetExpanded) {
-		for (NodeRevision nodeRev : nodeSetBeforeExpanded) {
-			session.addToNodesBeforeExpanded(nodeRev.getNode());
-		}
-		
-		for (Node node : nodeSetExpanded) {
-			session.addToNodesExpanded(node);
-		}
-	}
-
 	private void addTotalCountVariables(Collection<Node> allMaps, AlgorithmArguments args, UserModel userModel, final Long minExcludeDate) {		
 		userModel.addVariable("mind-map_count_total", ""+allMaps.size());
 				

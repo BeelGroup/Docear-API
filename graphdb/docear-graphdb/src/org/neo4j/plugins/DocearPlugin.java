@@ -131,11 +131,10 @@ public class DocearPlugin extends ServerPlugin {
 		userModel.addVariable("feature_count_reduced_unique", "" + getVariableSum(userModel, "feature_count_reduced_unique"));
 	}
 	
-	private void addNodeAmountVariablesFromSession(QuerySession session, UserModel userModel) {
+	private void addNodeAmountVariablesFromSession(QuerySession session, UserModel userModel) {		
 		userModel.addVariable("element_amount_nodes", String.valueOf(session.getNodeAmountBeforeExpanded()));
-		userModel.addVariable("node_count_before_expanded", String.valueOf(session.getNodeAmountBeforeExpanded()));
+		userModel.addVariable("node_count_before_expanded", String.valueOf(session.getNodeAmountBeforeExpanded()));		
 		userModel.addVariable("node_count_expanded", String.valueOf(session.getNodeAmountExpanded()));
-
 	}
 
 	private Integer getVariableSum(UserModel userModel, String varName) {
