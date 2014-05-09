@@ -7,6 +7,7 @@ import org.apache.lucene.index.Term;
 import org.docear.Logging.DocearLogger;
 import org.docear.database.AlgorithmArguments;
 import org.docear.graphdb.GraphDbWorker;
+import org.docear.graphdb.QuerySession;
 import org.docear.xml.Keyword;
 import org.docear.xml.Keywords;
 import org.docear.xml.UserModel;
@@ -22,10 +23,10 @@ public class TFIDFKeywordGenerator extends TFKeywordGenerator {
 	}
 	
 	@Override
-	public void fillKeywords(Integer userId, AlgorithmArguments args, UserModel userModel, String excludePdfHash) throws Exception {
+	public void fillKeywords(QuerySession session, Integer userId, AlgorithmArguments args, UserModel userModel, String excludePdfHash) throws Exception {
 		long sTime = System.currentTimeMillis();		
 
-		super.fillKeywords(userId, args, userModel, excludePdfHash);
+		super.fillKeywords(session, userId, args, userModel, excludePdfHash);
 		setIDFFromMindmaps(userModel.getKeywords());
 
 		DocearLogger.info("tfidf-terms for user: "+userId+" (" + (System.currentTimeMillis() - sTime) + ")");	

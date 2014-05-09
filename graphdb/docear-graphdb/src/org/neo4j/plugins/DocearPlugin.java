@@ -3,6 +3,7 @@ package org.neo4j.plugins;
 import org.docear.Logging.DocearLogger;
 import org.docear.database.AlgorithmArguments;
 import org.docear.graphdb.DocearReferencesGenerator;
+import org.docear.graphdb.QuerySession;
 import org.docear.lucene.TFIDFKeywordGenerator;
 import org.docear.lucene.TFKeywordGenerator;
 import org.docear.query.ResultGenerator;
@@ -16,6 +17,8 @@ import org.neo4j.server.plugins.ServerPlugin;
 import org.neo4j.server.plugins.Source;
 
 public class DocearPlugin extends ServerPlugin {
+	private QuerySession session = new QuerySession();
+	
 	@Name("test")
 	@Description("test specific algorithm arguments")
 	@PluginTarget(GraphDatabaseService.class)
@@ -60,7 +63,7 @@ public class DocearPlugin extends ServerPlugin {
 		UserModel userModel = new UserModel();
 		if (data_element_type == 0 || data_element_type == 1) {
 			try {
-				fillKeywords(userId, args, userModel, excludeHash);
+				fillKeywords(session, userId, args, userModel, excludeHash);
 			}
 			catch (Exception e) {
 				DocearLogger.error(e);
@@ -68,13 +71,14 @@ public class DocearPlugin extends ServerPlugin {
 		}
 		if (data_element_type == 0 || data_element_type == 2) {
 			try {
-				fillReferences(userId, args, userModel, excludeHash);
+				fillReferences(session, userId, args, userModel, excludeHash);
 			}
 			catch (Exception e) {
 				DocearLogger.error(e);
 			}
 		}
-
+		
+		
 		DocearLogger.info("before");
 
 		if (userModel.getKeywords().isEmpty() && userModel.getReferences().isEmpty()) {
@@ -84,6 +88,7 @@ public class DocearPlugin extends ServerPlugin {
 
 		try {
 			summarizeVariables(userModel);
+			addNodeAmountVariablesFromSession(session, userModel);
 
 			Integer no_days_since_max_nodes = null;
 			Integer no_days_since_max_maps = null;
@@ -124,6 +129,12 @@ public class DocearPlugin extends ServerPlugin {
 		userModel.addVariable("feature_count_expanded_unique", "" + getVariableSum(userModel, "feature_count_expanded_unique"));
 		userModel.addVariable("feature_count_reduced", "" + getVariableSum(userModel, "feature_count_reduced"));
 		userModel.addVariable("feature_count_reduced_unique", "" + getVariableSum(userModel, "feature_count_reduced_unique"));
+	}
+	
+	private void addNodeAmountVariablesFromSession(QuerySession session, UserModel userModel) {
+		userModel.addVariable("element_amount_nodes", String.valueOf(session.getNodeAmountBeforeExpanded()));
+		userModel.addVariable("node_count_before_expanded", String.valueOf(session.getNodeAmountBeforeExpanded()));
+		userModel.addVariable("node_count_expanded", String.valueOf(session.getNodeAmountExpanded()));
 
 	}
 
@@ -148,18 +159,18 @@ public class DocearPlugin extends ServerPlugin {
 		return value;
 	}
 
-	private void fillKeywords(Integer userId, AlgorithmArguments args, UserModel userModel, String excludeHash) throws Exception {
+	private void fillKeywords(QuerySession session, Integer userId, AlgorithmArguments args, UserModel userModel, String excludeHash) throws Exception {
 		ResultGenerator generator = new TFKeywordGenerator(args);
 		if (((Integer) args.getArgument(AlgorithmArguments.WEIGHTING_SCHEME)) == 2 && ((Integer) args.getArgument(AlgorithmArguments.WEIGHT_IDF)) == 1) {
 			generator = new TFIDFKeywordGenerator(args);
 			DocearLogger.info("using TFIDF");
 		}
 
-		generator.generateResultsForUserModel(userId, userModel, excludeHash);
+		generator.generateResultsForUserModel(session, userId, userModel, excludeHash);
 	}
 
-	public void fillReferences(Integer userId, AlgorithmArguments args, UserModel userModel, String excludeHash) throws Exception {
+	public void fillReferences(QuerySession session, Integer userId, AlgorithmArguments args, UserModel userModel, String excludeHash) throws Exception {
 		ResultGenerator generator = new DocearReferencesGenerator(args);
-		generator.generateResultsForUserModel(userId, userModel, excludeHash);
+		generator.generateResultsForUserModel(session, userId, userModel, excludeHash);
 	}
 }

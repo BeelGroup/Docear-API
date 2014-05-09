@@ -23,10 +23,10 @@ public class DocearReferencesGenerator implements ResultGenerator {
 	}
 
 	@Override
-	public void generateResultsForUserModel(int userId, UserModel userModel, String excludePdfHash) throws Exception {
+	public void generateResultsForUserModel(QuerySession session, int userId, UserModel userModel, String excludePdfHash) throws Exception {
 		long sTime = System.currentTimeMillis();
 		try {			
-			worker.fillUserReferences(userId, args, userModel, excludePdfHash);
+			worker.fillUserReferences(session, userId, args, userModel, excludePdfHash);
 			if(userModel.getReferences().getReferences().size() == 0) {
 				throw new Exception("not enough data gathered for (" + args + ")");
 			}

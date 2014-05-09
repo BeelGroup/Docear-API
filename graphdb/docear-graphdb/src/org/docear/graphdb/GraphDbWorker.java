@@ -122,7 +122,7 @@ public class GraphDbWorker {
 		this.database = graphDb;
 	}
 	
-	public Set<Node> getRelevantNodes(int userId, AlgorithmArguments args, UserModel userModel, String excludePdfHash) {
+	public Set<Node> getRelevantNodes(QuerySession session, int userId, AlgorithmArguments args, UserModel userModel, String excludePdfHash) {
 		Collection<Node> allUserMaps = getMapsForUser(userId, ALGORITHM_FOR_ALL_USER_ELEMENTS, userModel);
 		Long minExcludeDate = null;
 		// needed for offline evaluator: skip this paper and all nodes that have been created after the user has used this paper
@@ -142,7 +142,7 @@ public class GraphDbWorker {
 		Iterator<NodeRevision> iter = nodeSet.iterator();		
 			
 		// get random number from size+1 --> amount==0 means take all, everything else means the size itself
-		int amount = new Random().nextInt(Math.min(nodeSet.size(), AlgorithmArguments.MAX_ELEMENT_AMOUNT)+1);
+		int amount = new Random().nextInt(Math.min(nodeSet.size(), AlgorithmArguments.MAX_ELEMENT_AMOUNT)+1);		
 				
 		if (amount > 0) {
 			if (amount > nodeSet.size()) {
@@ -188,9 +188,7 @@ public class GraphDbWorker {
 		}
 		DocearLogger.info("demo-nodes: "+foundDemoNodes.size()+" of "+nodes.size());
 		
-		userModel.addVariable("element_amount_nodes", String.valueOf(amount));
-		userModel.addVariable("node_count_before_expanded", String.valueOf(amount));
-		userModel.addVariable("node_count_expanded", String.valueOf(nodes.size()));
+		saveNodesForVariablesInSession(session, nodeSet, nodes);
 		
 		Integer method = (Integer) args.getArgument(AlgorithmArguments.ELEMENT_SELECTION_METHOD); 		
 		if (new Integer(2).equals(args.getArgument(AlgorithmArguments.DATA_ELEMENT)) && method != null && method > 0) 
@@ -200,6 +198,17 @@ public class GraphDbWorker {
 		return nodes;
 	}
 	
+	//node references have to be saved for Terms and References - since both collections can intersect, we need to collect both in one set and evaluate later
+	private void saveNodesForVariablesInSession(QuerySession session, Collection<NodeRevision> nodeSetBeforeExpanded, Set<Node> nodeSetExpanded) {
+		for (NodeRevision nodeRev : nodeSetBeforeExpanded) {
+			session.addToNodesBeforeExpanded(nodeRev.getNode());
+		}
+		
+		for (Node node : nodeSetExpanded) {
+			session.addToNodesExpanded(node);
+		}
+	}
+
 	private void addTotalCountVariables(Collection<Node> allMaps, AlgorithmArguments args, UserModel userModel, final Long minExcludeDate) {		
 		userModel.addVariable("mind-map_count_total", ""+allMaps.size());
 				
@@ -247,17 +256,12 @@ public class GraphDbWorker {
 		}
 	}
 
-	public List<NodeInfo> getUserNodesInfo(int userId, AlgorithmArguments args, UserModel userModel, String pdfHash) {
-		return getUserNodesInfo(getRelevantNodes(userId, args, userModel, pdfHash), args);
-	}
+	public List<NodeInfo> getUserNodesInfo(QuerySession session, int userId, AlgorithmArguments args, UserModel userModel, String pdfHash) {
+		return getUserNodesInfo(getRelevantNodes(session, userId, args, userModel, pdfHash), args);
+	}	
 	
-	// never called - deactivating for now
-//	public String getUserText(int userId, AlgorithmArguments args, UserModel userModel, String pdfHash) {
-//		return getUserText(getRelevantNodes(userId, args, userModel, pdfHash));
-//	}
-	
-	public void fillUserReferences(int userId, AlgorithmArguments args, UserModel userModel, String pdfHash) {		
-		extractReferences(getRelevantNodes(userId, args, userModel, pdfHash), userModel);
+	public void fillUserReferences(QuerySession session, int userId, AlgorithmArguments args, UserModel userModel, String pdfHash) {		
+		extractReferences(getRelevantNodes(session, userId, args, userModel, pdfHash), userModel);
 	}
 	
 	private void extractReferences(Collection<Node> nodes, UserModel userModel) {

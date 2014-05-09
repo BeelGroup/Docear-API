@@ -23,6 +23,7 @@ import org.apache.lucene.util.Version;
 import org.docear.Logging.DocearLogger;
 import org.docear.database.AlgorithmArguments;
 import org.docear.graphdb.GraphDbWorker;
+import org.docear.graphdb.QuerySession;
 import org.docear.query.ResultGenerator;
 import org.docear.structs.NodeInfo;
 import org.docear.xml.Keyword;
@@ -55,8 +56,8 @@ public class TFKeywordGenerator implements ResultGenerator {
 		return worker;
 	}
 	
-	public void fillKeywords(Integer userId, AlgorithmArguments args, UserModel userModel, String excludePdfHash) throws Exception {
-		Directory directory = buildLuceneDocumentForUser(userId, args, userModel, excludePdfHash);
+	public void fillKeywords(QuerySession session, Integer userId, AlgorithmArguments args, UserModel userModel, String excludePdfHash) throws Exception {
+		Directory directory = buildLuceneDocumentForUser(session, userId, args, userModel, excludePdfHash);
 
 		IndexReader reader = IndexReader.open(directory);
 		// reader.getUniqueTermCount();
@@ -98,7 +99,7 @@ public class TFKeywordGenerator implements ResultGenerator {
 		reader.close();
 	}
 	
-	protected Directory buildLuceneDocumentForUser(int userId, AlgorithmArguments args, UserModel userModel, String excludePdfHash) throws Exception {
+	protected Directory buildLuceneDocumentForUser(QuerySession session, int userId, AlgorithmArguments args, UserModel userModel, String excludePdfHash) throws Exception {
 		if (args == null) {
 			args = new AlgorithmArguments("");
 		}
@@ -111,7 +112,7 @@ public class TFKeywordGenerator implements ResultGenerator {
 		try {
 			IndexWriter writer = new IndexWriter(directory, config);
 
-			Document doc = getDocument(userId, args, userModel, excludePdfHash);
+			Document doc = getDocument(session, userId, args, userModel, excludePdfHash);
 			if (doc == null) {
 				writer.close();
 				throw new Exception("not enough data gathered for (" + args + ")");
@@ -136,8 +137,8 @@ public class TFKeywordGenerator implements ResultGenerator {
 		return null;
 	}
 	
-	private Document getDocument(int userId, AlgorithmArguments args, UserModel userModel, String excludePdfHash) {		
-		List<NodeInfo> nodesInfo = worker.getUserNodesInfo(userId, args, userModel, excludePdfHash);		
+	private Document getDocument(QuerySession session, int userId, AlgorithmArguments args, UserModel userModel, String excludePdfHash) {		
+		List<NodeInfo> nodesInfo = worker.getUserNodesInfo(session, userId, args, userModel, excludePdfHash);		
 		
 		if(nodesInfo == null || nodesInfo.size() == 0) {
 			return null;
@@ -307,8 +308,8 @@ public class TFKeywordGenerator implements ResultGenerator {
 	}
 	
 	@Override
-	public void generateResultsForUserModel(int userId, UserModel userModel, String excludePdfHash) throws Exception {
-		fillKeywords(userId, args, userModel, excludePdfHash);
+	public void generateResultsForUserModel(QuerySession session, int userId, UserModel userModel, String excludePdfHash) throws Exception {
+		fillKeywords(session, userId, args, userModel, excludePdfHash);
 		
 	}
 	
