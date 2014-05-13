@@ -123,7 +123,8 @@ public class GraphDbWorker {
 	}
 	
 	public Set<Node> getRelevantNodes(QuerySession session, int userId, AlgorithmArguments args, UserModel userModel, String excludePdfHash) {
-		Collection<Node> allUserMaps = getMapsForUser(userId, ALGORITHM_FOR_ALL_USER_ELEMENTS, userModel);
+		Collection<Node> allUserMaps = getMapsForUser(session, userId, ALGORITHM_FOR_ALL_USER_ELEMENTS, userModel, false);
+		userModel.addVariable("mind-map_count_total", ""+allUserMaps.size());
 		Long minExcludeDate = null;
 		// needed for offline evaluator: skip this paper and all nodes that have been created after the user has used this paper
 		//FIXME: !!! this only means that we get the minimum date of the node holding the pdfhash - not the date, when the pdf was added to the node
@@ -132,7 +133,7 @@ public class GraphDbWorker {
 		}
 		
 		addTotalCountVariables(allUserMaps, args, userModel, minExcludeDate);		
-		Collection<NodeRevision> nodeSet = getNodeCollection(userId, args, userModel, minExcludeDate);
+		Collection<NodeRevision> nodeSet = getNodeCollection(session, userId, args, userModel, minExcludeDate);
 
 		if(nodeSet == null) {
 			return null;
@@ -298,7 +299,7 @@ public class GraphDbWorker {
 			}			
 		}
 		
-		// expanded and reduced is the same for references, since stopwords can't be removed on references
+		// s and reduced is the same for references, since stopwords can't be removed on references
 		userModel.getReferences().addVariable("feature_count_expanded", ""+featureCountReferences);
 		userModel.getReferences().addVariable("feature_count_reduced", ""+featureCountReferences);
 		userModel.getReferences().addVariable("feature_count_expanded_unique", ""+occurenceMap.size());
@@ -309,11 +310,8 @@ public class GraphDbWorker {
 		}
 	}
 
-	private Collection<NodeRevision> getNodeCollection(int userId, AlgorithmArguments args, UserModel userModel, final Long minExcludeDate) {
-		Collection<Node> allMaps = getMapsForUser(userId, ALGORITHM_FOR_ALL_USER_ELEMENTS, userModel);		
-		userModel.addVariable("mind-map_count_total", ""+allMaps.size());
-		
-		Collection<Node> maps = getMapsForUser(userId, args, userModel);
+	private Collection<NodeRevision> getNodeCollection(QuerySession session, int userId, AlgorithmArguments args, UserModel userModel, final Long minExcludeDate) {		
+		Collection<Node> maps = getMapsForUser(session, userId, args, userModel, true);
 		
 		if (maps == null || maps.size() == 0) {
 			return null;
@@ -958,7 +956,7 @@ public class GraphDbWorker {
 		return td.traverse(parent);
 	}
 
-	private List<Node> getMapsForUser(int userId, AlgorithmArguments args, UserModel userModel) {
+	private List<Node> getMapsForUser(QuerySession session, int userId, AlgorithmArguments args, UserModel userModel, boolean countAmount) {
 		List<Node> allMaps = getLatestMapsForUser(userId, args);
 		if(allMaps == null) {
 			return null;
@@ -997,10 +995,14 @@ public class GraphDbWorker {
 			// get random number from size+1 --> amount==0 means take all, everything else means the size itself
 			int amount = new Random().nextInt(Math.min(allMaps.size(), AlgorithmArguments.MAX_ELEMENT_AMOUNT)+1);
 			if (amount > 0) {
-				allMaps = allMaps.subList(0, amount);
+				allMaps = allMaps.subList(0, amount);				
 			}
 			
-			userModel.addVariable("element_amount_maps", String.valueOf(amount));
+			if (countAmount) {
+				for (Node map : allMaps) {
+					session.addToMaps(map);
+				}
+			}
 		}
 
 		return allMaps;

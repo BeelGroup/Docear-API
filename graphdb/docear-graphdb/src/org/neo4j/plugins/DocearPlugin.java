@@ -17,7 +17,6 @@ import org.neo4j.server.plugins.ServerPlugin;
 import org.neo4j.server.plugins.Source;
 
 public class DocearPlugin extends ServerPlugin {
-	private QuerySession session = new QuerySession();
 	
 	@Name("test")
 	@Description("test specific algorithm arguments")
@@ -40,6 +39,7 @@ public class DocearPlugin extends ServerPlugin {
 			@Parameter(name = "algorithmArguments", optional = true) String algorithmArguments,
 			@Parameter(name = "excludeHash", optional = true) String excludeHash) throws Exception {
 
+		QuerySession session = new QuerySession();
 		AlgorithmArguments args;
 		try {
 			if (algorithmArguments == null) {
@@ -135,6 +135,7 @@ public class DocearPlugin extends ServerPlugin {
 		userModel.addVariable("element_amount_nodes", String.valueOf(session.getNodeAmountBeforeExpanded()));
 		userModel.addVariable("node_count_before_expanded", String.valueOf(session.getNodeAmountBeforeExpanded()));		
 		userModel.addVariable("node_count_expanded", String.valueOf(session.getNodeAmountExpanded()));
+		userModel.addVariable("element_amount_maps", String.valueOf(session.getMapAmount()));
 	}
 
 	private Integer getVariableSum(UserModel userModel, String varName) {
