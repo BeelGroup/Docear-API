@@ -122,17 +122,15 @@ public class GraphDbWorker {
 		this.database = graphDb;
 	}
 	
-	public Set<Node> getRelevantNodes(QuerySession session, int userId, AlgorithmArguments args, UserModel userModel, String excludePdfHash) {
-		Collection<Node> allUserMaps = getMapsForUser(session, userId, ALGORITHM_FOR_ALL_USER_ELEMENTS, userModel, false);
-		userModel.addVariable("mind-map_count_total", ""+allUserMaps.size());
+	public Set<Node> getRelevantNodes(QuerySession session, int userId, AlgorithmArguments args, UserModel userModel, String excludePdfHash) {				
 		Long minExcludeDate = null;
+		Collection<Node> allUserMaps = getMapsForUser(session, userId, ALGORITHM_FOR_ALL_USER_ELEMENTS, userModel, false, minExcludeDate);
 		// needed for offline evaluator: skip this paper and all nodes that have been created after the user has used this paper
 		//FIXME: !!! this only means that we get the minimum date of the node holding the pdfhash - not the date, when the pdf was added to the node
 		if (excludePdfHash != null) {
 			minExcludeDate = getMinCreatedDateByPdfHash(allUserMaps, excludePdfHash);
 		}
-		
-		addTotalCountVariables(allUserMaps, args, userModel, minExcludeDate);		
+					
 		Collection<NodeRevision> nodeSet = getNodeCollection(session, userId, args, userModel, minExcludeDate);
 
 		if(nodeSet == null) {
@@ -311,7 +309,7 @@ public class GraphDbWorker {
 	}
 
 	private Collection<NodeRevision> getNodeCollection(QuerySession session, int userId, AlgorithmArguments args, UserModel userModel, final Long minExcludeDate) {		
-		Collection<Node> maps = getMapsForUser(session, userId, args, userModel, true);
+		Collection<Node> maps = getMapsForUser(session, userId, args, userModel, true, minExcludeDate);
 		
 		if (maps == null || maps.size() == 0) {
 			return null;
@@ -956,18 +954,20 @@ public class GraphDbWorker {
 		return td.traverse(parent);
 	}
 
-	private List<Node> getMapsForUser(QuerySession session, int userId, AlgorithmArguments args, UserModel userModel, boolean countAmount) {
-		List<Node> allMaps = getLatestMapsForUser(userId, args);
-		if(allMaps == null) {
+	private List<Node> getMapsForUser(QuerySession session, int userId, AlgorithmArguments args, UserModel userModel, boolean countAmount, Long minExcludeDate) {
+		//get all mind maps of the user right now - after that cut to the element_amouint
+		List<Node> userMaps = getLatestMapsForUser(userId, args);		
+		if(userMaps == null) {
 			return null;
 		}
+		addTotalCountVariables(userMaps, args, userModel, minExcludeDate);	
 		
-		// if data_element is mind maps: order the mind maps
+		// if data_element is mind maps: order the mind maps and cut to the element_amount
 		if (new Integer(1).equals(args.getArgument(AlgorithmArguments.DATA_ELEMENT))) {			
 			final Integer method = (Integer) args.getArgument(AlgorithmArguments.ELEMENT_SELECTION_METHOD); 
 			
 			if (method != null && method > 0) {
-				Collections.sort(allMaps, new Comparator<Node>() {
+				Collections.sort(userMaps, new Comparator<Node>() {
 					@Override
 					public int compare(Node o1, Node o2) {
 						switch (method) {
@@ -990,22 +990,22 @@ public class GraphDbWorker {
 			
 			if (method != null && method > 0) 
 				// get randomly the number of last days for which the mindmaps will be considered
-				GraphDbHelper.filterByDaysSinceLastForMaps(allMaps, args, userModel);
+				GraphDbHelper.filterByDaysSinceLastForMaps(userMaps, args, userModel);
 
 			// get random number from size+1 --> amount==0 means take all, everything else means the size itself
-			int amount = new Random().nextInt(Math.min(allMaps.size(), AlgorithmArguments.MAX_ELEMENT_AMOUNT)+1);
+			int amount = new Random().nextInt(Math.min(userMaps.size(), AlgorithmArguments.MAX_ELEMENT_AMOUNT)+1);
 			if (amount > 0) {
-				allMaps = allMaps.subList(0, amount);				
+				userMaps = userMaps.subList(0, amount);				
 			}
 			
 			if (countAmount) {
-				for (Node map : allMaps) {
+				for (Node map : userMaps) {
 					session.addToMaps(map);
 				}
 			}
 		}
 
-		return allMaps;
+		return userMaps;
 	}
 	
 	private List<Node> getLatestMapsForUser(int userId, AlgorithmArguments args) {
