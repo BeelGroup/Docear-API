@@ -182,6 +182,10 @@ public class GraphDbController implements KernelEventHandler, TransactionEventLi
 	public Object getResource() {
 		return null;
 	}
+	
+	public GraphDatabaseService getGraphDatabaseService() {
+		return this.graphDb;
+	}
 
 	@Override
 	public void kernelPanic(ErrorState arg0) {		

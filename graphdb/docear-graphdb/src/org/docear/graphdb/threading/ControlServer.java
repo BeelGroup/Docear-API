@@ -9,6 +9,10 @@ import java.util.Scanner;
 
 import org.docear.Logging.DocearLogger;
 import org.docear.graphdb.GraphDbController;
+import org.neo4j.cypher.ExecutionEngine;
+import org.neo4j.cypher.ExecutionResult;
+
+import scala.collection.immutable.Map;
 
 public class ControlServer extends Thread {
 	private final ServerSocket server;
@@ -56,8 +60,8 @@ public class ControlServer extends Thread {
 							}
 						}
 						else {
-							printHelp(writer);
-						}
+							executeQuery(commandLine, writer);
+						}						
 					}
 				}
 				finally {
@@ -70,6 +74,26 @@ public class ControlServer extends Thread {
 			}
 		}
 		DocearLogger.info("ControlServer shutdown");
+	}
+
+	private void executeQuery(String query, PrintStream writer) {
+		ExecutionEngine engine = new ExecutionEngine(this.graphController.getGraphDatabaseService());
+				
+		int c = 0;
+		try {
+    		ExecutionResult result = engine.execute(query);
+    		
+    		while (result.hasNext()) {
+    			c++;
+    			Map<String, Object> map = result.next();
+    		}
+		}
+		catch(Exception e) {
+			e.printStackTrace(writer);
+		}
+		
+		writer.println("results found: "+c);
+		writer.flush();
 	}
 
 	private void printHelp(PrintStream writer) {

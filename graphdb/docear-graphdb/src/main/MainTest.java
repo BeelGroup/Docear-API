@@ -1,11 +1,14 @@
 package main;
 
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
 
-import org.docear.xml.Keywords;
-import org.docear.xml.References;
-import org.docear.xml.UserModel;
+import java.util.List;
+
+import org.neo4j.cypher.ExecutionEngine;
+import org.neo4j.cypher.ExecutionResult;
+import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.factory.GraphDatabaseFactory;
+
+import scala.collection.immutable.Map;
 
 public class MainTest {
 
@@ -13,32 +16,31 @@ public class MainTest {
 	 * @param args
 	 */
 	public static void main(String[] args) {		
-//		try {
-//			UserModel userModel = new UserModel();
-//			userModel.addVariable("v1", "1");
-//			userModel.addVariable("v2", "2");
-//
-//			Keywords keywords = new Keywords();
-//			keywords.addVariable("kv1", "1");
-//			keywords.addVariable("kv1", "2");
-//			keywords.addKeyword("k1", 0.3);
-//			userModel.setKeywords(keywords);
-//
-//			References references = new References();
-//			references.addVariable("rv1", "1");
-//			references.addReference("t1", "h1", 1d);
-//			references.addReference("t2", "h2", 2d);
-//			userModel.setReferences(references);
-//			
-//			DocearLogger.info(userModel.getXml());
-//    		}
-//		catch (ParserConfigurationException e) {
-//			// TODO Auto-generated catch block
-//			DocearLogger.error();
-//		}
-//		catch (TransformerException e) {
-//			// TODO Auto-generated catch block
-//			DocearLogger.error();
-//		}
+		GraphDatabaseService db = new GraphDatabaseFactory().newEmbeddedDatabase("/media/stefan/74EBDC6B5FE5CACC/georgia/docear-graph.db");
+		ExecutionEngine engine = new ExecutionEngine( db );
+		
+		ExecutionResult result;
+		try {
+			String query = "";
+			//query = "start n=node(*) where n.name = 'my node' return n, n.name";
+			query = "START r=node(0) MATCH r-[:USER_SET]->us-[:USER]->u RETURN u LIMIT 10;";
+			result = engine.execute(query);
+			int c = 0;
+			while (result.hasNext()) {
+				c++;
+				Map<String, Object> map = result.next();
+				scala.collection.immutable.List o = map.view().toList();
+				System.out.println();
+			}
+			
+			System.out.println("results found: "+c);
+			
+		    
+		    
+//			System.out.println(result);
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 }
