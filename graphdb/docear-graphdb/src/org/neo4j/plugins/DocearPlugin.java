@@ -4,6 +4,7 @@ import org.docear.Logging.DocearLogger;
 import org.docear.database.AlgorithmArguments;
 import org.docear.graphdb.DocearReferencesGenerator;
 import org.docear.graphdb.QuerySession;
+import org.docear.lucene.LuceneController;
 import org.docear.lucene.TFIDFKeywordGenerator;
 import org.docear.lucene.TFKeywordGenerator;
 import org.docear.query.ResultGenerator;
@@ -61,6 +62,7 @@ public class DocearPlugin extends ServerPlugin {
 		}
 
 		UserModel userModel = new UserModel();
+		LuceneController.getCurrentController().getGraphDbWorker().addTotalCountVariables(session, userId, args, userModel);
 		if (data_element_type == 0 || data_element_type == 1) {
 			try {
 				fillKeywords(session, userId, args, userModel, excludeHash);

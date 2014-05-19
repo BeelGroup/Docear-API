@@ -197,50 +197,57 @@ public class GraphDbWorker {
 		return nodes;
 	}	
 	
-	private void addTotalCountVariables(Collection<Node> allMaps, AlgorithmArguments args, UserModel userModel, final Long minExcludeDate) {		
-		userModel.addVariable("mind-map_count_total", ""+allMaps.size());
-				
-		int nodeCountTotal = 0;
-		int linkCountTotal = 0;
-		
-		HashSet<String> hashes = new HashSet<String>();
-		for (Node startNode : allMaps) {
-			try {				
-				final String mapType = startNode.getSingleRelationship(Type.REVISION, Direction.INCOMING).getStartNode().getProperty(GraphCreatorJob.PROPERTY_MAP_TYP).toString();
-				Iterator<Path> it = getUserLatestRevisionsTraversal(startNode, mapType, ALGORITHM_FOR_ALL_USER_ELEMENTS, minExcludeDate).iterator();				
-				while (it.hasNext()) {
-					Path path = it.next();
-					if (!path.endNode().hasProperty("ID") || !DEMO_NODES.contains(path.endNode().getProperty("ID").toString())) {
-						nodeCountTotal++;
-					}
-				}
-				
-				Traverser traverser = getUserLatestRevisionsReferencesTraversal(startNode, mapType, ALGORITHM_FOR_ALL_USER_ELEMENTS, minExcludeDate);
-				for (Node n : traverser.nodes()) {					
-					if(!n.hasProperty("DCR_PRIVACY_LEVEL") || "PUBLIC".equals(n.getProperty("DCR_PRIVACY_LEVEL"))) {
-						if (n.hasProperty("annotation_document_hash")) {
-							if (!n.hasProperty("ID") || !DEMO_NODES.contains(n.getProperty("ID").toString())) {
-								hashes.add((String) n.getProperty("annotation_document_hash"));
-								linkCountTotal++;
-							}
-						}
-					}
-					
-				}
-			}
-			catch(Throwable t) {
-				t.printStackTrace();
-			}
+	public void addTotalCountVariables(QuerySession session, int userId, AlgorithmArguments args, UserModel userModel) {
+		try {
+    		Collection<Node> allMaps = getMapsForUser(session, userId, ALGORITHM_FOR_ALL_USER_ELEMENTS, userModel, true, null);
+    		System.out.println("org.docear.graphdb.GraphDbWorker.addTotalCountVariables(session, userId, args, userModel, minExcludeDate) allMaps: "+allMaps.size());
+    		userModel.addVariable("mind-map_count_total", ""+allMaps.size());
+    				
+    		int nodeCountTotal = 0;
+    		int linkCountTotal = 0;
+    		
+    		HashSet<String> hashes = new HashSet<String>();
+    		for (Node startNode : allMaps) {
+    			try {				
+    				final String mapType = startNode.getSingleRelationship(Type.REVISION, Direction.INCOMING).getStartNode().getProperty(GraphCreatorJob.PROPERTY_MAP_TYP).toString();
+    				Iterator<Path> it = getUserLatestRevisionsTraversal(startNode, mapType, ALGORITHM_FOR_ALL_USER_ELEMENTS, null).iterator();				
+    				while (it.hasNext()) {
+    					Path path = it.next();
+    					if (!path.endNode().hasProperty("ID") || !DEMO_NODES.contains(path.endNode().getProperty("ID").toString())) {
+    						nodeCountTotal++;
+    					}
+    				}
+    				
+    				Traverser traverser = getUserLatestRevisionsReferencesTraversal(startNode, mapType, ALGORITHM_FOR_ALL_USER_ELEMENTS, null);
+    				for (Node n : traverser.nodes()) {					
+    					if(!n.hasProperty("DCR_PRIVACY_LEVEL") || "PUBLIC".equals(n.getProperty("DCR_PRIVACY_LEVEL"))) {
+    						if (n.hasProperty("annotation_document_hash")) {
+    							if (!n.hasProperty("ID") || !DEMO_NODES.contains(n.getProperty("ID").toString())) {
+    								hashes.add((String) n.getProperty("annotation_document_hash"));
+    								linkCountTotal++;
+    							}
+    						}
+    					}
+    					
+    				}
+    			}
+    			catch(Throwable t) {
+    				t.printStackTrace();
+    			}
+    		}
+    		userModel.addVariable("node_count_total", ""+nodeCountTotal);
+    		userModel.addVariable("paper_count_total", ""+hashes.size());
+    		userModel.addVariable("link_count_total", ""+linkCountTotal);
+    		
+    		if (new Integer(1).equals(args.getArgument(AlgorithmArguments.DATA_ELEMENT))) {
+    			userModel.addVariable("entity_total_count", ""+allMaps.size());
+    		}
+    		else if (new Integer(2).equals(args.getArgument(AlgorithmArguments.DATA_ELEMENT))) {
+    			userModel.addVariable("entity_total_count", ""+nodeCountTotal);
+    		}
 		}
-		userModel.addVariable("node_count_total", ""+nodeCountTotal);
-		userModel.addVariable("paper_count_total", ""+hashes.size());
-		userModel.addVariable("link_count_total", ""+linkCountTotal);
-		
-		if (new Integer(1).equals(args.getArgument(AlgorithmArguments.DATA_ELEMENT))) {
-			userModel.addVariable("entity_total_count", ""+allMaps.size());
-		}
-		else if (new Integer(2).equals(args.getArgument(AlgorithmArguments.DATA_ELEMENT))) {
-			userModel.addVariable("entity_total_count", ""+nodeCountTotal);
+		catch(Exception e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -959,8 +966,7 @@ public class GraphDbWorker {
 		List<Node> userMaps = getLatestMapsForUser(userId, args);		
 		if(userMaps == null) {
 			return null;
-		}
-		addTotalCountVariables(userMaps, args, userModel, minExcludeDate);	
+		}			
 		
 		// if data_element is mind maps: order the mind maps and cut to the element_amount
 		if (new Integer(1).equals(args.getArgument(AlgorithmArguments.DATA_ELEMENT))) {			
