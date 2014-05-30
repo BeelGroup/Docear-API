@@ -479,9 +479,21 @@ public class UserCommons {
 		RecommendationsUsersSettings settings = RecommendationsUsersSettingsQueries.getRecommendationsUsersSettings(session, user);
 		if (settings == null) {
 			settings = new RecommendationsUsersSettings();
-			
-			RecommendationsLabel label = RecommendationsLabelQueries.getRandomLabel(session);
-			RecommendationsRatingsLabel ratingLabel = RecommendationsRatingsLabelQueries.getRandomLabel(session);
+		}
+		
+		boolean changes = false;
+		RecommendationsLabel label = settings.getRecommendationLabel();
+		if (label == null) {
+			label = RecommendationsLabelQueries.getRandomLabel(session);
+			changes = true;
+		}
+		RecommendationsRatingsLabel ratingLabel = settings.getRecommendationRatingLabel();
+		if (ratingLabel == null) {
+			ratingLabel = RecommendationsRatingsLabelQueries.getRandomLabel(session);
+			changes = true;
+		}
+		
+		if (changes) {
 			label.setSession(session);
 			ratingLabel.setSession(session);
 			settings.setRecommendationLabel(label);
@@ -496,12 +508,12 @@ public class UserCommons {
 					settings.setHighlight(random.nextBoolean());
 				}
 				else {
-					settings.setHighlight(false);
+					settings.setHighlight(null);
 				}
 			}
 			else {
 				settings.setUsePrefix(false);
-				settings.setHighlight(false);
+				settings.setHighlight(null);
 			}
 			
 			Transaction transaction = session.beginTransaction();

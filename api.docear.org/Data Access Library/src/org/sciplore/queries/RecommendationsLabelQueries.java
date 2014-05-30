@@ -26,7 +26,7 @@ public class RecommendationsLabelQueries {
 	
 	public static RecommendationsLabel getRandomLabel(Session session) {
 		Criteria criteria = session.createCriteria(RecommendationsLabel.class);
-		criteria = criteria.add(Restrictions.eq("type", RecommendationsLabel.TYPE_ORGANIC));
+//		criteria = criteria.add(Restrictions.eq("type", RecommendationsLabel.TYPE_ORGANIC));
 		@SuppressWarnings("unchecked")
 		List<RecommendationsLabel> labels = criteria.list();
 				
