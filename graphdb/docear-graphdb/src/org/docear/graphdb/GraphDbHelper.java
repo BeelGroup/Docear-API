@@ -24,6 +24,78 @@ import org.neo4j.graphdb.Node;
 
 public class GraphDbHelper {
 	
+	public void addNewSinceMaxDate(QuerySession session, AlgorithmArguments args, Node node, boolean allUserMaps) {
+		final Integer dataElement = (Integer) args.getArgument(AlgorithmArguments.DATA_ELEMENT);
+		final Integer method = (Integer) args.getArgument(AlgorithmArguments.ELEMENT_SELECTION_METHOD);
+		
+		if (dataElement == null || method == null || method == 0) {
+			return;
+		}
+		
+		switch (dataElement) {
+		case 1:
+			addNewSinceMaxDateMap(session, node, method, allUserMaps);
+			break;
+		case 2:
+			addNewSinceMaxDateNode(session, node, method, allUserMaps);
+			break;
+		}
+	}
+	
+	private void addNewSinceMaxDateMap(QuerySession session, Node node, Integer method, boolean allUserMaps) {
+		Long date = null;
+		
+		switch (method) {
+		case 1: // 1=edited 
+			// date is given in the format yyyy-MM-dd HH:mm:ss
+			date = GraphDbHelper.stringToMilliseconds(node.getProperty("CREATED").toString(), new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));			
+			break;
+		case 2: // 2=created 
+			date = Long.valueOf(node.getProperty("dcr_id").toString().split("_")[0]);			 
+		}
+		
+		if (date == null) {
+			return;
+		}
+		
+		if (allUserMaps) {
+			session.addNewAllDate(date);
+		}
+		else {
+			session.addNewAlgDate(date);
+		}
+	}
+	
+	private void addNewSinceMaxDateNode(QuerySession session, Node node, Integer method, boolean allUserMaps) {
+		Long date = null;
+		String propertyName = null;
+		
+		switch (method) {
+			case 1: // 1=modified
+				propertyName = "MODIFIED";
+				break;
+			case 2: // 2=created 
+				propertyName = "CREATED";
+				break;
+			case 3: // 3=moved 
+				propertyName = "MOVED";
+				break;
+		}
+		
+		if (propertyName == null) {
+			return;
+		}
+		
+		date = Long.valueOf(node.getProperty(propertyName).toString());
+		
+		if (allUserMaps) {
+			session.addNewAllDate(date);
+		}
+		else {
+			session.addNewAlgDate(date);
+		}
+	}
+	
 	/**
 	 * @param nodes
 	 * @param args
