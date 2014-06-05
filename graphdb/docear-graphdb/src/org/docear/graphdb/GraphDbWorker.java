@@ -190,16 +190,27 @@ public class GraphDbWorker {
 		DocearLogger.info("demo-nodes: "+foundDemoNodes.size()+" of "+nodes.size());
 		
 		Integer method = (Integer) args.getArgument(AlgorithmArguments.ELEMENT_SELECTION_METHOD); 		
-		if (new Integer(2).equals(args.getArgument(AlgorithmArguments.DATA_ELEMENT)) && method != null && method > 0) 
+		if (new Integer(2).equals(args.getArgument(AlgorithmArguments.DATA_ELEMENT)) && method != null && method > 0) {
 			// get randomly the number of last days for which the nodes will be considered
-			GraphDbHelper.filterByDaysSinceLastForNodes(nodes, args, userModel);
+			DateFilter.filterByDate(session, userModel, nodes, args);
+		}
 		
 		return nodes;
 	}	
 	
 	public void addTotalCountVariables(QuerySession session, int userId, AlgorithmArguments args, UserModel userModel) {
 		try {
+			DateFilter.clearNewSinceMaxDates(session, true);
     		Collection<Node> allMaps = getMapsForUser(session, userId, ALGORITHM_FOR_ALL_USER_ELEMENTS, userModel, true, null);
+    		
+    		final Integer dataElement = (Integer) args.getArgument(AlgorithmArguments.DATA_ELEMENT);
+    		if (dataElement != null && dataElement == 1) {
+    			for (Node map : allMaps) {    				
+    				DateFilter.addNewSinceMaxDate(session, args, map, true);
+    			}
+    		}
+    		
+    		
     		System.out.println("org.docear.graphdb.GraphDbWorker.addTotalCountVariables(session, userId, args, userModel, minExcludeDate) allMaps: "+allMaps.size());
     		userModel.addVariable("mind-map_count_total", ""+allMaps.size());
     				
@@ -213,8 +224,12 @@ public class GraphDbWorker {
     				Iterator<Path> it = getUserLatestRevisionsTraversal(startNode, mapType, ALGORITHM_FOR_ALL_USER_ELEMENTS, null).iterator();				
     				while (it.hasNext()) {
     					Path path = it.next();
-    					if (!path.endNode().hasProperty("ID") || !DEMO_NODES.contains(path.endNode().getProperty("ID").toString())) {
+    					Node node = path.endNode();
+    					if (!node.hasProperty("ID") || !DEMO_NODES.contains(node.getProperty("ID").toString())) {
     						nodeCountTotal++;
+    						if (dataElement != null && dataElement == 1) {
+    							DateFilter.addNewSinceMaxDate(session, args, node, true);
+    						}
     					}
     				}
     				
@@ -228,7 +243,6 @@ public class GraphDbWorker {
     							}
     						}
     					}
-    					
     				}
     			}
     			catch(Throwable t) {
@@ -321,7 +335,7 @@ public class GraphDbWorker {
 		if (maps == null || maps.size() == 0) {
 			return null;
 		}
-		
+						
 		Collection<NodeRevision> nodeSet = null;
 		
 		// 2 = mind map nodes are considered
@@ -424,9 +438,15 @@ public class GraphDbWorker {
 			nodeSet = new HashSet<NodeRevision>();
 		}
 		
+		DateFilter.clearNewSinceMaxDates(session, false);
 		for (Node startNode : maps) {
+			
+			// for maps
+			if (((Integer) args.getArgument(AlgorithmArguments.DATA_ELEMENT)) == 1) {	    		
+    			DateFilter.addNewSinceMaxDate(session, args, startNode, false);	    		
+			}
 			try {
-				collectNodes(nodeSet, startNode, args, minExcludeDate);
+				collectNodes(session, nodeSet, startNode, args, minExcludeDate);
 				DocearLogger.info("user("+userId+"): use map "+startNode.getProperty("ID").toString());
 			}
 			catch(Throwable t) {
@@ -507,7 +527,7 @@ public class GraphDbWorker {
 		}
 	}
 
-	private void collectNodes(Collection<NodeRevision> nodes, Node mapRoot, AlgorithmArguments args, Long minExludeDate) {
+	private void collectNodes(QuerySession session, Collection<NodeRevision> nodes, Node mapRoot, AlgorithmArguments args, Long minExludeDate) {		
 		final String mapType = mapRoot.getSingleRelationship(Type.REVISION, Direction.INCOMING).getStartNode().getProperty(GraphCreatorJob.PROPERTY_MAP_TYP).toString();
 		Traverser traverser = null;
 		if (new Integer(2).equals((Integer) args.getArgument(AlgorithmArguments.DATA_ELEMENT_TYPE))) {
@@ -519,21 +539,35 @@ public class GraphDbWorker {
 		}
 		final String revisionKey = mapRoot.getProperty("ID").toString();
 		
+		final Integer dataElement = (Integer) args.getArgument(AlgorithmArguments.DATA_ELEMENT);
+		
+		DateFilter.clearNewSinceMaxDates(session, false);
 		for (Node n : traverser.nodes()) {
 			//take 'public' nodes only into account
 			if(!n.hasProperty("DCR_PRIVACY_LEVEL") || "PUBLIC".equals(n.getProperty("DCR_PRIVACY_LEVEL"))) {
 				// ignore folded or unfolded nodes based on the algorithm parameter value
 				switch((Integer)args.getArgument(AlgorithmArguments.NODE_VISIBILITY)) {
 					case 1:
-						if (!n.hasProperty("FOLDED") || (n.hasProperty("FOLDED") && !"true".equals(n.getProperty("FOLDED").toString())))
-							nodes.add(new NodeRevision(n, revisionKey, mapType));		
+						if (!n.hasProperty("FOLDED") || (n.hasProperty("FOLDED") && !"true".equals(n.getProperty("FOLDED").toString()))) {
+							nodes.add(new NodeRevision(n, revisionKey, mapType));
+							if (dataElement != null && dataElement == 2) {
+								DateFilter.addNewSinceMaxDate(session, args, n, false); // noDaysSinceAmount for nodes
+							}
+						}
 						break;
 					case 2:
-						if (n.hasProperty("FOLDED") && "true".equals(n.getProperty("FOLDED").toString()))
+						if (n.hasProperty("FOLDED") && "true".equals(n.getProperty("FOLDED").toString())) {
 							nodes.add(new NodeRevision(n, revisionKey, mapType));	
+							if (dataElement != null && dataElement == 2) {
+								DateFilter.addNewSinceMaxDate(session, args, n, false); // noDaysSinceAmount for nodes
+							}
+						}
 						break;
 					default: //use all, case 0 or NULL
 						nodes.add(new NodeRevision(n, revisionKey, mapType));
+						if (dataElement != null && dataElement == 2) {
+							DateFilter.addNewSinceMaxDate(session, args, n, false); // noDaysSinceAmount for nodes
+						}	
 				}
 			}
 		}
@@ -994,9 +1028,10 @@ public class GraphDbWorker {
 				});
 			}
 			
-			if (method != null && method > 0) 
+			if (method != null && method > 0) {
 				// get randomly the number of last days for which the mindmaps will be considered
-				GraphDbHelper.filterByDaysSinceLastForMaps(userMaps, args, userModel);
+				DateFilter.filterByDate(session, userModel, userMaps, args);
+			}
 
 			// get random number from size+1 --> amount==0 means take all, everything else means the size itself
 			int amount = new Random().nextInt(Math.min(userMaps.size(), AlgorithmArguments.MAX_ELEMENT_AMOUNT)+1);
