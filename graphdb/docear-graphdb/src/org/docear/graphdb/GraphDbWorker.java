@@ -191,7 +191,7 @@ public class GraphDbWorker {
 		
 		Integer method = (Integer) args.getArgument(AlgorithmArguments.ELEMENT_SELECTION_METHOD); 		
 		if (new Integer(2).equals(args.getArgument(AlgorithmArguments.DATA_ELEMENT)) && method != null && method > 0) {
-			// get randomly the number of last days for which the nodes will be considered
+			// get randomly the number of last days for which the nodes will be considered			
 			DateFilter.filterByDate(session, userModel, nodes, args);
 		}
 		

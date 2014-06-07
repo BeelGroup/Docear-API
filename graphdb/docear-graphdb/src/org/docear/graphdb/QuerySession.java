@@ -9,6 +9,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.apache.commons.lang.time.DateUtils;
+import org.docear.Logging.DocearLogger;
 import org.neo4j.graphdb.Node;
 
 public class QuerySession {
@@ -106,7 +107,8 @@ public class QuerySession {
 	}	
 	
 	public Date getFilterDate() {
-		if (algNodeDates == null) {
+		if (algNodeDates == null || algNodeDates.size() == 0) {
+			DocearLogger.info("NDSM: algNodeDates empty");
 			return null;
 		}
 		

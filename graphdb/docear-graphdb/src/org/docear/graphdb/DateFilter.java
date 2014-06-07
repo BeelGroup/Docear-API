@@ -4,6 +4,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Iterator;
 
 import org.docear.Logging.DocearLogger;
@@ -45,6 +46,7 @@ public class DateFilter {
 		final Integer method = (Integer) args.getArgument(AlgorithmArguments.ELEMENT_SELECTION_METHOD);
 		
 		if (dataElement == null || method == null || method == 0) {
+			DocearLogger.info("NDSM: dataElement or dataElementType is null / 0");
 			return;
 		}
 		
@@ -67,10 +69,15 @@ public class DateFilter {
 		switch (method) {
 		case 1: // 1=edited 
 			// date is given in the format yyyy-MM-dd HH:mm:ss
-			date = DateFilter.stringToMilliseconds(map.getProperty("CREATED").toString(), new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));			
+			if (map.hasProperty("CREATED")) {
+				date = DateFilter.stringToMilliseconds(map.getProperty("CREATED").toString(), new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
+			}
 			break;
 		case 2: // 2=created 
-			date = Long.valueOf(map.getProperty("dcr_id").toString().split("_")[0]);			 
+			if (map.hasProperty("dcr_id")) {
+				date = Long.valueOf(map.getProperty("dcr_id").toString().split("_")[0]);
+			}
+			break;
 		}
 		
 		return date;
@@ -79,7 +86,10 @@ public class DateFilter {
 	private static void addNewSinceMaxDateMap(QuerySession session, Node map, Integer method, boolean allUserMaps) {
 		Long date = getMapDate(map, method);
 		
-		session.addNewDate(date, allUserMaps);		
+		if (date != null) {	
+			DocearLogger.info("NDSM: addNewDate: "+new Date(date).toString());
+			session.addNewDate(date, allUserMaps);
+		}
 	}
 	
 	private static Long getNodeDate(Node node, Integer method) {
@@ -129,7 +139,15 @@ public class DateFilter {
 	}
 
 	private static void filterMapsByDate(QuerySession session, Collection<Node> nodes, Integer method) {	
-		Long filterDate = session.getFilterDate().getTime();
+		Date d = session.getFilterDate();
+		if (d == null) {
+			DocearLogger.error("NDSM no filter date available");
+			return;
+		}
+		
+		Long filterDate = d.getTime();
+		
+		DocearLogger.info("NDSM: filterDate: " + new Date(filterDate).toString());
 		
 		for (Iterator<Node> it = nodes.iterator(); it.hasNext();) {
 			Node map = it.next();

@@ -68,7 +68,7 @@ public class DocearPlugin extends ServerPlugin {
 				fillKeywords(session, userId, args, userModel, excludeHash);
 			}
 			catch (Exception e) {
-				DocearLogger.error(e);
+				e.printStackTrace();
 			}
 		}
 		if (data_element_type == 0 || data_element_type == 2) {
@@ -76,7 +76,7 @@ public class DocearPlugin extends ServerPlugin {
 				fillReferences(session, userId, args, userModel, excludeHash);
 			}
 			catch (Exception e) {
-				DocearLogger.error(e);
+				e.printStackTrace();
 			}
 		}
 		
@@ -91,35 +91,9 @@ public class DocearPlugin extends ServerPlugin {
 		try {
 			summarizeVariables(userModel);
 			addNodeAmountVariablesFromSession(session, userModel);
-
-			Integer no_days_since_max_nodes = null;
-			Integer no_days_since_max_maps = null;
-
-			String s = userModel.getKeywords().getVariables().get("no_days_since_max_nodes");
-			if (s == null) {
-				s = userModel.getReferences().getVariables().get("no_days_since_max_nodes");
-			}
-			if (s != null) {
-				no_days_since_max_nodes = Integer.parseInt(s);
-			}
-
-			s = userModel.getVariables().getVariables().get("no_days_since_max_maps");
-			if (s == null) {
-				s = userModel.getReferences().getVariables().get("no_days_since_max_maps");
-			}
-			if (s != null) {
-				no_days_since_max_maps = Integer.parseInt(s);
-			}
-
-			DocearLogger.info("####### no_days_since_max_nodes: " + no_days_since_max_nodes);
-			DocearLogger.info("####### no_days_since_max_maps: " + no_days_since_max_maps);
-
-			if ((no_days_since_max_nodes != null && no_days_since_max_nodes < 0) || (no_days_since_max_maps != null && no_days_since_max_maps < 0)) {
-				DocearLogger.info("negativ variables");
-			}
 		}
 		catch (Exception e) {
-			DocearLogger.error(e);
+			e.printStackTrace();
 		}
 
 		String out = userModel.getXml();
@@ -154,7 +128,7 @@ public class DocearPlugin extends ServerPlugin {
 			}
 		}
 		catch (Exception e) {
-			DocearLogger.error(e);
+			e.printStackTrace();
 			return null;
 		}
 
