@@ -61,7 +61,6 @@ public class RecommendationsDocuments extends Resource {
 
 	@Override
 	public Resource getPersistentIdentity() {
-		RecommendationsDocuments recDoc = new RecommendationsDocuments(getSession());
 		if (getId() != null) {
 			return (Resource) getSession().get(this.getClass(), getId());
 		}
