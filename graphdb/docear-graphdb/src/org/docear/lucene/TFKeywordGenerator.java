@@ -223,7 +223,7 @@ public class TFKeywordGenerator implements ResultGenerator {
 					if (nodeInfo.getReference() != null && nodeInfo.getReference().getTitle() != null) textForField.append(nodeInfo.getReference().getTitle());
 			}
 
-			Field fieldToAdd = new Field(nodeInfo.getId(), textForField.toString(), Field.Store.YES, Field.Index.ANALYZED, Field.TermVector.YES);
+			Field fieldToAdd = new Field(nodeInfo.getId(), textExpand(textForField.toString()), Field.Store.YES, Field.Index.ANALYZED, Field.TermVector.YES);
 			Double fieldWeight = 0d;
 	
 			if (args.getArgument(AlgorithmArguments.NODE_WEIGHT_COMBO_SCHEME) != null) { // combination of factors{ 			
@@ -307,6 +307,10 @@ public class TFKeywordGenerator implements ResultGenerator {
 		return doc;
 	}
 	
+	private String textExpand(String string) {
+		return string.replace("_", " ");
+	}
+
 	@Override
 	public void generateResultsForUserModel(QuerySession session, int userId, UserModel userModel, String excludePdfHash) throws Exception {
 		fillKeywords(session, userId, args, userModel, excludePdfHash);
