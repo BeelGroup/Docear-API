@@ -14,6 +14,7 @@ public class SearchCommons {
 	private final static int MAX_MODEL_SIZE = 20;
 	
 	public static SearchModel createSearchModel(Session session, UserModel userModel, List<UserModelItem> userModelItems) {
+		long time = System.currentTimeMillis();
 		StringBuilder modelBuilder = new StringBuilder();
 		
 		Iterator<UserModelItem> iter = userModelItems.iterator();
@@ -37,8 +38,7 @@ public class SearchCommons {
 		searchModel.setUserModel(userModel);
 		searchModel.setModel(modelBuilder.toString().trim());
 		searchModel.setVarSize(size);
-		
-		
+		searchModel.setExecutionTime((int) (System.currentTimeMillis()-time));
 		
 		return searchModel;
 	}
