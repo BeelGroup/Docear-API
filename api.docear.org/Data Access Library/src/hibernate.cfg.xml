@@ -47,6 +47,9 @@
 		<mapping class="org.sciplore.resources.DocumentXrefCategory"/>
 		<mapping class="org.sciplore.resources.RecommendationsDocuments"/>
 		<mapping class="org.sciplore.resources.RecommendationsDocumentsSet"/>
+		<mapping class="org.sciplore.resources.SearchModel"/>
+		<mapping class="org.sciplore.resources.SearchDocuments"/>
+		<mapping class="org.sciplore.resources.SearchDocumentsSet"/>		
 		<mapping class="org.sciplore.resources.RecommendationsEvaluatorCache"/>
 		<mapping class="org.sciplore.resources.Algorithm"/>
         <mapping class="org.sciplore.resources.UserModel"/>

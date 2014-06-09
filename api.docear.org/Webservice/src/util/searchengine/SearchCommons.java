@@ -29,10 +29,16 @@ public class SearchCommons {
 			}
 		}
 		
+		if (size == 0) {
+			return null;
+		}
+		
 		SearchModel searchModel = new SearchModel(session);
 		searchModel.setUserModel(userModel);
 		searchModel.setModel(modelBuilder.toString().trim());
 		searchModel.setVarSize(size);
+		
+		
 		
 		return searchModel;
 	}
