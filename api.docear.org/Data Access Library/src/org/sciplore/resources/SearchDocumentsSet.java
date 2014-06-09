@@ -73,8 +73,7 @@ public class SearchDocumentsSet extends Resource {
 	}
 
 	@Override
-	public Resource getPersistentIdentity() {
-    	SearchDocumentsSet searchDocSet = new SearchDocumentsSet(getSession());
+	public Resource getPersistentIdentity() {    	
     	if (getId() != null) {
 			return (Resource) getSession().get(this.getClass(), getId());			
 		}

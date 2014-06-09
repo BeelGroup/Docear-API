@@ -22,18 +22,20 @@ import org.sciplore.queries.DocumentQueries;
 import org.sciplore.resources.Algorithm;
 import org.sciplore.resources.Document;
 import org.sciplore.resources.GoogleDocumentQuery;
+import org.sciplore.resources.SearchModel;
 import org.sciplore.resources.User;
 import org.sciplore.resources.UserModel;
 
-import util.RecommendationCommons;
 import util.recommendations.xml.XmlUserModelParser;
+import util.searchengine.SearchCommons;
 import xml.XmlElement;
 
 public class GraphDbUserModelFactory {
 
 	List<UserModelItem> userModelItems = null;
 
-	private final UserModel model;
+	private final UserModel userModel;
+	private SearchModel searchModel = null;
 	private final String xml;
 
 	private Double ratioKeywordsInModel = null;
@@ -43,8 +45,8 @@ public class GraphDbUserModelFactory {
 		this(session, user, null);
 	}
 
-	public GraphDbUserModelFactory(Session session, User user, Algorithm algorithm) throws Exception {
-		model = new UserModel(session);
+	public GraphDbUserModelFactory(Session session, User user, Algorithm algorithm) throws Exception {		
+		userModel = new UserModel(session);
 		xml = createModel(session, user, algorithm);	
 		
 		if (xml == null || xml.trim().length() == 0) {
@@ -58,31 +60,31 @@ public class GraphDbUserModelFactory {
 	}
 
 	private void processXmlModel(Session session) throws Exception {
-		if (model.getAlgorithm().getApproach() == Algorithm.APPROACH_STEREOTYPE) {
-			model.setModel("@@STEREOTYPE@@");
-			model.setFeatureCountExpanded(null);
-			model.setFeatureCountExpandedUnique(null);
-			model.setFeatureCountReduced(null);
-			model.setFeatureCountReducedUnique(null);
-			model.setUmFeatureWeightAvg(null);
-			model.setUmFeatureWeightLast3Avg(null);
-			model.setUmFeatureWeightLast5Avg(null);
-			model.setUmFeatureWeightLast10Avg(null);
-			model.setUmFeatureWeightMax(null);
-			model.setUmFeatureWeightMin(null);
-			model.setUmFeatureWeightTop3Avg(null);
-			model.setUmFeatureWeightTop5Avg(null);
-			model.setUmFeatureWeightTop10Avg(null);
+		if (userModel.getAlgorithm().getApproach() == Algorithm.APPROACH_STEREOTYPE) {
+			userModel.setModel("@@STEREOTYPE@@");
+			userModel.setFeatureCountExpanded(null);
+			userModel.setFeatureCountExpandedUnique(null);
+			userModel.setFeatureCountReduced(null);
+			userModel.setFeatureCountReducedUnique(null);
+			userModel.setUmFeatureWeightAvg(null);
+			userModel.setUmFeatureWeightLast3Avg(null);
+			userModel.setUmFeatureWeightLast5Avg(null);
+			userModel.setUmFeatureWeightLast10Avg(null);
+			userModel.setUmFeatureWeightMax(null);
+			userModel.setUmFeatureWeightMin(null);
+			userModel.setUmFeatureWeightTop3Avg(null);
+			userModel.setUmFeatureWeightTop5Avg(null);
+			userModel.setUmFeatureWeightTop10Avg(null);
 			return;
 		}
 
 		XmlUserModelParser parser = new XmlUserModelParser(xml);
 
 		Searcher searcher = new Searcher();
-		userModelItems = extractKeywordsFromResponse(searcher, parser.getKeywords(), model.getAlgorithm());
-		userModelItems.addAll(extractReferencesFromResponse(session, searcher, parser.getReferences(), model.getAlgorithm()));
+		userModelItems = extractKeywordsFromResponse(searcher, parser.getKeywords(), userModel.getAlgorithm());
+		userModelItems.addAll(extractReferencesFromResponse(session, searcher, parser.getReferences(), userModel.getAlgorithm()));
 		if (userModelItems == null || userModelItems.size() == 0) {
-			RecommendationCommons.logger.log("userModelItems empty for algorithm["+model.getAlgorithm().getId()+"] and xml:\n" + xml); 
+			RecommendationCommons.logger.log("userModelItems empty for algorithm["+userModel.getAlgorithm().getId()+"] and xml:\n" + xml); 
 			return;
 		}
 
@@ -112,21 +114,23 @@ public class GraphDbUserModelFactory {
 		storeGoogleDocumentQueries(session, userModelItems);
 
 		int resultAmount = new Random().nextInt(Math.min(userModelItems.size(), AlgorithmCommons.MAX_RESULT_AMOUNT)) + 1;
-		model.getAlgorithm().setResultAmount(resultAmount);
+		userModel.getAlgorithm().setResultAmount(resultAmount);
 
-		if (model.getAlgorithm().getDataElement() == Algorithm.DATA_ELEMENT_MAPS) {
-			model.getAlgorithm().setElementAmount(parser.getMeta("element_amount_maps"));
-			model.getAlgorithm().setNoDaysSinceMax(parser.getMeta("no_days_since_max_maps"));
-			model.getAlgorithm().setNoDaysSinceChosen(parser.getMeta("no_days_since_chosen_maps"));
+		if (userModel.getAlgorithm().getDataElement() == Algorithm.DATA_ELEMENT_MAPS) {
+			userModel.getAlgorithm().setElementAmount(parser.getMeta("element_amount_maps"));
+			userModel.getAlgorithm().setNoDaysSinceMax(parser.getMeta("no_days_since_max_maps"));
+			userModel.getAlgorithm().setNoDaysSinceChosen(parser.getMeta("no_days_since_chosen_maps"));
 		}
-		else if (model.getAlgorithm().getDataElement() == Algorithm.DATA_ELEMENT_NODES) {
-			model.getAlgorithm().setElementAmount(parser.getMeta("element_amount_nodes"));
-			model.getAlgorithm().setNoDaysSinceMax(parser.getMeta("no_days_since_max_nodes"));
-			model.getAlgorithm().setNoDaysSinceChosen(parser.getMeta("no_days_since_chosen_nodes"));
+		else if (userModel.getAlgorithm().getDataElement() == Algorithm.DATA_ELEMENT_NODES) {
+			userModel.getAlgorithm().setElementAmount(parser.getMeta("element_amount_nodes"));
+			userModel.getAlgorithm().setNoDaysSinceMax(parser.getMeta("no_days_since_max_nodes"));
+			userModel.getAlgorithm().setNoDaysSinceChosen(parser.getMeta("no_days_since_chosen_nodes"));
 		}
 		
 		userModelItems = userModelItems.subList(0, resultAmount);
-		model.setModel(getModelString());
+		userModel.setModel(getModelString());
+		
+		searchModel = SearchCommons.createSearchModel(session, userModel, userModelItems);		
 		addUserModelVariables(parser);
 	}
 
@@ -173,82 +177,82 @@ public class GraphDbUserModelFactory {
 		}
 
 		// variables directly returned from the graphdb
-		model.setEntityTotalCount(parser.getMeta("entity_total_count"));
-		model.setFeatureCountExpanded(parser.getMeta("feature_count_expanded"));
-		model.setFeatureCountExpandedUnique(parser.getMeta("feature_count_expanded_unique"));
-		model.setFeatureCountReduced(parser.getMeta("feature_count_reduced"));
-		model.setFeatureCountReducedUnique(parser.getMeta("feature_count_reduced_unique"));
-		model.setMindmapCountTotal(parser.getMeta("mind-map_count_total"));
-		model.setNodeCountBeforeExpanded(parser.getMeta("node_count_before_expanded"));
-		model.setNodeCountExpanded(parser.getMeta("node_count_expanded"));
-		model.setNodeCountTotal(parser.getMeta("node_count_total"));
-		model.setPaperCountTotal(parser.getMeta("paper_count_total"));
-		model.setLinkCountTotal(parser.getMeta("link_count_total"));
+		userModel.setEntityTotalCount(parser.getMeta("entity_total_count"));
+		userModel.setFeatureCountExpanded(parser.getMeta("feature_count_expanded"));
+		userModel.setFeatureCountExpandedUnique(parser.getMeta("feature_count_expanded_unique"));
+		userModel.setFeatureCountReduced(parser.getMeta("feature_count_reduced"));
+		userModel.setFeatureCountReducedUnique(parser.getMeta("feature_count_reduced_unique"));
+		userModel.setMindmapCountTotal(parser.getMeta("mind-map_count_total"));
+		userModel.setNodeCountBeforeExpanded(parser.getMeta("node_count_before_expanded"));
+		userModel.setNodeCountExpanded(parser.getMeta("node_count_expanded"));
+		userModel.setNodeCountTotal(parser.getMeta("node_count_total"));
+		userModel.setPaperCountTotal(parser.getMeta("paper_count_total"));
+		userModel.setLinkCountTotal(parser.getMeta("link_count_total"));
 
 		// compute variables
-		if (userModelItems.size() > 0 && model.getNodeCountTotal() > 0) {
-			model.setRatioKeywords((double) countKeyWords / userModelItems.size());
-			model.setRatioReferences((double) countReferences / userModelItems.size());
+		if (userModelItems.size() > 0 && userModel.getNodeCountTotal() > 0) {
+			userModel.setRatioKeywords((double) countKeyWords / userModelItems.size());
+			userModel.setRatioReferences((double) countReferences / userModelItems.size());
 
-			model.setUmSizeRelative(((double) model.getNodeCountExpanded()) / ((double) model.getNodeCountTotal()));
+			userModel.setUmSizeRelative(((double) userModel.getNodeCountExpanded()) / ((double) userModel.getNodeCountTotal()));
 		}
 		else {
-			throw new RuntimeException("damaged userModel (\"0\" values): " + model.getModel() + " size: " + userModelItems.size() + " / nodeCountTotal: "
-					+ model.getNodeCountTotal());
+			throw new RuntimeException("damaged userModel (\"0\" values): " + userModel.getModel() + " size: " + userModelItems.size() + " / nodeCountTotal: "
+					+ userModel.getNodeCountTotal());
 		}
 
-		model.setUmFeatureWeightMax(userModelItems.get(0).getWeight());
-		model.setUmFeatureWeightMin(userModelItems.get(userModelItems.size() - 1).getWeight());
+		userModel.setUmFeatureWeightMax(userModelItems.get(0).getWeight());
+		userModel.setUmFeatureWeightMin(userModelItems.get(userModelItems.size() - 1).getWeight());
 
 		// initialize variables with first item
-		model.setUmFeatureWeightTop3Avg(userModelItems.get(0).getWeight());
-		model.setUmFeatureWeightLast3Avg(userModelItems.get(userModelItems.size() - 1).getWeight());
-		model.setUmFeatureWeightTop5Avg(userModelItems.get(0).getWeight());
-		model.setUmFeatureWeightLast5Avg(userModelItems.get(userModelItems.size() - 1).getWeight());
-		model.setUmFeatureWeightTop10Avg(userModelItems.get(0).getWeight());
-		model.setUmFeatureWeightLast10Avg(userModelItems.get(userModelItems.size() - 1).getWeight());
+		userModel.setUmFeatureWeightTop3Avg(userModelItems.get(0).getWeight());
+		userModel.setUmFeatureWeightLast3Avg(userModelItems.get(userModelItems.size() - 1).getWeight());
+		userModel.setUmFeatureWeightTop5Avg(userModelItems.get(0).getWeight());
+		userModel.setUmFeatureWeightLast5Avg(userModelItems.get(userModelItems.size() - 1).getWeight());
+		userModel.setUmFeatureWeightTop10Avg(userModelItems.get(0).getWeight());
+		userModel.setUmFeatureWeightLast10Avg(userModelItems.get(userModelItems.size() - 1).getWeight());
 
-		model.setUmFeatureWeightAvg(userModelItems.get(0).getWeight());
+		userModel.setUmFeatureWeightAvg(userModelItems.get(0).getWeight());
 		for (int i = 1; i < userModelItems.size(); i++) {
-			model.setUmFeatureWeightAvg(model.getUmFeatureWeightAvg() + userModelItems.get(i).getWeight());
+			userModel.setUmFeatureWeightAvg(userModel.getUmFeatureWeightAvg() + userModelItems.get(i).getWeight());
 			if (i < 3) {
-				model.setUmFeatureWeightTop3Avg(model.getUmFeatureWeightTop3Avg() + userModelItems.get(i).getWeight());
-				model.setUmFeatureWeightLast3Avg(model.getUmFeatureWeightLast3Avg() + userModelItems.get(userModelItems.size() - i - 1).getWeight());
+				userModel.setUmFeatureWeightTop3Avg(userModel.getUmFeatureWeightTop3Avg() + userModelItems.get(i).getWeight());
+				userModel.setUmFeatureWeightLast3Avg(userModel.getUmFeatureWeightLast3Avg() + userModelItems.get(userModelItems.size() - i - 1).getWeight());
 			}
 			if (i < 5) {
-				model.setUmFeatureWeightTop5Avg(model.getUmFeatureWeightTop5Avg() + userModelItems.get(i).getWeight());
-				model.setUmFeatureWeightLast5Avg(model.getUmFeatureWeightLast5Avg() + userModelItems.get(userModelItems.size() - i - 1).getWeight());
+				userModel.setUmFeatureWeightTop5Avg(userModel.getUmFeatureWeightTop5Avg() + userModelItems.get(i).getWeight());
+				userModel.setUmFeatureWeightLast5Avg(userModel.getUmFeatureWeightLast5Avg() + userModelItems.get(userModelItems.size() - i - 1).getWeight());
 			}
 			if (i < 10) {
-				model.setUmFeatureWeightTop10Avg(model.getUmFeatureWeightTop10Avg() + userModelItems.get(i).getWeight());
-				model.setUmFeatureWeightLast10Avg(model.getUmFeatureWeightLast10Avg() + userModelItems.get(userModelItems.size() - i - 1).getWeight());
+				userModel.setUmFeatureWeightTop10Avg(userModel.getUmFeatureWeightTop10Avg() + userModelItems.get(i).getWeight());
+				userModel.setUmFeatureWeightLast10Avg(userModel.getUmFeatureWeightLast10Avg() + userModelItems.get(userModelItems.size() - i - 1).getWeight());
 			}
 		}
 
-		model.setUmFeatureWeightAvg(model.getUmFeatureWeightAvg() / userModelItems.size());
+		userModel.setUmFeatureWeightAvg(userModel.getUmFeatureWeightAvg() / userModelItems.size());
 		if (userModelItems.size() >= 3) {
-			model.setUmFeatureWeightTop3Avg(model.getUmFeatureWeightTop3Avg() / 3);
-			model.setUmFeatureWeightLast3Avg(model.getUmFeatureWeightLast3Avg() / 3);
+			userModel.setUmFeatureWeightTop3Avg(userModel.getUmFeatureWeightTop3Avg() / 3);
+			userModel.setUmFeatureWeightLast3Avg(userModel.getUmFeatureWeightLast3Avg() / 3);
 		}
 		else {
-			model.setUmFeatureWeightTop3Avg(null);
-			model.setUmFeatureWeightLast3Avg(null);
+			userModel.setUmFeatureWeightTop3Avg(null);
+			userModel.setUmFeatureWeightLast3Avg(null);
 		}
 		if (userModelItems.size() >= 5) {
-			model.setUmFeatureWeightTop5Avg(model.getUmFeatureWeightTop5Avg() / 5);
-			model.setUmFeatureWeightLast5Avg(model.getUmFeatureWeightLast5Avg() / 5);
+			userModel.setUmFeatureWeightTop5Avg(userModel.getUmFeatureWeightTop5Avg() / 5);
+			userModel.setUmFeatureWeightLast5Avg(userModel.getUmFeatureWeightLast5Avg() / 5);
 		}
 		else {
-			model.setUmFeatureWeightTop5Avg(null);
-			model.setUmFeatureWeightLast5Avg(null);
+			userModel.setUmFeatureWeightTop5Avg(null);
+			userModel.setUmFeatureWeightLast5Avg(null);
 		}
 		if (userModelItems.size() >= 10) {
-			model.setUmFeatureWeightTop10Avg(model.getUmFeatureWeightTop10Avg() / 10);
-			model.setUmFeatureWeightLast10Avg(model.getUmFeatureWeightLast10Avg() / 10);
+			userModel.setUmFeatureWeightTop10Avg(userModel.getUmFeatureWeightTop10Avg() / 10);
+			userModel.setUmFeatureWeightLast10Avg(userModel.getUmFeatureWeightLast10Avg() / 10);
 		}
 		else {
-			model.setUmFeatureWeightTop10Avg(null);
-			model.setUmFeatureWeightLast10Avg(null);
+			userModel.setUmFeatureWeightTop10Avg(null);
+			userModel.setUmFeatureWeightLast10Avg(null);
 		}
 
 	}
@@ -285,7 +289,7 @@ public class GraphDbUserModelFactory {
 
 			if (item instanceof UserModelKeywordItem) {
 				Query query = new TermQuery(new Term("text", item.getItem()));
-				if (model.getAlgorithm().getFeatureWeightSubmission() != null && model.getAlgorithm().getFeatureWeightSubmission()) {
+				if (userModel.getAlgorithm().getFeatureWeightSubmission() != null && userModel.getAlgorithm().getFeatureWeightSubmission()) {
 					query.setBoost((float) item.getWeight().doubleValue());
 				}
 				booleanQuery.add(query, BooleanClause.Occur.SHOULD);
@@ -293,7 +297,7 @@ public class GraphDbUserModelFactory {
 			}
 			else if (item instanceof UserModelReferenceItem) {
 				Query query = new TermQuery(new Term("references", item.getItem()));
-				if (model.getAlgorithm().getFeatureWeightSubmission() != null && model.getAlgorithm().getFeatureWeightSubmission()) {
+				if (userModel.getAlgorithm().getFeatureWeightSubmission() != null && userModel.getAlgorithm().getFeatureWeightSubmission()) {
 					query.setBoost((float) item.getWeight().doubleValue());
 				}
 				booleanQuery.add(query, BooleanClause.Occur.SHOULD);
@@ -305,7 +309,11 @@ public class GraphDbUserModelFactory {
 	}
 
 	public UserModel getUserModel() {
-		return model;
+		return userModel;
+	}
+	
+	public SearchModel getSearchModel() {
+		return searchModel;
 	}
 
 	public Double getRatioKeywordsInModel() {
@@ -343,17 +351,17 @@ public class GraphDbUserModelFactory {
 					session.saveOrUpdate(algorithm);
 					RecommendationCommons.logger.log("created algorithm ["+algorithm.getId()+"] for user ["+user.getId()+"]");					
 				}
-				model.setAlgorithm(algorithm);
+				userModel.setAlgorithm(algorithm);
 				valid = true;
 				// TESTCASE
 				// model.setModel("1:2:20@@|#|@@mind map based recommender@@|#|@@3AAE9EA8ED40A3D6825DC6EEDAE41A8F5CBB46D75B8D8251787E3AA5363BA@@|-|@@Plagiarism in natural and programming languages: an overview of current tools and technologies@@|-|@@18");
-				if (model.getAlgorithm().getApproach() == Algorithm.APPROACH_STEREOTYPE) {
+				if (userModel.getAlgorithm().getApproach() == Algorithm.APPROACH_STEREOTYPE) {
 					return null;
 				}
 				try {
-    				response = requestUserModel(user, model.getAlgorithm(), null);
+    				response = requestUserModel(user, userModel.getAlgorithm(), null);
     				if (response == null) {
-    					RecommendationCommons.logger.log("empty userModel for user ["+user.getId()+"] and algorithm ["+model.getAlgorithm().getId()+"]");
+    					RecommendationCommons.logger.log("empty userModel for user ["+user.getId()+"] and algorithm ["+userModel.getAlgorithm().getId()+"]");
     					maxTrials--;
     					algorithm = null;
     					valid = false;
@@ -364,20 +372,20 @@ public class GraphDbUserModelFactory {
 				}
 				catch(Exception e) {
 					valid = false;
-					RecommendationCommons.logger.log("exception for algorithm ["+model.getAlgorithm().getId()+"] and user ["+user.getId()+"]: "+e.getMessage());
+					RecommendationCommons.logger.log("exception for algorithm ["+userModel.getAlgorithm().getId()+"] and user ["+user.getId()+"]: "+e.getMessage());
 					e.printStackTrace();
 				}
 			}
 			if (!valid) {
 				time = System.currentTimeMillis();
 				algorithm = AlgorithmCommons.getDefault(session);
-				model.setAlgorithm(algorithm);
-				RecommendationCommons.logger.log("using default algorithm ["+model.getAlgorithm().getPersistentIdentity().getId()+"] for user ["+user.getId()+"]");
-				response = requestUserModel(user, model.getAlgorithm(), null);
+				userModel.setAlgorithm(algorithm);
+				RecommendationCommons.logger.log("using default algorithm ["+userModel.getAlgorithm().getPersistentIdentity().getId()+"] for user ["+user.getId()+"]");
+				response = requestUserModel(user, userModel.getAlgorithm(), null);
 			}
 		}
 		finally {
-			model.setExecutionTime((int) (System.currentTimeMillis() - time));
+			userModel.setExecutionTime((int) (System.currentTimeMillis() - time));
 		}
 
 		return response;
