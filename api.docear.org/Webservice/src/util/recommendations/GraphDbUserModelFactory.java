@@ -130,7 +130,12 @@ public class GraphDbUserModelFactory {
 		userModelItems = userModelItems.subList(0, resultAmount);
 		userModel.setModel(getModelString());
 		
-		searchModel = SearchCommons.createSearchModel(session, userModel, userModelItems);		
+		try {
+			searchModel = SearchCommons.createSearchModel(session, userModel, userModelItems);
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
 		addUserModelVariables(parser);
 	}
 
