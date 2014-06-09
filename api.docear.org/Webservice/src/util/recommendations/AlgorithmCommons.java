@@ -71,8 +71,13 @@ public class AlgorithmCommons {
 			alg.setRootPath(null);
 		}
 		
-		alg.setDataElementType(r.nextInt(3)); //0=both, 1=text, 2=citations (bibocoupling)		
-		alg.setElementSelectionMethod(r.nextInt(4)); //0=all; 1=edited; 2=created; 3=moved; 4=opened; 5=selected; 6=unfolded (e.g. the last X edited nodes)						
+		alg.setDataElementType(r.nextInt(3)); //0=both, 1=text, 2=citations (bibocoupling)
+		
+		int maxNumber = 4;
+		if (alg.getDataElement() == 1) {
+			maxNumber = 3;
+		}			
+		alg.setElementSelectionMethod(r.nextInt(maxNumber)); //0=all; 1=edited; 2=created; 3=moved; 4=opened; 5=selected; 6=unfolded (e.g. the last X edited nodes)						
 		
 		int timeFrame = r.nextInt(timeFrames.length); //<----- we ignore this for now 
 		timeFrame = 0;
