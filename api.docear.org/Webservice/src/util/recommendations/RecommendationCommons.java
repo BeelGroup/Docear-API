@@ -493,7 +493,7 @@ public class RecommendationCommons {
 		Set<RecommendationsDocuments> recommendationDocuments = new HashSet<RecommendationsDocuments>();
 
 		Searcher searcher = new Searcher();		
-		List<DocumentHashItem> items = searcher.search(factory.getLuceneQuery(), 1000);
+		List<DocumentHashItem> items = searcher.search(factory.getLuceneQuery(), 0, 1000);
 
 		if (items == null || items.size() == 0) {
 			return null;

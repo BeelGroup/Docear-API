@@ -112,6 +112,17 @@ public class SearchDocuments extends Resource {
 	public Integer getPresentationRank() {
 		return presentationRank;
 	}
+	
+	
+	/**
+	 * @return returns the index of the document in the whole set (starting with 0, ending with set.size-1), this method returns presentationRank-1 for convenience
+	 */
+	public Integer getPresentationIndex() {
+		if (presentationRank == null) {
+			return presentationRank;
+		}
+		return presentationRank-1;
+	}
 
 	public void setPresentationRank(Integer presentationRank) {
 		this.presentationRank = presentationRank;

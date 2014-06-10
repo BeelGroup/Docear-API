@@ -50,37 +50,42 @@ public class Searcher {
 	}
 	
 	public List<DocumentHashItem> search(String search) throws ParseException, IOException {
-		return search(search, "title", 100);
+		return search(search, "title", 0, 100);
+	}
+			
+	public List<DocumentHashItem> search(String search, String defaultField, int offset, int number) throws ParseException, IOException {	
+		if (defaultField == null) {
+			defaultField = "title";
+		}
+		
+		Query query = new QueryParser(Version.LUCENE_46, defaultField, new StandardAnalyzer(Version.LUCENE_46)).parse(search);
+		return search(query, offset, number);
 	}
 	
-	public List<DocumentHashItem> search(String search, String field, int max) throws IOException, org.apache.lucene.queryparser.classic.ParseException {	
-		Query q = new QueryParser(Version.LUCENE_46, field, new StandardAnalyzer(Version.LUCENE_46)).parse(search);				
-		
-		return search(q, max);
-	}
-	
-	public List<DocumentHashItem> search(Query query, int max) throws ParseException, IOException {
-		List<DocumentHashItem> r = new ArrayList<DocumentHashItem>();
-		
+	public List<DocumentHashItem> search(Query query, int offset, int number) throws ParseException, IOException {
+		List<DocumentHashItem> documentHashItem = new ArrayList<DocumentHashItem>();
 		long time = System.currentTimeMillis();
-		TopDocs td = is.search(query, max);
+		TopDocs td = is.search(query, offset+number);
 		System.out.println("LuceneQuery ["+query+"] executed in "+(System.currentTimeMillis()-time)+" ms");
 		
-		int rank = 1;
+		int rank = 0;
 		for (ScoreDoc sd : td.scoreDocs) {			
 			DocumentHashItem item = new DocumentHashItem();
-			try {
-				item.documentId = Integer.parseInt((is.doc(sd.doc).get("id")));
-				item.pdfHash = is.doc(sd.doc).get("hash");				
-				item.rank = rank++;
-				item.relevance =sd.score;
-				r.add(item);
-			}
-			catch (Exception e) {
-				logger.info("Exception in org.mrdlib.index.Searcher.search(): "+e.getMessage());
+			rank++;
+			if (rank > offset) {
+    			try {
+    				item.documentId = Integer.parseInt((is.doc(sd.doc).get("id")));
+    				item.pdfHash = is.doc(sd.doc).get("hash");				
+    				item.rank = rank;
+    				item.relevance =sd.score;
+    				documentHashItem.add(item);
+    			}
+    			catch (Exception e) {
+    				logger.info("Exception in org.mrdlib.index.Searcher.search(): "+e.getMessage());
+    			}
 			}
 		}
-		return r;
+		return documentHashItem;
 	}
 	
 	public Double[] getIDF(String[] terms, String field) throws Exception {				

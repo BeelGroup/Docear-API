@@ -1,9 +1,19 @@
 package util.searchengine;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.Session;
+import org.mrdlib.index.DocumentHashItem;
+import org.mrdlib.index.Searcher;
+import org.sciplore.queries.DocumentQueries;
+import org.sciplore.queries.DocumentsPdfHashQueries;
+import org.sciplore.resources.Document;
+import org.sciplore.resources.DocumentsPdfHash;
+import org.sciplore.resources.FulltextUrl;
+import org.sciplore.resources.SearchDocuments;
+import org.sciplore.resources.SearchDocumentsSet;
 import org.sciplore.resources.SearchModel;
 import org.sciplore.resources.UserModel;
 
@@ -41,5 +51,92 @@ public class SearchCommons {
 		searchModel.setExecutionTime((int) (System.currentTimeMillis()-time));
 		
 		return searchModel;
+	}
+	
+	public List<SearchDocuments> search(Session session, String search, String defaultField, int offset, int number, SearchDocumentsSet searchDocumentsSet) {
+		List<SearchDocuments> searchDocuments = getExistingSearchDocuments(searchDocumentsSet, offset, number);
+		
+		// compute which documents really need to be searched, when the stored ones are used
+		int effectiveNumber = number - searchDocuments.size();
+		int effectiveOffset = offset + searchDocuments.size();
+		
+		try {
+			Searcher searcher = new Searcher();
+			List<DocumentHashItem> items = searcher.search(search, defaultField, effectiveOffset, effectiveNumber);
+			
+			searchDocuments = getSearchDocumentsFromDocumentHashItem(session, searchDocumentsSet, items, effectiveOffset);
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return searchDocuments;
+	}
+	
+	public List<SearchDocuments> getSearchDocumentsFromDocumentHashItem(Session session, SearchDocumentsSet searchDocSet, List<DocumentHashItem> items, int offset) {
+		List<SearchDocuments> searchDocuments = new ArrayList<SearchDocuments>();
+    	for (DocumentHashItem item : items) {
+    		Document doc = null;
+    		FulltextUrl fulltextUrl = null;
+    		if (item.pdfHash != null) {
+    			DocumentsPdfHash dph = DocumentsPdfHashQueries.getPdfHash(session, item.pdfHash);
+    			if (dph != null) {
+    				doc = dph.getDocument();
+    				try {
+    					fulltextUrl = dph.getFulltextUrls().get(0);
+    				}
+    				catch (Exception e) {
+    					doc = null;
+    					System.out.println("UserResource.getLiteratureRecommendations: " + e.getMessage());
+    				}
+    			}
+    		}
+    
+    		// fallback if hash unknown or null
+    		if (doc == null) {
+    			doc = DocumentQueries.getDocument(session, item.documentId);
+    			try {
+    				fulltextUrl = doc.getFulltextUrls().iterator().next();
+    			}
+    			catch (Exception e) {
+    				continue;
+    			}
+    		}
+    		if (fulltextUrl == null) {
+    			continue;
+    		}
+    
+    		SearchDocuments searchDoc = createSearchDocument(session, searchDocSet, fulltextUrl, item.rank, item.relevance, offset);
+    		if (searchDoc != null) {
+    			searchDocuments.add(searchDoc);
+    		}
+    	}
+    	
+    	return searchDocuments;
+	}
+
+	private SearchDocuments createSearchDocument(Session session, SearchDocumentsSet searchDocSet, FulltextUrl fulltextUrl, int rank, Float relevance, int offset) {		
+		SearchDocuments searchDoc = new SearchDocuments(session);
+		searchDoc.setSearchDocumentsSet(searchDocSet);
+		searchDoc.setFulltextUrl(fulltextUrl);
+		searchDoc.setPresentationRank(++offset);
+		searchDoc.setRelevance(relevance);
+
+		return searchDoc;
+	}
+
+	private List<SearchDocuments> getExistingSearchDocuments(SearchDocumentsSet searchDocumentsSet, Integer offset, int number) {
+		List<SearchDocuments> searchDocuments = new ArrayList<SearchDocuments>();
+		
+		if (searchDocumentsSet != null && searchDocumentsSet.getSearchdocuments().size() > 0) {
+    		for (SearchDocuments searchDoc : searchDocumentsSet.getSearchdocuments()) {
+    			Integer index = searchDoc.getPresentationIndex();
+    			if (index != null && index >= offset && index < (offset+number)) {
+    				searchDocuments.add(searchDoc);
+    			}
+    		}
+		}
+		
+		return searchDocuments;
 	}
 }

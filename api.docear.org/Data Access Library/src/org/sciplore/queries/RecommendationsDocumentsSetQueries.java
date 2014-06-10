@@ -7,7 +7,6 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.sciplore.resources.RecommendationsDocumentsSet;
 import org.sciplore.resources.User;
-import org.sciplore.tools.SimpleRestrictions;
 
 public class RecommendationsDocumentsSetQueries {
 

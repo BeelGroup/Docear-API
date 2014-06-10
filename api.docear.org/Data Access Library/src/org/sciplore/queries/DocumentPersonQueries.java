@@ -5,11 +5,9 @@ import java.util.List;
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.Session;
-import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.sciplore.resources.DocumentPerson;
 import org.sciplore.resources.Person;
-import org.sciplore.tools.Tools;
 
 public class DocumentPersonQueries {
 	

@@ -527,9 +527,10 @@ public class DocumentResource {
 
 	@GET
 	@Path("/{q}")
-	public Response search(@Context UriInfo ui, @Context HttpServletRequest request, @PathParam(value = "q") String q,
-			@QueryParam("source") String source, @DefaultValue(Tools.DEFAULT_FORMAT) @QueryParam("format") String format,
-			@QueryParam("stream") boolean stream, @QueryParam("number") Integer number) {
+	public Response search(@Context UriInfo ui, @Context HttpServletRequest request, @PathParam(value = "q") String q, @QueryParam("source") String source, 
+			@DefaultValue(Tools.DEFAULT_FORMAT) @QueryParam("format") String format, @QueryParam("stream") boolean stream, @QueryParam("defaultField") String defaultField,
+			int offset, int number) {
+		
 		Session session = Tools.getSession();
 		try {
 			if (!ResourceCommons.authenticate(request)) {
@@ -541,9 +542,6 @@ public class DocumentResource {
 			List<DocumentHashItem> items = new Searcher().search(q);
 			System.out.println("lucene search time: "+(System.currentTimeMillis()-time));
 			
-			if (number == null) {
-				number = items.size();
-			}
 			if (items==null || items.size() == 0) {
 				throw new NullPointerException();
 			}
@@ -567,6 +565,8 @@ public class DocumentResource {
 			Tools.tolerantClose(session);
 		}
 	}
+	
+	
 
 	//FIXME: merge document with specific id
 	//	@POST
