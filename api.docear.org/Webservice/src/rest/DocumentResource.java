@@ -60,6 +60,7 @@ import util.DocumentCommons;
 import util.FulltextCommons;
 import util.ResourceCommons;
 import util.Tools;
+import util.UserCommons;
 
 @Path("/documents")
 public class DocumentResource {
@@ -531,6 +532,10 @@ public class DocumentResource {
 			@QueryParam("stream") boolean stream, @QueryParam("number") Integer number) {
 		Session session = Tools.getSession();
 		try {
+			if (!ResourceCommons.authenticate(request)) {
+				return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "unauthorized.");
+			}
+			
 			List<Integer> docIds = new ArrayList<Integer>();
 			long time = System.currentTimeMillis();
 			List<DocumentHashItem> items = new Searcher().search(q);

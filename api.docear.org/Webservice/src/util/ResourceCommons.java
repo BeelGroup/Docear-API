@@ -3,11 +3,31 @@ package util;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MediaType;
 
+import org.hibernate.Session;
+import org.sciplore.database.SessionProvider;
 import org.sciplore.resources.User;
 
 public class ResourceCommons {
 
 	public static final String DEFAULT_FORMAT = "xml";
+	
+	public static boolean authenticate(HttpServletRequest request) {
+		if (System.getProperty("docear_debug") != null && System.getProperty("docear_debug").equals("true")) {
+			return true;
+		}
+		String userName = request.getHeader("userName");
+		final Session session = SessionProvider.sessionFactory.openSession();
+		try {
+			User user = new User(session).getUserByEmailOrUsername(userName);
+			if (user == null) {
+				return false;
+			}
+			return authenticate(request, user);
+		}
+		finally {
+			Tools.tolerantClose(session);
+		}
+	}
 	
 	public static boolean authenticate(HttpServletRequest request, User user) {
 		if (System.getProperty("docear_debug") != null && System.getProperty("docear_debug").equals("true")) {
