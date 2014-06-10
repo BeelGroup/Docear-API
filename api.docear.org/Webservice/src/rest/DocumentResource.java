@@ -54,6 +54,8 @@ import org.sciplore.resources.Document;
 import org.sciplore.resources.DocumentXref;
 import org.sciplore.resources.DocumentsPdfHash;
 import org.sciplore.resources.FulltextUrl;
+import org.sciplore.resources.SearchDocuments;
+import org.sciplore.resources.SearchDocumentsSet;
 import org.sciplore.resources.User;
 
 import util.DocumentCommons;
@@ -61,6 +63,7 @@ import util.FulltextCommons;
 import util.ResourceCommons;
 import util.Tools;
 import util.UserCommons;
+import util.searchengine.SearchCommons;
 
 @Path("/documents")
 public class DocumentResource {
@@ -529,7 +532,7 @@ public class DocumentResource {
 	@Path("/{q}")
 	public Response search(@Context UriInfo ui, @Context HttpServletRequest request, @PathParam(value = "q") String q, @QueryParam("source") String source, 
 			@DefaultValue(Tools.DEFAULT_FORMAT) @QueryParam("format") String format, @QueryParam("stream") boolean stream, @QueryParam("defaultField") String defaultField,
-			int offset, int number) {
+			@QueryParam("offset") int offset, @QueryParam("number") int number, @QueryParam("SearchDocumentsSet") Integer searchDocSetId) {
 		
 		Session session = Tools.getSession();
 		try {
@@ -537,19 +540,11 @@ public class DocumentResource {
 				return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "unauthorized.");
 			}
 			
-			List<Integer> docIds = new ArrayList<Integer>();
-			long time = System.currentTimeMillis();
-			List<DocumentHashItem> items = new Searcher().search(q);
-			System.out.println("lucene search time: "+(System.currentTimeMillis()-time));
-			
-			if (items==null || items.size() == 0) {
-				throw new NullPointerException();
+			SearchDocumentsSet searchDocumentsSet = null;
+			if (searchDocSetId != null) {
+				searchDocumentsSet = (SearchDocumentsSet) session.get(SearchDocumentsSet.class, searchDocSetId);
 			}
-			for (int i=0; i<Math.min(number, items.size()); i++) {
-				docIds.add(items.get(i).documentId);
-			}
-			List<Document> docs = DocumentQueries.getDocuments(session, docIds);
-			Bean bean = new BeanFactory(ui, request).getDocumentsBean(docs, new Long(docs.size()));
+			List<SearchDocuments> searchDocuments = SearchCommons.search(session, q, defaultField, offset, number, searchDocumentsSet);
 			return Tools.getSerializedResponse(format, bean, stream);
 
 		}

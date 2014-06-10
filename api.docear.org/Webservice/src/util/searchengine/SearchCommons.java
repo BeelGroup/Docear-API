@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.ws.rs.core.UriInfo;
+
 import org.hibernate.Session;
 import org.mrdlib.index.DocumentHashItem;
 import org.mrdlib.index.Searcher;
@@ -12,6 +14,8 @@ import org.sciplore.queries.DocumentsPdfHashQueries;
 import org.sciplore.resources.Document;
 import org.sciplore.resources.DocumentsPdfHash;
 import org.sciplore.resources.FulltextUrl;
+import org.sciplore.resources.RecommendationsDocumentsSet;
+import org.sciplore.resources.RecommendationsUsersSettings;
 import org.sciplore.resources.SearchDocuments;
 import org.sciplore.resources.SearchDocumentsSet;
 import org.sciplore.resources.SearchModel;
@@ -53,7 +57,7 @@ public class SearchCommons {
 		return searchModel;
 	}
 	
-	public List<SearchDocuments> search(Session session, String search, String defaultField, int offset, int number, SearchDocumentsSet searchDocumentsSet) {
+	public static List<SearchDocuments> search(Session session, String search, String defaultField, int offset, int number, SearchDocumentsSet searchDocumentsSet) {
 		List<SearchDocuments> searchDocuments = getExistingSearchDocuments(searchDocumentsSet, offset, number);
 		
 		// compute which documents really need to be searched, when the stored ones are used
@@ -64,7 +68,7 @@ public class SearchCommons {
 			Searcher searcher = new Searcher();
 			List<DocumentHashItem> items = searcher.search(search, defaultField, effectiveOffset, effectiveNumber);
 			
-			searchDocuments = getSearchDocumentsFromDocumentHashItem(session, searchDocumentsSet, items, effectiveOffset);
+			searchDocuments.addAll(getSearchDocumentsFromDocumentHashItem(session, searchDocumentsSet, items, effectiveOffset));
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -73,7 +77,7 @@ public class SearchCommons {
 		return searchDocuments;
 	}
 	
-	public List<SearchDocuments> getSearchDocumentsFromDocumentHashItem(Session session, SearchDocumentsSet searchDocSet, List<DocumentHashItem> items, int offset) {
+	public static List<SearchDocuments> getSearchDocumentsFromDocumentHashItem(Session session, SearchDocumentsSet searchDocSet, List<DocumentHashItem> items, int offset) {
 		List<SearchDocuments> searchDocuments = new ArrayList<SearchDocuments>();
     	for (DocumentHashItem item : items) {
     		Document doc = null;
@@ -114,8 +118,12 @@ public class SearchCommons {
     	
     	return searchDocuments;
 	}
+	
+	public static String buildSearchDocumentsXml(SearchDocumentsSet searchDocSet, List<SearchDocuments> searchDocuments, RecommendationsUsersSettings settings, UriInfo uriInfo, String userName) {
+		
+	}
 
-	private SearchDocuments createSearchDocument(Session session, SearchDocumentsSet searchDocSet, FulltextUrl fulltextUrl, int rank, Float relevance, int offset) {		
+	private static SearchDocuments createSearchDocument(Session session, SearchDocumentsSet searchDocSet, FulltextUrl fulltextUrl, int rank, Float relevance, int offset) {		
 		SearchDocuments searchDoc = new SearchDocuments(session);
 		searchDoc.setSearchDocumentsSet(searchDocSet);
 		searchDoc.setFulltextUrl(fulltextUrl);
@@ -125,7 +133,7 @@ public class SearchCommons {
 		return searchDoc;
 	}
 
-	private List<SearchDocuments> getExistingSearchDocuments(SearchDocumentsSet searchDocumentsSet, Integer offset, int number) {
+	private static List<SearchDocuments> getExistingSearchDocuments(SearchDocumentsSet searchDocumentsSet, Integer offset, int number) {
 		List<SearchDocuments> searchDocuments = new ArrayList<SearchDocuments>();
 		
 		if (searchDocumentsSet != null && searchDocumentsSet.getSearchdocuments().size() > 0) {
