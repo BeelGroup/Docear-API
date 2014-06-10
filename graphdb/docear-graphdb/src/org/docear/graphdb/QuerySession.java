@@ -79,11 +79,17 @@ public class QuerySession {
 	
 	public Integer getNoDaysSinceMax(boolean allUserMaps) {
 		if (allUserMaps) {
-			return getNoDaysSinceMax(this.allNodeDates.first());
+			if (this.allNodeDates.size() > 0) {
+				return getNoDaysSinceMax(this.allNodeDates.first());
+			}
 		}
 		else {
-			return getNoDaysSinceMax(this.algNodeDates.first());
+			if (this.algNodeDates.size() > 0) {
+				return getNoDaysSinceMax(this.algNodeDates.first());
+			}
 		}
+		
+		return null;
 	}	
 
 	public void clearNewSinceMaxDates(boolean allUserMaps) {
@@ -114,6 +120,7 @@ public class QuerySession {
 		
 		if (filterDate == null) {	
 			int randomIndex = new Random().nextInt(algNodeDates.size());
+			System.out.println("NDSM: random index: "+randomIndex);
 			filterDate = algNodeDates.toArray(new Date[] {})[randomIndex];
 		}
 		

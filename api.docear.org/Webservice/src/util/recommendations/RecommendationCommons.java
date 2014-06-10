@@ -1,4 +1,4 @@
-package util;
+package util.recommendations;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -30,15 +30,14 @@ import org.sciplore.resources.FulltextUrl;
 import org.sciplore.resources.RecommendationsDocuments;
 import org.sciplore.resources.RecommendationsDocumentsSet;
 import org.sciplore.resources.RecommendationsUsersSettings;
+import org.sciplore.resources.SearchModel;
 import org.sciplore.resources.User;
 import org.sciplore.resources.UserModel;
 import org.w3c.dom.Element;
 
 import rest.UserRessource;
-import util.recommendations.AsynchronousRecommendationsGeneratorAfterNewMap;
-import util.recommendations.GraphDbUserModelFactory;
-import util.recommendations.OfflineEvaluator;
-import util.recommendations.RecommendationLogger;
+import util.InternalCommons;
+import util.Tools;
 
 public class RecommendationCommons {	
 	public static final OfflineEvaluator offlineEvaluator = new OfflineEvaluator();
@@ -419,6 +418,13 @@ public class RecommendationCommons {
 				}
 				
 				session.saveOrUpdate(recDocSet);
+				
+				
+				SearchModel searchModel = response.getSearchModel();
+				if (searchModel != null) {
+					session.saveOrUpdate(searchModel);
+				}
+				
 				session.flush();
 				RecommendationCommons.logger.log("recommendations saved for user["+recDocSet.getUser().getId()+"] with algorithm["+recDocSet.getUserModel().getAlgorithm().getId()+"] having stopWordRemoval set to: "+recDocSet.getUserModel().getAlgorithm().getStopWordRemoval()+"\n#####\n");
 				

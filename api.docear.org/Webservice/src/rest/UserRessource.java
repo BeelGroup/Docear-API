@@ -38,18 +38,15 @@ import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.sciplore.data.BeanFactory;
 import org.sciplore.database.AtomicOperation;
 import org.sciplore.database.AtomicOperationHandle;
 import org.sciplore.database.SessionProvider;
 import org.sciplore.queries.ApplicationQueries;
-import org.sciplore.queries.DocumentQueries;
 import org.sciplore.queries.MindmapQueries;
 import org.sciplore.queries.RecommendationsDocumentsQueries;
 import org.sciplore.queries.RecommendationsDocumentsSetQueries;
 import org.sciplore.resources.Application;
 import org.sciplore.resources.Contact;
-import org.sciplore.resources.Document;
 import org.sciplore.resources.FulltextUrl;
 import org.sciplore.resources.Mindmap;
 import org.sciplore.resources.RecommendationsDocuments;
@@ -60,14 +57,12 @@ import org.sciplore.resources.UserPasswordRequest;
 import org.sciplore.tools.SciploreResponseCode;
 import org.sciplore.utilities.DocearLogger;
 
-import util.DocumentCommons;
-import util.InternalCommons;
-import util.RecommendationCommons;
 import util.ResourceCommons;
 import util.Tools;
 import util.UserCommons;
 import util.recommendations.AsynchronousRecommendationsGeneratorAfterAutoRec;
 import util.recommendations.AsynchronousRecommendationsGeneratorAfterRecRequest;
+import util.recommendations.RecommendationCommons;
 
 @Path("/user")
 public class UserRessource {

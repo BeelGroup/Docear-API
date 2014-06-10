@@ -1,7 +1,5 @@
 package org.docear.graphdb;
 
-import java.text.DateFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
@@ -19,14 +17,14 @@ import org.neo4j.graphdb.Node;
 
 public class DateFilter {
 	
-	public static void addNewSinceMaxDate(QuerySession session, AlgorithmArguments args, Node node, boolean allUserMaps) {
+	public static void addNewSinceMaxDate(QuerySession session, AlgorithmArguments args, Node node, Boolean allUserMaps) {		;
 		final Integer dataElement = (Integer) args.getArgument(AlgorithmArguments.DATA_ELEMENT);
 		final Integer method = (Integer) args.getArgument(AlgorithmArguments.ELEMENT_SELECTION_METHOD);
-		
+				
 		if (dataElement == null || method == null || method == 0) {
 			return;
 		}
-		
+				
 		switch (dataElement) {
 		case 1:
 			addNewSinceMaxDateMap(session, node, method, allUserMaps);
@@ -70,7 +68,7 @@ public class DateFilter {
 		case 1: // 1=edited 
 			// date is given in the format yyyy-MM-dd HH:mm:ss
 			if (map.hasProperty("CREATED")) {
-				date = DateFilter.stringToMilliseconds(map.getProperty("CREATED").toString(), new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
+				date = DateFilter.stringToMilliseconds(map.getProperty("CREATED").toString());
 			}
 			break;
 		case 2: // 2=created 
@@ -78,7 +76,20 @@ public class DateFilter {
 				date = Long.valueOf(map.getProperty("dcr_id").toString().split("_")[0]);
 			}
 			break;
+		default:
+			if (map.hasProperty("CREATED")) {
+				date = DateFilter.stringToMilliseconds(map.getProperty("CREATED").toString());
+			}
+			else {
+				date = Long.MAX_VALUE;
+			}
+			
+			if (map.hasProperty("dcr_id")) {
+				date = Math.min(date, Long.valueOf(map.getProperty("dcr_id").toString().split("_")[0]));
+			}
+			break;
 		}
+		
 		
 		return date;
 	}
@@ -86,8 +97,7 @@ public class DateFilter {
 	private static void addNewSinceMaxDateMap(QuerySession session, Node map, Integer method, boolean allUserMaps) {
 		Long date = getMapDate(map, method);
 		
-		if (date != null) {	
-			DocearLogger.info("NDSM: addNewDate: "+new Date(date).toString());
+		if (date != null) {
 			session.addNewDate(date, allUserMaps);
 		}
 	}
@@ -113,6 +123,19 @@ public class DateFilter {
 		}
 		
 		date = Long.valueOf(node.getProperty(propertyName).toString());
+		if (method == 0) {
+			// get minimum of all strings
+			String s1 = node.getProperty("MODIFIED").toString();
+			String s2 = node.getProperty("CREATED").toString();
+			if (s2.compareTo(s1) < 0) {
+				s1 = s2;
+			}
+			s2 = node.getProperty("MOVED").toString();
+			if (s2.compareTo(s1) < 0) {
+				s1 = s2;
+			}
+			date = Long.valueOf(s1);
+		}
 		
 		return date;
 	}
@@ -128,8 +151,14 @@ public class DateFilter {
 	}
 	
 	private static void filterNodesByDate(QuerySession session, Collection<Node> nodes, Integer method) {
-		Long filterDate = session.getFilterDate().getTime();
+		Date d = session.getFilterDate();
+		if (d == null) {
+			DocearLogger.info("no dates to filter!");
+			return;
+		}
 		
+		Long filterDate = d.getTime();
+				
 		for (Iterator<Node> it = nodes.iterator(); it.hasNext();) {
 			Node node = it.next();
 			if (getNodeDate(node, method) < filterDate) {
@@ -329,13 +358,28 @@ public class DateFilter {
 //		return minDate;
 //	}
 	
-	private static long stringToMilliseconds(String dateString, DateFormat dateFormat) {
+	private static Long stringToMilliseconds(String dateString) {
+		Long date = null;
 		try {
-			return dateFormat.parse(dateString).getTime();
-		} catch (ParseException e) {
-			DocearLogger.error(e);
+			SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			date = dateFormat.parse(dateString).getTime();
 		}
-		return -1;
+		catch(Exception ignore) {			
+		}
+		
+		if (date == null) {
+			try {
+				date = new Date(Long.parseLong(dateString)).getTime();		
+			}
+			catch(Exception ignore) {
+			}
+		}
+		
+		if (date == null) {
+			System.out.println("org.docear.graphdb.DateFilter.stringToMilliseconds(String): \"" + dateString + "\" cannot be parsed!");
+		}
+	
+		return date;
 	}
 	
 }

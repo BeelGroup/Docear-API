@@ -15,7 +15,6 @@ import org.sciplore.resources.Algorithm;
 import org.sciplore.resources.DocumentsPdfHash;
 import org.sciplore.resources.RecommendationsEvaluatorCache;
 
-import util.RecommendationCommons;
 import util.Tools;
 
 public class OfflineEvaluator implements Runnable {

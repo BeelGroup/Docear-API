@@ -70,13 +70,13 @@ import org.sciplore.resources.User;
 import util.BibtexCommons;
 import util.DocumentCommons;
 import util.InternalCommons;
-import util.RecommendationCommons;
 import util.ResourceCommons;
 import util.Tools;
 import util.UserCommons;
 import util.UserSessionProvider;
 import util.UserSessionProvider.UserSession;
 import util.recommendations.GraphDbUserModelFactory;
+import util.recommendations.RecommendationCommons;
 
 @Path("/internal")
 public class InternalResource {
