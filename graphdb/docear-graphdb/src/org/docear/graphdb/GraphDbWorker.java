@@ -976,20 +976,37 @@ public class GraphDbWorker {
 				Collections.sort(userMaps, new Comparator<Node>() {
 					@Override
 					public int compare(Node o1, Node o2) {
+						int comp = 0;
 						switch (method) {
 						case 1: // 1=edited
 							String created1 = o1.getProperty("CREATED").toString(); //'created' on a revision node indicates the time when it was saved
 							String created2 = o2.getProperty("CREATED").toString();
-							int comp1 = created2.compareTo(created1);
-							return (comp1);
+							comp = created2.compareTo(created1);
+							break;
 						case 2: // 2=created
 							String str1 = o1.getProperty("dcr_id").toString();
 							String str2 = o2.getProperty("dcr_id").toString();
-							int comp2 = str2.compareTo(str1);
-							return (comp2);
+							comp = str2.compareTo(str1);
+							break;	
+						default:
+							created1 = o1.getProperty("CREATED").toString(); //'created' on a revision node indicates the time when it was saved
+							created2 = o2.getProperty("CREATED").toString();
+							 	
+							str1 = o1.getProperty("dcr_id").toString();
+							str2 = o2.getProperty("dcr_id").toString();
+							
+							// get maximums
+							if (created1.compareTo(str1) < 0) {
+								created1 = str1;
+							}
+							if (created2.compareTo(str2) < 0) {
+								created2 = str2;
+							}
+							comp = created2.compareTo(created1);
+							break;
 						}
 
-						return 0;
+						return comp;
 					}
 				});
 			}
