@@ -627,8 +627,6 @@ public class RecommendationCommons {
 		
 		session.saveOrUpdate(recDocSet);
 		session.flush();
-		
-		
 	}
 
 	public static void computeDeliveryVariables(Integer id) {

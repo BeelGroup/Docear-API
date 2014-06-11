@@ -29,7 +29,7 @@ public class XMLBuilder {
 			for (SearchDocuments searchDoc : searchDocuments) {
 				Element searchResult = dom.createElement("search_result");
 				searchResult.setAttribute("id", String.valueOf(searchDoc.getId()));
-				searchResult.setAttribute("fulltext", baseUri+"user/"+userName+"/search/fulltext/" + searchDoc.getHashId() + "/");
+				searchResult.setAttribute("fulltext", baseUri+"documents/"+searchDoc.getHashId()+"/download/");
 //				if (first && settings != null) {
 //					if (settings.getUsePrefix() != null && settings.getUsePrefix()) {
 //						searchResult.setAttribute("prefix", "[Sponsored]");

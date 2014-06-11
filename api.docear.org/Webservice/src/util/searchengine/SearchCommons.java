@@ -133,8 +133,8 @@ public class SearchCommons {
 	private static List<SearchDocuments> getExistingSearchDocuments(SearchDocumentsSet searchDocumentsSet, Integer offset, int number) {
 		List<SearchDocuments> searchDocuments = new ArrayList<SearchDocuments>();
 		
-		if (searchDocumentsSet != null && searchDocumentsSet.getSearchdocuments().size() > 0) {
-    		for (SearchDocuments searchDoc : searchDocumentsSet.getSearchdocuments()) {
+		if (searchDocumentsSet != null && searchDocumentsSet.getSearchDocuments().size() > 0) {
+    		for (SearchDocuments searchDoc : searchDocumentsSet.getSearchDocuments()) {
     			Integer index = searchDoc.getPresentationIndex();
     			if (index != null && index >= offset && index < (offset+number)) {
     				searchDocuments.add(searchDoc);
@@ -143,5 +143,14 @@ public class SearchCommons {
 		}
 		
 		return searchDocuments;
+	}
+
+	public static void click(Session session, SearchDocuments searchDoc) {
+		searchDoc.setClicked(new Date(System.currentTimeMillis()));
+		
+		session.saveOrUpdate(searchDoc);
+		session.flush();
+		
+		
 	}
 }

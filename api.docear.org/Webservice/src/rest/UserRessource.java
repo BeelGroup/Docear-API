@@ -130,7 +130,7 @@ public class UserRessource {
 		}
 
 		return UserCommons.getHTTPStatusResponse(Status.INTERNAL_SERVER_ERROR, "unexpected exception when trying to fetch recommendation's url");
-	}	
+	}
 
 	@PUT
 	@Path("/{username}/recommendations/{recommendationsSetId}")

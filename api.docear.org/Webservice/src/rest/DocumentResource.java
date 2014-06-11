@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.channels.AlreadyConnectedException;
 import java.sql.Timestamp;
@@ -48,10 +49,13 @@ import org.sciplore.database.SessionProvider;
 import org.sciplore.formatter.Bean;
 import org.sciplore.queries.DocumentQueries;
 import org.sciplore.queries.DocumentsPdfHashQueries;
+import org.sciplore.queries.RecommendationsDocumentsQueries;
+import org.sciplore.queries.SearchDocumentsQueries;
 import org.sciplore.resources.Document;
 import org.sciplore.resources.DocumentXref;
 import org.sciplore.resources.DocumentsPdfHash;
 import org.sciplore.resources.FulltextUrl;
+import org.sciplore.resources.RecommendationsDocuments;
 import org.sciplore.resources.SearchDocuments;
 import org.sciplore.resources.SearchDocumentsSet;
 import org.sciplore.resources.User;
@@ -61,6 +65,7 @@ import util.FulltextCommons;
 import util.ResourceCommons;
 import util.Tools;
 import util.UserCommons;
+import util.recommendations.RecommendationCommons;
 import util.searchengine.SearchCommons;
 import util.searchengine.xml.XMLBuilder;
 
@@ -580,38 +585,57 @@ public class DocumentResource {
 		}
 	}
 	
-	
+	@GET
+	@Path("/{hash}/download")
+	public Response downloadDocument(@PathParam("hash") String hashId, @Context UriInfo uriInfo, @QueryParam("userName") String userName,
+			@Context HttpServletRequest request, @DefaultValue(Tools.DEFAULT_FORMAT) @QueryParam("format") String format, @QueryParam("stream") boolean stream) {
+		final Session session = SessionProvider.sessionFactory.openSession();
+		session.setFlushMode(FlushMode.MANUAL);
+		try {
+			User user = new User(session).getUserByEmailOrUsername(userName);
+			if (user == null) {
+				return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "unauthorized");
+			}
+			if (!ResourceCommons.authenticate(request, user)) {
+				return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "no valid access token.");
+			}
 
-	//FIXME: merge document with specific id
-	//	@POST
-	//	@Path("/{id}")
-	//	@Consumes(MediaType.MULTIPART_FORM_DATA)
-	//	public Response addDocument(@Context UriInfo ui, @Context HttpServletRequest request, @PathParam(value = "id") int id,
-	//			@FormDataParam("source") String source, @FormDataParam("file") InputStream inputStream,
-	//			@FormDataParam("file") FormDataContentDisposition fileDetail) {
-	//
-	//		if (!source.equals("probability") && !source.equals("jabref")) {
-	//			return Response.status(Status.FORBIDDEN).build();
-	//		}
-	//
-	//		String fileName = fileDetail.getFileName();
-	//		System.out.println("debug fileName: " + fileName);
-	//
-	//		try {
-	//			String fileEnding = fileName.substring(fileName.lastIndexOf(".") + 1);
-	//			if (fileEnding.equalsIgnoreCase("xml")) {
-	//				return Importer.uploadResource(Document.class, inputStream, fileDetail);
-	//			}
-	//			else {
-	//				return Importer.uploadPdf(ui, request, inputStream, fileDetail, source);
-	//			}
-	//		}
-	//		catch (Exception e) {
-	//			e.printStackTrace();
-	//			return Response.status(Status.BAD_REQUEST).build();
-	//		}
-	//	}
+			SearchDocuments searchDoc = SearchDocumentsQueries.getSearchDocument(session, hashId, user);
+			// only react if not clicked already && recDoc has deliveredDate
+			if (searchDoc.getClicked() == null && searchDoc.getSearchDocumentsSet().getDelivered() != null) {
+				SearchCommons.click(session, searchDoc);				
+			}
 
+			URL url = null;
+			FulltextUrl fulltextUrl = null;
+			try {
+				fulltextUrl = searchDoc.getFulltextUrl();
+				if (fulltextUrl != null) {
+					url = new URL(fulltextUrl.getUrl());
+					return UserCommons.getRedirectedResponse(url.toURI());
+				}
+			}
+			catch(MalformedURLException e) {
+				System.out.println("rest.UserRessource.getRecommendationFulltext(hashId, userName, uriInfo, request, format, stream):\n"
+						+ "url: "+url+"\nfulltextUrl: "+fulltextUrl+" throws Exception: \n"
+								+ e.getMessage());
+			}
+			catch (Exception e) {				
+				e.printStackTrace();
+				return UserCommons.getHTTPStatusResponse(Status.INTERNAL_SERVER_ERROR, e.getMessage());
+			}
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+			return UserCommons.getHTTPStatusResponse(Status.INTERNAL_SERVER_ERROR, e.getMessage());
+		}			
+		finally {
+			Tools.tolerantClose(session);
+		}
+
+		return UserCommons.getHTTPStatusResponse(Status.INTERNAL_SERVER_ERROR, "unexpected exception when trying to fetch recommendation's url");
+	}	
+		
 	@GET
 	@Path("/")
 	public Response getDocuments(@Context UriInfo ui, @Context HttpServletRequest request, @QueryParam("source") String source,

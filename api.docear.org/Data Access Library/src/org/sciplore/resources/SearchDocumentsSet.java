@@ -65,7 +65,7 @@ public class SearchDocumentsSet extends Resource {
     
     @OneToMany(mappedBy = "searchDocumentsSet", fetch = FetchType.LAZY)
 	@Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)    
-	private Set<SearchDocuments> searchdocuments = new HashSet<SearchDocuments>();
+	private Set<SearchDocuments> searchDocuments = new HashSet<SearchDocuments>();
     
     public SearchDocumentsSet() {
     	
@@ -173,11 +173,11 @@ public class SearchDocumentsSet extends Resource {
 		this.varAmountShould = varAmountShould;
 	}
 
-	public Set<SearchDocuments> getSearchdocuments() {
-		return searchdocuments;
+	public Set<SearchDocuments> getSearchDocuments() {
+		return searchDocuments;
 	}
 
-	public void setSearchdocuments(Set<SearchDocuments> searchdocuments) {
-		this.searchdocuments = searchdocuments;
+	public void setSearchDocuments(Set<SearchDocuments> searchDocuments) {
+		this.searchDocuments = searchDocuments;
 	}	
 }
