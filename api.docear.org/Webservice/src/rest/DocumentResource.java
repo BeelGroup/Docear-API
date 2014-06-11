@@ -40,9 +40,7 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.mrdlib.index.DocumentHashItem;
 import org.mrdlib.index.Indexer;
-import org.mrdlib.index.Searcher;
 import org.sciplore.data.BeanFactory;
 import org.sciplore.database.AtomicOperation;
 import org.sciplore.database.AtomicOperationHandle;
@@ -64,6 +62,7 @@ import util.ResourceCommons;
 import util.Tools;
 import util.UserCommons;
 import util.searchengine.SearchCommons;
+import util.searchengine.xml.XMLBuilder;
 
 @Path("/documents")
 public class DocumentResource {
@@ -530,23 +529,43 @@ public class DocumentResource {
 
 	@GET
 	@Path("/{q}")
-	public Response search(@Context UriInfo ui, @Context HttpServletRequest request, @PathParam(value = "q") String q, @QueryParam("source") String source, 
+	public Response search(@Context UriInfo uriInfo, @Context HttpServletRequest request, @PathParam(value = "q") String q, @QueryParam("source") String source, @QueryParam("userName") String userName,
 			@DefaultValue(Tools.DEFAULT_FORMAT) @QueryParam("format") String format, @QueryParam("stream") boolean stream, @QueryParam("defaultField") String defaultField,
 			@QueryParam("offset") int offset, @QueryParam("number") int number, @QueryParam("SearchDocumentsSet") Integer searchDocSetId) {
 		
 		Session session = Tools.getSession();
 		try {
-			if (!ResourceCommons.authenticate(request)) {
-				return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "unauthorized.");
+			User user = new User(session).getUserByEmailOrUsername(userName);
+			if (user == null) {
+				return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "unauthorized");
+			}
+			if (!ResourceCommons.authenticate(request, user)) {
+				return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "no valid access token.");
 			}
 			
 			SearchDocumentsSet searchDocumentsSet = null;
 			if (searchDocSetId != null) {
 				searchDocumentsSet = (SearchDocumentsSet) session.get(SearchDocumentsSet.class, searchDocSetId);
 			}
+			if (searchDocumentsSet == null) {
+				searchDocumentsSet = new SearchDocumentsSet(session);
+			}
+			
 			List<SearchDocuments> searchDocuments = SearchCommons.search(session, q, defaultField, offset, number, searchDocumentsSet);
-			return Tools.getSerializedResponse(format, bean, stream);
-
+			searchDocumentsSet.setUser(user);
+			try {
+				session.saveOrUpdate(searchDocumentsSet);
+				
+				for (SearchDocuments sd : searchDocuments) {
+					session.saveOrUpdate(sd);
+				}
+			}
+			catch (Exception e) {
+				e.printStackTrace();
+			}
+			
+			String xml = XMLBuilder.buildSearchDocumentsXml(searchDocumentsSet, searchDocuments, uriInfo, user.getUsername());
+			return UserCommons.getHTTPStatusResponse(Status.OK, xml);
 		}
 		catch (NullPointerException e) {
 			e.printStackTrace();

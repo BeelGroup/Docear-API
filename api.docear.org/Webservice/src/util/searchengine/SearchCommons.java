@@ -1,10 +1,9 @@
 package util.searchengine;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-
-import javax.ws.rs.core.UriInfo;
 
 import org.hibernate.Session;
 import org.mrdlib.index.DocumentHashItem;
@@ -14,8 +13,6 @@ import org.sciplore.queries.DocumentsPdfHashQueries;
 import org.sciplore.resources.Document;
 import org.sciplore.resources.DocumentsPdfHash;
 import org.sciplore.resources.FulltextUrl;
-import org.sciplore.resources.RecommendationsDocumentsSet;
-import org.sciplore.resources.RecommendationsUsersSettings;
 import org.sciplore.resources.SearchDocuments;
 import org.sciplore.resources.SearchDocumentsSet;
 import org.sciplore.resources.SearchModel;
@@ -65,8 +62,12 @@ public class SearchCommons {
 		int effectiveOffset = offset + searchDocuments.size();
 		
 		try {
-			Searcher searcher = new Searcher();
+			long time = System.currentTimeMillis();
+			Searcher searcher = new Searcher();			
 			List<DocumentHashItem> items = searcher.search(search, defaultField, effectiveOffset, effectiveNumber);
+			searchDocumentsSet.setCreated(new Date());
+			searchDocumentsSet.setComputationTime(System.currentTimeMillis()-time);
+			searchDocumentsSet.setQuery(search);
 			
 			searchDocuments.addAll(getSearchDocumentsFromDocumentHashItem(session, searchDocumentsSet, items, effectiveOffset));
 		}
@@ -91,7 +92,7 @@ public class SearchCommons {
     				}
     				catch (Exception e) {
     					doc = null;
-    					System.out.println("UserResource.getLiteratureRecommendations: " + e.getMessage());
+    					e.printStackTrace();
     				}
     			}
     		}
@@ -119,10 +120,6 @@ public class SearchCommons {
     	return searchDocuments;
 	}
 	
-	public static String buildSearchDocumentsXml(SearchDocumentsSet searchDocSet, List<SearchDocuments> searchDocuments, RecommendationsUsersSettings settings, UriInfo uriInfo, String userName) {
-		
-	}
-
 	private static SearchDocuments createSearchDocument(Session session, SearchDocumentsSet searchDocSet, FulltextUrl fulltextUrl, int rank, Float relevance, int offset) {		
 		SearchDocuments searchDoc = new SearchDocuments(session);
 		searchDoc.setSearchDocumentsSet(searchDocSet);

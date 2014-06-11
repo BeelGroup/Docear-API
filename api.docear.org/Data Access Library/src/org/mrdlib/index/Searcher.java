@@ -50,12 +50,12 @@ public class Searcher {
 	}
 	
 	public List<DocumentHashItem> search(String search) throws ParseException, IOException {
-		return search(search, "title", 0, 100);
+		return search(search, "text", 0, 100);
 	}
 			
 	public List<DocumentHashItem> search(String search, String defaultField, int offset, int number) throws ParseException, IOException {	
 		if (defaultField == null) {
-			defaultField = "title";
+			defaultField = "text";
 		}
 		
 		Query query = new QueryParser(Version.LUCENE_46, defaultField, new StandardAnalyzer(Version.LUCENE_46)).parse(search);
@@ -63,10 +63,8 @@ public class Searcher {
 	}
 	
 	public List<DocumentHashItem> search(Query query, int offset, int number) throws ParseException, IOException {
-		List<DocumentHashItem> documentHashItem = new ArrayList<DocumentHashItem>();
-		long time = System.currentTimeMillis();
+		List<DocumentHashItem> documentHashItem = new ArrayList<DocumentHashItem>();		
 		TopDocs td = is.search(query, offset+number);
-		System.out.println("LuceneQuery ["+query+"] executed in "+(System.currentTimeMillis()-time)+" ms");
 		
 		int rank = 0;
 		for (ScoreDoc sd : td.scoreDocs) {			
@@ -85,6 +83,7 @@ public class Searcher {
     			}
 			}
 		}
+		System.out.println("LuceneQuery added "+rank+" results to result list");
 		return documentHashItem;
 	}
 	

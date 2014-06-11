@@ -63,6 +63,7 @@ import util.UserCommons;
 import util.recommendations.AsynchronousRecommendationsGeneratorAfterAutoRec;
 import util.recommendations.AsynchronousRecommendationsGeneratorAfterRecRequest;
 import util.recommendations.RecommendationCommons;
+import util.recommendations.xml.XMLBuilder;
 
 @Path("/user")
 public class UserRessource {
@@ -215,7 +216,7 @@ public class UserRessource {
 			// STEFAN retrieve applicationnumber only with buildnumber and application name
 
 			try {
-				String xml = RecommendationCommons.buildRecommendationsXML(recDocSet, settings, uriInfo, userName);
+				String xml = XMLBuilder.buildRecommendationsXML(recDocSet, settings, uriInfo, userName);
 				Integer build = UserCommons.getClientVersionFromRequest(request);
 				recDocSet.setApplication(ApplicationQueries.getApplicationByBuildNumber(session, build));
 				recDocSet.setDelivered(new Date());

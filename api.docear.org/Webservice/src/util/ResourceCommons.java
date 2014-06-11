@@ -4,29 +4,29 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MediaType;
 
 import org.hibernate.Session;
-import org.sciplore.database.SessionProvider;
 import org.sciplore.resources.User;
 
 public class ResourceCommons {
 
 	public static final String DEFAULT_FORMAT = "xml";
 	
-	public static boolean authenticate(HttpServletRequest request) {
-		if (System.getProperty("docear_debug") != null && System.getProperty("docear_debug").equals("true")) {
-			return true;
-		}
+	public static User authenticate(Session session, HttpServletRequest request) {		
 		String userName = request.getHeader("userName");
-		final Session session = SessionProvider.sessionFactory.openSession();
+		
 		try {
-			User user = new User(session).getUserByEmailOrUsername(userName);
-			if (user == null) {
-				return false;
+			User user = new User(session).getUserByEmailOrUsername(userName);			
+			if (System.getProperty("docear_debug") != null && System.getProperty("docear_debug").equals("true")) {
+				return user;
 			}
-			return authenticate(request, user);
+			if (authenticate(request, user)) {
+				return user;
+			}
 		}
-		finally {
-			Tools.tolerantClose(session);
+		catch(Exception e) {
+			e.printStackTrace();			
 		}
+		
+		return null;
 	}
 	
 	public static boolean authenticate(HttpServletRequest request, User user) {
