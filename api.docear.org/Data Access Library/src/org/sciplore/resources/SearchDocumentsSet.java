@@ -39,6 +39,9 @@ public class SearchDocumentsSet extends Resource {
     @Required
     private SearchModel searchModel;
 	
+	@Column()
+	private String query;
+	
     @Column()
     private Date created;
    
@@ -104,6 +107,14 @@ public class SearchDocumentsSet extends Resource {
 
 	public void setSearchModel(SearchModel searchModel) {
 		this.searchModel = searchModel;
+	}
+	
+	public String getQuery() {
+		return query;
+	}
+
+	public void setQuery(String query) {
+		this.query = query;
 	}
 
 	public Date getCreated() {
