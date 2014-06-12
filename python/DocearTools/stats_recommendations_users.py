@@ -11,11 +11,17 @@ db=_mysql.connect(host="localhost", port=3306, user="docear", passwd="ppLmQ8esxJ
 def main(): 
     print('--- main() ---')
     start = time.time()
+    query = "DROP TABLE IF EXISTS `tmp_rec_users`;"
+    db.query(query)
+    
     query = """CREATE TABLE IF NOT EXISTS `tmp_rec_users` (
           `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
           `user_id` bigint(20) unsigned DEFAULT NULL,
           `sets_total` int(10) unsigned DEFAULT NULL,
           `recs_total` int(10) unsigned DEFAULT NULL,
+          `node_count_total` int(10) unsigned DEFAULT NULL,
+          `paper_count_total` int(10) unsigned DEFAULT NULL,
+          `link_count_total` int(10) unsigned DEFAULT NULL,
           `clicks_total` int(10) unsigned DEFAULT NULL,
           `ctr` double unsigned DEFAULT NULL,
           `sets_total_app_ge65` int(10) unsigned DEFAULT NULL,
@@ -62,6 +68,15 @@ def main():
             GROUP BY S.user_id) Y
             ON (X.user_id = Y.user_id)
             SET recs_total = Y.counter;"""
+    db.query(query)
+    
+    #insert node_count_total, paper_count_total, link_count_total
+    query = """UPDATE tmp_rec_users X JOIN
+            (SELECT S.user_id, MAX(U.node_count_total) AS node_count_total, MAX(U.paper_count_total) AS paper_count_total, MAX(U.link_count_total) AS link_count_total 
+            FROM user_models U JOIN recommendations_documents_set S ON (S.user_model_id = U.id) 
+            GROUP BY S.user_id)Y
+            ON (X.user_id = Y.user_id)
+            SET X.node_count_total = Y.node_count_total, X.paper_count_total = Y.paper_count_total, X.link_count_total = Y.link_count_total;"""
     db.query(query)
 
     
