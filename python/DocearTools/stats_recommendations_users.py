@@ -4,12 +4,13 @@ clicked recommendations on 1st, 2nd, 3rd, ... showing
 @author: stefan
 '''
 import _mysql
+import time
 
 db=_mysql.connect(host="localhost", port=3306, user="docear", passwd="ppLmQ8esxJtTGQtz", db="docear")
 
-def main():  
-
-
+def main(): 
+    print('--- main() ---')
+    start = time.time()
     query = """CREATE TABLE IF NOT EXISTS `tmp_rec_users` (
           `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
           `user_id` bigint(20) unsigned DEFAULT NULL,
@@ -37,8 +38,6 @@ def main():
           CONSTRAINT `FK__rec_users_id` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8;"""
     db.query(query)
-
-
       
     query = """TRUNCATE tmp_rec_users"""
     db.query(query)
@@ -49,7 +48,9 @@ def main():
     #update users with sets_total    
     query = """UPDATE tmp_rec_users T JOIN 
             (SELECT user_id, count(*) AS counter FROM recommendations_documents_set S 
-            WHERE user_id NOT IN (1, 2, 27) AND S.delivered IS NOT NULL AND (offline_evaluator IS NULL || offline_evaluator = 0) GROUP BY user_id) X
+            WHERE user_id NOT IN (1, 2, 27) AND S.delivered IS NOT NULL 
+            AND (offline_evaluator IS NULL || offline_evaluator = 0)             
+            GROUP BY user_id) X
             ON (X.user_id=T.user_id)
             SET T.sets_total=X.counter""";
     db.query(query)
@@ -220,7 +221,11 @@ def main():
             SET X.max_mindmap_application_id = Y.application_id"""
     db.query(query)
     
+    print ('--- elapsed time: {0}s ---'.format(time.time()-start))
+    
 def update_recommendations_active():
+    start = time.time()
+    print("--- update_recommendations_active() ---")
     #update recommendations_active
     query = """UPDATE tmp_rec_users X SET X.recommendations_active=1"""
     db.query(query)
@@ -273,8 +278,12 @@ def update_recommendations_active():
             ON (B.user_id = X.user_id)
             SET X.recommendations_active_mthd2 = 1
             WHERE A.rev_date > DATE_SUB(B.time, INTERVAL 7 DAY)"""
+            
+    print ('--- elapsed time: {0}s ---'.format(time.time()-start))
     
 def update_recommendations_documents_set():
+    start = time.time()
+    print('--- update_recommendations_documents_set() ---')
     #rec_amount_current
     query = """UPDATE recommendations_documents_set X JOIN 
             (SELECT S.id, count(*) AS c FROM recommendations_documents_set S JOIN recommendations_documents R ON (R.recommendations_documents_set_id = S.id) 
@@ -307,6 +316,8 @@ def update_recommendations_documents_set():
     db.query(query)
     query = """UPDATE recommendations_documents_set S SET S.rec_clicked_count=0, S.rec_clicked_ctr=0 WHERE S.delivered IS NOT NULL AND S.rec_clicked_count IS NULL"""
     db.query(query)
+    
+    print ('--- elapsed time: {0}s ---'.format(time.time()-start))
       
 def rename_table_id_columns(tablename, alias):
     columns = ""
@@ -328,21 +339,30 @@ def rename_table_id_columns(tablename, alias):
     return columns[:-1]          
       
 def update_user_person_table():
+    start = time.time()
+    print('--- update_user_person_table() ---')
     query = """DROP TABLE IF EXISTS tmp_user_person"""
     db.query(query)
     
     target_query = "CREATE TABLE tmp_user_person AS SELECT "
     target_query += rename_table_id_columns('users', 'U') + ', ' + rename_table_id_columns('persons', 'P') + ',' + rename_table_id_columns('tmp_rec_users', 'T') + ',' + rename_table_id_columns('recommendations_users_settings', 'S')
+    target_query +=  ', ' + rename_table_id_columns('recommendations_labels', 'L') +  ', ' + rename_table_id_columns('recommendations_ratings_labels', 'RL')
     target_query += " FROM users U "
     target_query += " JOIN persons P ON (U.person_id = P.id)" 
     target_query += " JOIN tmp_rec_users T ON (T.user_id = U.id)"
     target_query += " JOIN recommendations_users_settings S ON (S.user_id = U.id)"
+    target_query += " JOIN recommendations_labels L ON (S.recommendations_labels_id = L.id)"
+    target_query += " JOIN recommendations_ratings_labels RL ON (S.recommendations_ratings_labels_id = RL.id)"
     
     print target_query
     db.query(target_query)
     
-if __name__ == '__main__':  
+    print ('--- elapsed time: {0}s ---'.format(time.time()-start))
+    
+if __name__ == '__main__':
+    start = time.time()
     main()
     update_recommendations_active()
     update_recommendations_documents_set()
     update_user_person_table()
+    print ('### total computation time: {0}s ###'.format(time.time()-start))
