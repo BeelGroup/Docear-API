@@ -73,7 +73,7 @@ public class UserRessource {
 	public static final File PARSER_WORKING_PATH = new File(PARSER_BASE, "new");
 
 	private final static String SEP = "|#|";
-	private static final long EXPIRATION_TIME_MILLIS = 3600*24;
+	private static final long EXPIRATION_TIME_MILLIS = 3600*24*1000;
 
 	@GET
 	@Path("/{username}/recommendations/")

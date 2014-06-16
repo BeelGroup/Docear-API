@@ -62,7 +62,7 @@ public class UserPasswordRequest extends Resource {
 	
 	public boolean isExpired(long timeout_millis) {
 		if(created != null) {
-			if(created.getTime() > (System.currentTimeMillis()-timeout_millis)) {
+			if((created.getTime()+timeout_millis) < System.currentTimeMillis()) {
 				return true;
 			}
 		}
