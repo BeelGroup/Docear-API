@@ -689,7 +689,7 @@ public class UserRessource {
 			Contact contact = user.getPerson().getContacts().iterator().next();			
 			rest.Tools.mail(contact.getUri(), "Docear Password Request", UserCommons.getPasswordRequestMailText(pwRequest, contact.getUri()));
 			
-			return UserCommons.getHTTPStatusResponse(Status.OK, "an email with further instructions has been sent to your email address.");
+			return UserCommons.getHTTPStatusResponse(Status.OK, "an email with further instructions was sent to your email address.");
 		}
 		catch (Throwable e) {
 			e.printStackTrace();

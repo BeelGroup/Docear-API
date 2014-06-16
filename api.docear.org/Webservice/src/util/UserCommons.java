@@ -546,8 +546,6 @@ public class UserCommons {
 		message.append("\n");
 		message.append("you receive this email because you requested to change your password. Please use the link below and follow the instructions on the site.\n");
 		message.append("\n");
-		message.append("Please use the link below and follow the instructions on the site.\n");
-		message.append("\n");		
 		message.append(docearEMailConfig.getProperty("docear.pwd.reset.url", "https://www.docear.org/my-docear/change-password")+"?token="+pwRequest.getToken()+"&mail="+email+"\n");
 		message.append("\n");
 		message.append("If you did not request a password change, please ignore this email."); 
