@@ -365,9 +365,9 @@ def update_user_person_table():
     target_query += " FROM users U "
     target_query += " JOIN persons P ON (U.person_id = P.id)" 
     target_query += " JOIN tmp_rec_users T ON (T.user_id = U.id)"
-    target_query += " JOIN recommendations_users_settings S ON (S.user_id = U.id)"
-    target_query += " JOIN recommendations_labels L ON (S.recommendations_labels_id = L.id)"
-    target_query += " JOIN recommendations_ratings_labels RL ON (S.recommendations_ratings_labels_id = RL.id)"
+    target_query += " LEFT JOIN recommendations_users_settings S ON (S.user_id = U.id)"
+    target_query += " LEFT JOIN recommendations_labels L ON (S.recommendations_labels_id = L.id)"
+    target_query += " LEFT JOIN recommendations_ratings_labels RL ON (S.recommendations_ratings_labels_id = RL.id)"
     
     print target_query
     db.query(target_query)
