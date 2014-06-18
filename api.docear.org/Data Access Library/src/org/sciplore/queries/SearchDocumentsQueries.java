@@ -1,6 +1,5 @@
 package org.sciplore.queries;
 
-import java.util.Date;
 import java.util.List;
 
 import org.hibernate.Criteria;
@@ -18,7 +17,7 @@ public class SearchDocumentsQueries {
 	public static SearchDocuments getSearchDocument(Session session, String hashId, User user) throws Exception {
 		Criteria criteria = session.createCriteria(SearchDocuments.class).add(Restrictions.eq("hashId", hashId));
 		for (SearchDocuments result : (List<SearchDocuments>) criteria.list()) {
-			if (result.getSearchDocumentsSet().getUser().getId() == user.getId()) {
+			if (result.getSearchDocumentsSet().getSearchModel().getUser().getId() == user.getId()) {
 				return result;
 			}
 		}
@@ -43,29 +42,29 @@ public class SearchDocumentsQueries {
 		}
 	}
 		
-	private static Criteria getCriteria(Session session, String hashId, User user, Document document, Date delivered) {
-		Criteria criteria = session.createCriteria(SearchDocumentsSet.class, "searchDocSet");
-
-		if (user != null) {
-			criteria = criteria.add(Restrictions.eq("searchDocSet.user", user));
-		}
-		
-		if (delivered != null) {
-			criteria = criteria.add(Restrictions.eq("searchDocSet.delivered", delivered));
-		}
-		
-		criteria.createCriteria("searchDocuments", "searchDoc");
-
-		if (document != null) {
-			criteria = criteria.add(Restrictions.eq("searchDoc.document", document));
-		}
-		
-		if (hashId != null) {
-			criteria = criteria.add(Restrictions.eq("searchDoc.hash_id", hashId));
-			criteria = criteria.setFetchSize(1);
-		}
-
-		return criteria;
-	}
+//	private static Criteria getCriteria(Session session, String hashId, User user, Document document, Date delivered) {
+//		Criteria criteria = session.createCriteria(SearchDocumentsSet.class, "searchDocSet");
+//
+//		if (user != null) {
+//			criteria = criteria.add(Restrictions.eq("searchDocSet.user", user));
+//		}
+//		
+//		if (delivered != null) {
+//			criteria = criteria.add(Restrictions.eq("searchDocSet.delivered", delivered));
+//		}
+//		
+//		criteria.createCriteria("searchDocuments", "searchDoc");
+//
+//		if (document != null) {
+//			criteria = criteria.add(Restrictions.eq("searchDoc.document", document));
+//		}
+//		
+//		if (hashId != null) {
+//			criteria = criteria.add(Restrictions.eq("searchDoc.hash_id", hashId));
+//			criteria = criteria.setFetchSize(1);
+//		}
+//
+//		return criteria;
+//	}
 	
 }

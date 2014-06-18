@@ -9,6 +9,7 @@ import org.sciplore.resources.Document;
 import org.sciplore.resources.RecommendationsDocuments;
 import org.sciplore.resources.RecommendationsDocumentsSet;
 import org.sciplore.resources.RecommendationsUsersSettings;
+import org.sciplore.resources.SearchModel;
 import org.w3c.dom.Element;
 
 import util.InternalCommons;
@@ -66,5 +67,16 @@ public class XMLBuilder {
 			return InternalCommons.getXMLStr(dom);
 		}
 		return "";
+	}
+
+	public static String buildSearchModelXml(SearchModel searchModel, UriInfo uriInfo) {
+		org.w3c.dom.Document dom = InternalCommons.getNewXMLDocument();
+		if(dom != null) {
+			Element root = dom.createElement("searchmodel");
+			root.setAttribute("id", String.valueOf(searchModel.getId()));
+			root.setTextContent(searchModel.getModel());
+		}
+		
+		return InternalCommons.getXMLStr(dom);
 	}
 }

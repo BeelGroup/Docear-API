@@ -37,6 +37,7 @@ public class GraphDbUserModelFactory {
 	private final UserModel userModel;
 	private SearchModel searchModel = null;
 	private final String xml;
+	private final User user;
 
 	private Double ratioKeywordsInModel = null;
 	private Double ratioReferencesInModel = null;
@@ -48,6 +49,7 @@ public class GraphDbUserModelFactory {
 	public GraphDbUserModelFactory(Session session, User user, Algorithm algorithm) throws Exception {		
 		userModel = new UserModel(session);
 		xml = createModel(session, user, algorithm);	
+		this.user = user;
 		
 		if (xml == null || xml.trim().length() == 0) {
 			Integer algId = null;
@@ -131,7 +133,7 @@ public class GraphDbUserModelFactory {
 		userModel.setModel(getModelString());
 		
 		try {
-			searchModel = SearchCommons.createSearchModel(session, userModel, userModelItems);
+			searchModel = SearchCommons.createSearchModel(session, user, userModel, userModelItems);
 		}
 		catch (Exception e) {
 			e.printStackTrace();

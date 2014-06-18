@@ -15,17 +15,11 @@ import javax.persistence.Table;
 import org.hibernate.Session;
 import org.hibernate.annotations.Cascade;
 import org.sciplore.eventhandler.Required;
-import org.sciplore.queries.SearchDocumentsSetQueries;
 
 @Entity
 @Table(name = "search_documents_set")
 
 public class SearchDocumentsSet extends Resource {
-	@ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")    
-    @Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
-    @Required
-    private User user;
 	
 	@ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "application_id")    
@@ -81,16 +75,8 @@ public class SearchDocumentsSet extends Resource {
 			return (Resource) getSession().get(this.getClass(), getId());			
 		}
 		else {
-			return SearchDocumentsSetQueries.getPersistentIdentity(getSession(), this);
+			return null;
 		}
-	}
-
-	public User getUser() {
-		return user;
-	}
-
-	public void setUser(User user) {
-		this.user = user;
 	}
 
 	public Application getApplication() {

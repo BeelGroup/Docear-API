@@ -1,7 +1,10 @@
 package org.sciplore.resources;
 
+import java.util.Date;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
@@ -14,16 +17,22 @@ import org.sciplore.eventhandler.Required;
 @Entity
 @Table(name = "search_models")
 public class SearchModel extends Resource {
-
+	@ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")    
+    @Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
+    @Required
+    private User user;	
+	
+	@Column(nullable = false)
+	private String model;
+		
 	@ManyToOne
 	@JoinColumn(name = "user_model_id")
 	@Cascade(CascadeType.LOCK)
 	@Required
 	private UserModel userModel;
 	
-	@Column(nullable = false)
-	private String model;
-		
+	
 	@Column(nullable = true)
 	private Integer varSize = 0;
 	
@@ -32,6 +41,9 @@ public class SearchModel extends Resource {
 			
 	@Column(nullable = true)
 	private Boolean old = null;
+	
+	@Column(nullable = true)
+	private Date delivered;
 	
     public SearchModel(Session session) {
     	super();
@@ -57,6 +69,14 @@ public class SearchModel extends Resource {
 
 	public void setUserModel(UserModel userModel) {
 		this.userModel = userModel;
+	}
+	
+	public User getUser() {
+		return user;
+	}
+
+	public void setUser(User user) {
+		this.user = user;
 	}
 
 	public String getModel() {
@@ -90,6 +110,13 @@ public class SearchModel extends Resource {
 	public void setOld(Boolean old) {
 		this.old = old;
 	}
+
+	public Date getDelivered() {
+		return delivered;
+	}
+
+	public void setDelivered(Date delivered) {
+		this.delivered = delivered;
+	}
 	
-		
 }

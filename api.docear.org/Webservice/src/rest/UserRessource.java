@@ -45,6 +45,7 @@ import org.sciplore.queries.ApplicationQueries;
 import org.sciplore.queries.MindmapQueries;
 import org.sciplore.queries.RecommendationsDocumentsQueries;
 import org.sciplore.queries.RecommendationsDocumentsSetQueries;
+import org.sciplore.queries.SearchModelQueries;
 import org.sciplore.resources.Application;
 import org.sciplore.resources.Contact;
 import org.sciplore.resources.FulltextUrl;
@@ -52,6 +53,7 @@ import org.sciplore.resources.Mindmap;
 import org.sciplore.resources.RecommendationsDocuments;
 import org.sciplore.resources.RecommendationsDocumentsSet;
 import org.sciplore.resources.RecommendationsUsersSettings;
+import org.sciplore.resources.SearchModel;
 import org.sciplore.resources.User;
 import org.sciplore.resources.UserPasswordRequest;
 import org.sciplore.tools.SciploreResponseCode;
@@ -80,6 +82,35 @@ public class UserRessource {
 	public Response getAllRecommendations(@PathParam("username") String userName, @Context UriInfo uriInfo, @Context HttpServletRequest request,
 			@DefaultValue(Tools.DEFAULT_FORMAT) @QueryParam("format") String format, @QueryParam("stream") boolean stream, @QueryParam("auto") boolean auto) {
 		return getLiteratureRecommendations(userName, uriInfo, request, format, stream, auto);
+	}
+	
+	@GET
+	@Path("/{username}/searchmodel/")
+	public Response getSearchModel(@PathParam("username") String userName, @Context UriInfo uriInfo, @Context HttpServletRequest request) {
+		final Session session = SessionProvider.sessionFactory.openSession();
+		session.setFlushMode(FlushMode.MANUAL);
+		
+		try {
+    		User user = new User(session).getUserByEmailOrUsername(userName);
+    		if (!ResourceCommons.authenticate(request, user)) {
+    			return UserCommons.getHTTPStatusResponse(Status.INTERNAL_SERVER_ERROR, "no valid access token.");
+    		}
+    		
+    		SearchModel searchModel = SearchModelQueries.getLatestUnusedSearchModel(session, user);
+    		searchModel.setDelivered(new Date());
+    		session.update(searchModel);
+    		session.flush();
+    		
+    		String xml = XMLBuilder.buildSearchModelXml(searchModel, uriInfo);
+    		return UserCommons.getHTTPStatusResponse(Status.OK, xml);
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+			return UserCommons.getHTTPStatusResponse(Status.INTERNAL_SERVER_ERROR, e.getMessage());
+		}			
+		finally {
+			Tools.tolerantClose(session);
+		}
 	}
 
 	@GET

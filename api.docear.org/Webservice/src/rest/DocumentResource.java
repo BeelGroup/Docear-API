@@ -49,13 +49,11 @@ import org.sciplore.database.SessionProvider;
 import org.sciplore.formatter.Bean;
 import org.sciplore.queries.DocumentQueries;
 import org.sciplore.queries.DocumentsPdfHashQueries;
-import org.sciplore.queries.RecommendationsDocumentsQueries;
 import org.sciplore.queries.SearchDocumentsQueries;
 import org.sciplore.resources.Document;
 import org.sciplore.resources.DocumentXref;
 import org.sciplore.resources.DocumentsPdfHash;
 import org.sciplore.resources.FulltextUrl;
-import org.sciplore.resources.RecommendationsDocuments;
 import org.sciplore.resources.SearchDocuments;
 import org.sciplore.resources.SearchDocumentsSet;
 import org.sciplore.resources.User;
@@ -65,7 +63,6 @@ import util.FulltextCommons;
 import util.ResourceCommons;
 import util.Tools;
 import util.UserCommons;
-import util.recommendations.RecommendationCommons;
 import util.searchengine.SearchCommons;
 import util.searchengine.xml.XMLBuilder;
 
@@ -557,7 +554,6 @@ public class DocumentResource {
 			}
 			
 			List<SearchDocuments> searchDocuments = SearchCommons.search(session, q, defaultField, offset, number, searchDocumentsSet);
-			searchDocumentsSet.setUser(user);
 			try {
 				session.saveOrUpdate(searchDocumentsSet);
 				

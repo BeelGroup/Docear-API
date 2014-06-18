@@ -16,6 +16,7 @@ import org.sciplore.resources.FulltextUrl;
 import org.sciplore.resources.SearchDocuments;
 import org.sciplore.resources.SearchDocumentsSet;
 import org.sciplore.resources.SearchModel;
+import org.sciplore.resources.User;
 import org.sciplore.resources.UserModel;
 
 import util.recommendations.UserModelItem;
@@ -24,7 +25,7 @@ import util.recommendations.UserModelKeywordItem;
 public class SearchCommons {
 	private final static int MAX_MODEL_SIZE = 20;
 	
-	public static SearchModel createSearchModel(Session session, UserModel userModel, List<UserModelItem> userModelItems) {
+	public static SearchModel createSearchModel(Session session, User user, UserModel userModel, List<UserModelItem> userModelItems) {
 		long time = System.currentTimeMillis();
 		StringBuilder modelBuilder = new StringBuilder();
 		
@@ -47,6 +48,7 @@ public class SearchCommons {
 		
 		SearchModel searchModel = new SearchModel(session);
 		searchModel.setUserModel(userModel);
+		searchModel.setUser(user);
 		searchModel.setModel(modelBuilder.toString().trim());
 		searchModel.setVarSize(size);
 		searchModel.setExecutionTime((int) (System.currentTimeMillis()-time));
