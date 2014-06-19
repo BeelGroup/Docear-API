@@ -11,19 +11,25 @@ public class SearchModelQueries {
 
 	public static SearchModel getLatestUnusedSearchModel(Session session, User user) {
 		Criteria crit = session.createCriteria(SearchModel.class, "sm");
-		crit.createAlias("userModel", "um");
-		crit.add(Restrictions.eq("um.user", user));
-		crit.addOrder(Order.desc("sm.id"));		
+		crit.add(Restrictions.eq("user", user));
+		crit.addOrder(Order.desc("id"));		
 		crit.setMaxResults(1);
 		SearchModel latest = (SearchModel) crit.uniqueResult();
+		
+		if (latest == null) {
+			return null;
+		}
 
 		crit = session.createCriteria(SearchModel.class, "sm");
-		crit.createAlias("userModel", "um");
-		crit.add(Restrictions.eq("um.user", user));
+		crit.add(Restrictions.eq("user", user));	
 		crit.add(Restrictions.isNull("delivered"));
-		crit.addOrder(Order.desc("sm.id"));	
+		crit.addOrder(Order.desc("id"));	
 		crit.setMaxResults(1);		
 		SearchModel latestUnused = (SearchModel) crit.uniqueResult();
+		
+		if (latestUnused == null) {
+			return null;
+		}
 		
 		if (latest.getId() != latestUnused.getId()) {
 			latestUnused.setOld(true);

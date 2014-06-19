@@ -45,6 +45,10 @@ public class SearchModel extends Resource {
 	@Column(nullable = true)
 	private Date delivered;
 	
+	public SearchModel() {
+		super();
+	}
+	
     public SearchModel(Session session) {
     	super();
     	this.setSession(session);
@@ -58,6 +62,8 @@ public class SearchModel extends Resource {
 		return null;
 		
 	}
+	
+	
 	
 	public SearchModel getSearchModel(Integer id) {
 		return (SearchModel)this.getSession().get(SearchModel.class, id);

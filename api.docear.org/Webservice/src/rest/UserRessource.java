@@ -97,11 +97,14 @@ public class UserRessource {
     		}
     		
     		SearchModel searchModel = SearchModelQueries.getLatestUnusedSearchModel(session, user);
+    		if (searchModel == null) {
+    			return UserCommons.getHTTPStatusResponse(Status.NO_CONTENT, "no search model found for this user");
+    		}
     		searchModel.setDelivered(new Date());
     		session.update(searchModel);
     		session.flush();
     		
-    		String xml = XMLBuilder.buildSearchModelXml(searchModel, uriInfo);
+    		String xml = util.searchengine.xml.XMLBuilder.buildSearchModelXml(searchModel, uriInfo);
     		return UserCommons.getHTTPStatusResponse(Status.OK, xml);
 		}
 		catch(Exception e) {
