@@ -56,7 +56,7 @@ public class SearchCommons {
 		return searchModel;
 	}
 	
-	public static List<SearchDocuments> search(Session session, String search, String defaultField, int offset, int number, SearchDocumentsSet searchDocumentsSet) {
+	public static List<SearchDocuments> search(Session session, String search, String defaultField, int offset, int number, SearchDocumentsSet searchDocumentsSet, SearchModel searchModel) {
 		List<SearchDocuments> searchDocuments = getExistingSearchDocuments(searchDocumentsSet, offset, number);
 		
 		// compute which documents really need to be searched, when the stored ones are used
@@ -70,6 +70,7 @@ public class SearchCommons {
 			searchDocumentsSet.setCreated(new Date());
 			searchDocumentsSet.setComputationTime(System.currentTimeMillis()-time);
 			searchDocumentsSet.setQuery(search);
+			searchDocumentsSet.setSearchModel(searchModel);
 			
 			searchDocuments.addAll(getSearchDocumentsFromDocumentHashItem(session, searchDocumentsSet, items, effectiveOffset));
 		}

@@ -14,12 +14,11 @@ import org.sciplore.resources.User;
 public class SearchDocumentsQueries {
 
 	@SuppressWarnings("unchecked")
-	public static SearchDocuments getSearchDocument(Session session, String hashId, User user) throws Exception {
+	public static SearchDocuments getSearchDocument(Session session, String hashId) throws Exception {
 		Criteria criteria = session.createCriteria(SearchDocuments.class).add(Restrictions.eq("hashId", hashId));
 		for (SearchDocuments result : (List<SearchDocuments>) criteria.list()) {
-			if (result.getSearchDocumentsSet().getSearchModel().getUser().getId() == user.getId()) {
-				return result;
-			}
+			// can't check for the user because there might not be a search_model attached if the search was done without search model
+			return result;
 		}
 		
 		return null;

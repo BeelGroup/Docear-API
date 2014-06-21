@@ -56,6 +56,7 @@ import org.sciplore.resources.DocumentsPdfHash;
 import org.sciplore.resources.FulltextUrl;
 import org.sciplore.resources.SearchDocuments;
 import org.sciplore.resources.SearchDocumentsSet;
+import org.sciplore.resources.SearchModel;
 import org.sciplore.resources.User;
 
 import util.DocumentCommons;
@@ -533,7 +534,7 @@ public class DocumentResource {
 	@Path("/{q}")
 	public Response search(@Context UriInfo uriInfo, @Context HttpServletRequest request, @PathParam(value = "q") String q, @QueryParam("source") String source, @QueryParam("userName") String userName,
 			@DefaultValue(Tools.DEFAULT_FORMAT) @QueryParam("format") String format, @QueryParam("stream") boolean stream, @QueryParam("defaultField") String defaultField,
-			@QueryParam("offset") int offset, @QueryParam("number") int number, @QueryParam("SearchDocumentsSet") Integer searchDocSetId) {
+			@QueryParam("offset") int offset, @QueryParam("number") int number, @QueryParam("searchDocumentsSetId") Integer searchDocSetId, @QueryParam("searchModelId") Integer searchModelId) {
 		
 		Session session = Tools.getSession();
 		try {
@@ -541,10 +542,10 @@ public class DocumentResource {
 			if (user == null) {
 				return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "unauthorized");
 			}
-			if (!ResourceCommons.authenticate(request, user)) {
-				return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "no valid access token.");
-			}
-			
+//			if (!ResourceCommons.authenticate(request, user)) {
+//				return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "no valid access token.");
+//			}
+//			
 			SearchDocumentsSet searchDocumentsSet = null;
 			if (searchDocSetId != null) {
 				searchDocumentsSet = (SearchDocumentsSet) session.get(SearchDocumentsSet.class, searchDocSetId);
@@ -553,7 +554,12 @@ public class DocumentResource {
 				searchDocumentsSet = new SearchDocumentsSet(session);
 			}
 			
-			List<SearchDocuments> searchDocuments = SearchCommons.search(session, q, defaultField, offset, number, searchDocumentsSet);
+			SearchModel searchModel = null;
+			if (searchModelId != null) {
+				searchModel = (SearchModel) session.get(SearchModel.class, searchModelId);
+			}
+			
+			List<SearchDocuments> searchDocuments = SearchCommons.search(session, q, defaultField, offset, number, searchDocumentsSet, searchModel);
 			try {
 				session.saveOrUpdate(searchDocumentsSet);
 				
@@ -592,11 +598,11 @@ public class DocumentResource {
 			if (user == null) {
 				return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "unauthorized");
 			}
-			if (!ResourceCommons.authenticate(request, user)) {
-				return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "no valid access token.");
-			}
+//			if (!ResourceCommons.authenticate(request, user)) {
+//				return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "no valid access token.");
+//			}
 
-			SearchDocuments searchDoc = SearchDocumentsQueries.getSearchDocument(session, hashId, user);
+			SearchDocuments searchDoc = SearchDocumentsQueries.getSearchDocument(session, hashId);
 			// only react if not clicked already && recDoc has deliveredDate
 			if (searchDoc.getClicked() == null && searchDoc.getSearchDocumentsSet().getDelivered() != null) {
 				SearchCommons.click(session, searchDoc);				
