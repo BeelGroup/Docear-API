@@ -2,45 +2,33 @@ package util.searchengine.xml;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
 
 import javax.ws.rs.core.UriInfo;
 
 import org.sciplore.resources.Document;
 import org.sciplore.resources.SearchDocuments;
-import org.sciplore.resources.SearchDocumentsSet;
+import org.sciplore.resources.SearchDocumentsPage;
 import org.sciplore.resources.SearchModel;
 import org.w3c.dom.Element;
 
 import util.InternalCommons;
 
 public class XMLBuilder {
-	public static String buildSearchDocumentsXml(SearchDocumentsSet searchDocSet, List<SearchDocuments> searchDocuments, UriInfo uriInfo, String userName) {
+	public static String buildSearchDocumentsXml(SearchDocumentsPage searchDocumentsPage,UriInfo uriInfo, String userName) {
 		org.w3c.dom.Document dom = InternalCommons.getNewXMLDocument();
 		if(dom != null) {
 			Element root = dom.createElement("search_results");
-			root.setAttribute("id", String.valueOf(searchDocSet.getId()));
-//			root.setAttribute("descriptor", settings.getRecommendationLabel().getValue());
-//			root.setAttribute("evaluationLabel", settings.getRecommendationRatingLabel().getValue());
+			root.setAttribute("id", String.valueOf(searchDocumentsPage.getSearchDocumentsSet().getId()));
+			root.setAttribute("page", String.valueOf(searchDocumentsPage.getPage()));
 			dom.appendChild(root);
 			
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 			String baseUri = uriInfo.getBaseUri().toString();
-//			boolean first = true;
-			for (SearchDocuments searchDoc : searchDocuments) {
+			for (SearchDocuments searchDoc : searchDocumentsPage.getSearchDocuments()) {
 				Element searchResult = dom.createElement("search_result");
 				searchResult.setAttribute("id", String.valueOf(searchDoc.getId()));
 				searchResult.setAttribute("fulltext", baseUri+"documents/"+searchDoc.getHashId()+"/download/?userName="+userName);
-//				if (first && settings != null) {
-//					if (settings.getUsePrefix() != null && settings.getUsePrefix()) {
-//						searchResult.setAttribute("prefix", "[Sponsored]");
-//					}
-//					if (settings.getHighlight() != null && settings.getHighlight()) {
-//						searchResult.setAttribute("highlighted", "true");
-//					}
-//				}				
-//				first = false;
-				searchResult.setAttribute("created", sdf.format(searchDocSet.getCreated()));
+				searchResult.setAttribute("created", sdf.format(searchDocumentsPage.getCreated()));
 
 				Date clicked = searchDoc.getClicked();
 				if (clicked != null) {

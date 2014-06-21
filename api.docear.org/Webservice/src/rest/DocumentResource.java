@@ -55,6 +55,7 @@ import org.sciplore.resources.DocumentXref;
 import org.sciplore.resources.DocumentsPdfHash;
 import org.sciplore.resources.FulltextUrl;
 import org.sciplore.resources.SearchDocuments;
+import org.sciplore.resources.SearchDocumentsPage;
 import org.sciplore.resources.SearchDocumentsSet;
 import org.sciplore.resources.SearchModel;
 import org.sciplore.resources.User;
@@ -534,7 +535,7 @@ public class DocumentResource {
 	@Path("/{q}")
 	public Response search(@Context UriInfo uriInfo, @Context HttpServletRequest request, @PathParam(value = "q") String q, @QueryParam("source") String source, @QueryParam("userName") String userName,
 			@DefaultValue(Tools.DEFAULT_FORMAT) @QueryParam("format") String format, @QueryParam("stream") boolean stream, @QueryParam("defaultField") String defaultField,
-			@QueryParam("offset") int offset, @QueryParam("number") int number, @QueryParam("searchDocumentsSetId") Integer searchDocSetId, @QueryParam("searchModelId") Integer searchModelId) {
+			@QueryParam("page") Integer page, @QueryParam("number") int number, @QueryParam("searchDocumentsSetId") Integer searchDocSetId, @QueryParam("searchModelId") Integer searchModelId) {
 		
 		Session session = Tools.getSession();
 		try {
@@ -559,11 +560,19 @@ public class DocumentResource {
 				searchModel = (SearchModel) session.get(SearchModel.class, searchModelId);
 			}
 			
-			List<SearchDocuments> searchDocuments = SearchCommons.search(session, q, defaultField, offset, number, searchDocumentsSet, searchModel);
+			if (page == null) {
+				page = 1;
+			}
+			if (number == 0) {
+				number = 10;
+			}
+			
+			SearchDocumentsPage searchDocumentsPage = SearchCommons.search(session, q, defaultField, page, number, searchDocumentsSet, searchModel);
 			try {
-				session.saveOrUpdate(searchDocumentsSet);
+				session.saveOrUpdate(searchDocumentsPage.getSearchDocumentsSet());
+				session.saveOrUpdate(searchDocumentsPage);
 				
-				for (SearchDocuments sd : searchDocuments) {
+				for (SearchDocuments sd : searchDocumentsPage.getSearchDocuments()) {
 					session.saveOrUpdate(sd);
 				}
 			}
@@ -571,7 +580,7 @@ public class DocumentResource {
 				e.printStackTrace();
 			}
 			
-			String xml = XMLBuilder.buildSearchDocumentsXml(searchDocumentsSet, searchDocuments, uriInfo, user.getUsername());
+			String xml = XMLBuilder.buildSearchDocumentsXml(searchDocumentsPage, uriInfo, user.getUsername());
 			return UserCommons.getHTTPStatusResponse(Status.OK, xml);
 		}
 		catch (NullPointerException e) {
@@ -604,7 +613,7 @@ public class DocumentResource {
 
 			SearchDocuments searchDoc = SearchDocumentsQueries.getSearchDocument(session, hashId);
 			// only react if not clicked already && recDoc has deliveredDate
-			if (searchDoc.getClicked() == null && searchDoc.getSearchDocumentsSet().getDelivered() != null) {
+			if (searchDoc.getClicked() == null && searchDoc.getSearchDocumentsPage().getDelivered() != null) {
 				SearchCommons.click(session, searchDoc);				
 			}
 

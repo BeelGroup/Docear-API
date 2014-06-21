@@ -19,11 +19,10 @@ import org.sciplore.eventhandler.Required;
 public class SearchDocuments extends Resource {
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "search_documents_set_id")
+	@JoinColumn(name = "search_documents_page_id")
 	@Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
 	@Required
-	private SearchDocumentsSet searchDocumentsSet;										
-
+	private SearchDocumentsPage searchDocumentsPage;
 	
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "fulltext_url_id")
@@ -44,13 +43,7 @@ public class SearchDocuments extends Resource {
 	private Integer presentationRank;
 	
 	@Column()
-	private Integer documentsPerPage;
-
-	@Column()
 	private Float relevance;
-	
-	@Column()
-	private Boolean varSeen;
 	
 	public SearchDocuments() {
 	}
@@ -67,14 +60,14 @@ public class SearchDocuments extends Resource {
 		else {
 			return null;
 		}
+	}	
+
+	public SearchDocumentsPage getSearchDocumentsPage() {
+		return searchDocumentsPage;
 	}
 
-	public SearchDocumentsSet getSearchDocumentsSet() {
-		return searchDocumentsSet;
-	}
-
-	public void setSearchDocumentsSet(SearchDocumentsSet searchDocumentsSet) {
-		this.searchDocumentsSet = searchDocumentsSet;
+	public void setSearchDocumentsPage(SearchDocumentsPage searchDocumentsPage) {
+		this.searchDocumentsPage = searchDocumentsPage;
 	}
 
 	public FulltextUrl getFulltextUrl() {
@@ -128,28 +121,12 @@ public class SearchDocuments extends Resource {
 		this.presentationRank = presentationRank;
 	}
 
-	public Integer getDocumentsPerPage() {
-		return documentsPerPage;
-	}
-
-	public void setDocumentsPerPage(Integer documentsPerPage) {
-		this.documentsPerPage = documentsPerPage;
-	}
-
 	public Float getRelevance() {
 		return relevance;
 	}
 
 	public void setRelevance(Float relevance) {
 		this.relevance = relevance;
-	}
-
-	public Boolean getVarSeen() {
-		return varSeen;
-	}
-
-	public void setVarSeen(Boolean varSeen) {
-		this.varSeen = varSeen;
 	}
 
 }

@@ -1,9 +1,11 @@
 package util.searchengine;
 
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.Session;
 import org.mrdlib.index.DocumentHashItem;
@@ -14,6 +16,7 @@ import org.sciplore.resources.Document;
 import org.sciplore.resources.DocumentsPdfHash;
 import org.sciplore.resources.FulltextUrl;
 import org.sciplore.resources.SearchDocuments;
+import org.sciplore.resources.SearchDocumentsPage;
 import org.sciplore.resources.SearchDocumentsSet;
 import org.sciplore.resources.SearchModel;
 import org.sciplore.resources.User;
@@ -56,33 +59,43 @@ public class SearchCommons {
 		return searchModel;
 	}
 	
-	public static List<SearchDocuments> search(Session session, String search, String defaultField, int offset, int number, SearchDocumentsSet searchDocumentsSet, SearchModel searchModel) {
-		List<SearchDocuments> searchDocuments = getExistingSearchDocuments(searchDocumentsSet, offset, number);
+	public static SearchDocumentsPage search(Session session, String search, String defaultField, int page, int number, SearchDocumentsSet searchDocumentsSet, SearchModel searchModel) {
+		long time = System.currentTimeMillis();
+		if (searchDocumentsSet != null && searchDocumentsSet.getId() != null) {
+			SearchDocumentsPage searchDocumentsPage = getExistingSearchDocumentsPage(searchDocumentsSet, page);
+			if (searchDocumentsPage != null) {
+				return searchDocumentsPage;
+			}
+		}	
 		
 		// compute which documents really need to be searched, when the stored ones are used
-		int effectiveNumber = number - searchDocuments.size();
-		int effectiveOffset = offset + searchDocuments.size();
+		int effectiveOffset = (page-1) * number;
+		int effectiveNumber = effectiveOffset + number;
 		
+		SearchDocumentsPage searchDocumentsPage = new SearchDocumentsPage(session);
 		try {
-			long time = System.currentTimeMillis();
-			Searcher searcher = new Searcher();			
-			List<DocumentHashItem> items = searcher.search(search, defaultField, effectiveOffset, effectiveNumber);
-			searchDocumentsSet.setCreated(new Date());
-			searchDocumentsSet.setComputationTime(System.currentTimeMillis()-time);
 			searchDocumentsSet.setQuery(search);
 			searchDocumentsSet.setSearchModel(searchModel);
 			
-			searchDocuments.addAll(getSearchDocumentsFromDocumentHashItem(session, searchDocumentsSet, items, effectiveOffset));
+			searchDocumentsPage.setCreated(new Date());
+			searchDocumentsPage.setComputationTime(System.currentTimeMillis()-time);
+			searchDocumentsPage.setDocuments_per_page(number);
+			searchDocumentsPage.setPage(page);
+			searchDocumentsPage.setSearchDocumentsSet(searchDocumentsSet);
+			
+			Searcher searcher = new Searcher();		
+			Collection<DocumentHashItem> items = searcher.search(search, defaultField, effectiveOffset, effectiveNumber);
+			searchDocumentsPage.setSearchDocuments(getSearchDocumentsFromDocumentHashItem(session, searchDocumentsPage, items, effectiveOffset));
 		}
 		catch (Exception e) {
 			e.printStackTrace();
 		}
 		
-		return searchDocuments;
+		return searchDocumentsPage;
 	}
 	
-	public static List<SearchDocuments> getSearchDocumentsFromDocumentHashItem(Session session, SearchDocumentsSet searchDocSet, List<DocumentHashItem> items, int offset) {
-		List<SearchDocuments> searchDocuments = new ArrayList<SearchDocuments>();
+	public static Set<SearchDocuments> getSearchDocumentsFromDocumentHashItem(Session session, SearchDocumentsPage searchDocPage, Collection<DocumentHashItem> items, int offset) {
+		Set<SearchDocuments> searchDocuments = new HashSet<SearchDocuments>();
     	for (DocumentHashItem item : items) {
     		Document doc = null;
     		FulltextUrl fulltextUrl = null;
@@ -114,7 +127,7 @@ public class SearchCommons {
     			continue;
     		}
     
-    		SearchDocuments searchDoc = createSearchDocument(session, searchDocSet, fulltextUrl, item.rank, item.relevance, offset);
+    		SearchDocuments searchDoc = createSearchDocument(session, searchDocPage, fulltextUrl, item.rank, item.relevance, offset);
     		if (searchDoc != null) {
     			searchDocuments.add(searchDoc);
     		}
@@ -123,29 +136,28 @@ public class SearchCommons {
     	return searchDocuments;
 	}
 	
-	private static SearchDocuments createSearchDocument(Session session, SearchDocumentsSet searchDocSet, FulltextUrl fulltextUrl, int rank, Float relevance, int offset) {		
+	private static SearchDocuments createSearchDocument(Session session, SearchDocumentsPage searchDocPage, FulltextUrl fulltextUrl, int rank, Float relevance, int offset) {		
 		SearchDocuments searchDoc = new SearchDocuments(session);
-		searchDoc.setSearchDocumentsSet(searchDocSet);
+		searchDoc.setSearchDocumentsPage(searchDocPage);
 		searchDoc.setFulltextUrl(fulltextUrl);
-		searchDoc.setPresentationRank(++offset);
+		searchDoc.setOriginalRank(offset+rank);
+		searchDoc.setPresentationRank(rank);
 		searchDoc.setRelevance(relevance);
+		rank++;
 
 		return searchDoc;
 	}
 
-	private static List<SearchDocuments> getExistingSearchDocuments(SearchDocumentsSet searchDocumentsSet, Integer offset, int number) {
-		List<SearchDocuments> searchDocuments = new ArrayList<SearchDocuments>();
-		
-		if (searchDocumentsSet != null && searchDocumentsSet.getSearchDocuments().size() > 0) {
-    		for (SearchDocuments searchDoc : searchDocumentsSet.getSearchDocuments()) {
-    			Integer index = searchDoc.getPresentationIndex();
-    			if (index != null && index >= offset && index < (offset+number)) {
-    				searchDocuments.add(searchDoc);
+	private static SearchDocumentsPage getExistingSearchDocumentsPage(SearchDocumentsSet searchDocumentsSet, Integer page) {		
+		if (searchDocumentsSet != null && searchDocumentsSet.getSearchDocumentsPage().size() > 0) {
+    		for (SearchDocumentsPage searchDocPage : searchDocumentsSet.getSearchDocumentsPage()) {
+    			if (searchDocPage.getPage() == page) {
+    				return searchDocPage;
     			}
     		}
 		}
 		
-		return searchDocuments;
+		return null;
 	}
 
 	public static void click(Session session, SearchDocuments searchDoc) {

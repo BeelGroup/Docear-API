@@ -38,28 +38,13 @@ public class SearchDocumentsSet extends Resource {
 	
     @Column()
     private Date created;
-   
-    @Column(name = "computation_time")    
-    private Long computationTime;
 
-	@Column()
-    private Date delivered;
-	
-	@Column()
-    private Date deliveryTime;
-	
-    @Column()
-    private Date received;
-   
     @Column()
     private Integer userRating;
-    
-    @Column()
-    private Integer varAmountShould;
-    
+   
     @OneToMany(mappedBy = "searchDocumentsSet", fetch = FetchType.LAZY)
 	@Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)    
-	private Set<SearchDocuments> searchDocuments = new HashSet<SearchDocuments>();
+	private Set<SearchDocumentsPage> searchDocumentsPage = new HashSet<SearchDocumentsPage>();
     
     public SearchDocumentsSet() {
     	
@@ -111,38 +96,6 @@ public class SearchDocumentsSet extends Resource {
 		this.created = created;
 	}
 
-	public Long getComputationTime() {
-		return computationTime;
-	}
-
-	public void setComputationTime(Long computationTime) {
-		this.computationTime = computationTime;
-	}
-
-	public Date getDelivered() {
-		return delivered;
-	}
-
-	public void setDelivered(Date delivered) {
-		this.delivered = delivered;
-	}
-
-	public Date getDeliveryTime() {
-		return deliveryTime;
-	}
-
-	public void setDeliveryTime(Date deliveryTime) {
-		this.deliveryTime = deliveryTime;
-	}
-
-	public Date getReceived() {
-		return received;
-	}
-
-	public void setReceived(Date received) {
-		this.received = received;
-	}
-
 	public Integer getUserRating() {
 		return userRating;
 	}
@@ -151,19 +104,12 @@ public class SearchDocumentsSet extends Resource {
 		this.userRating = userRating;
 	}
 
-	public Integer getVarAmountShould() {
-		return varAmountShould;
+	public Set<SearchDocumentsPage> getSearchDocumentsPage() {
+		return searchDocumentsPage;
 	}
 
-	public void setVarAmountShould(Integer varAmountShould) {
-		this.varAmountShould = varAmountShould;
+	public void setSearchDocumentsPage(Set<SearchDocumentsPage> searchDocumentsPage) {
+		this.searchDocumentsPage = searchDocumentsPage;
 	}
-
-	public Set<SearchDocuments> getSearchDocuments() {
-		return searchDocuments;
-	}
-
-	public void setSearchDocuments(Set<SearchDocuments> searchDocuments) {
-		this.searchDocuments = searchDocuments;
-	}	
+	
 }
