@@ -5,4 +5,5 @@ public class DocumentHashItem {
 	public String pdfHash;
 	public int rank;
 	public Float relevance;
+	public int documentsAvailable;
 }

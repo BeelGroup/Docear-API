@@ -41,6 +41,9 @@ public class SearchDocumentsSet extends Resource {
 
     @Column()
     private Integer userRating;
+    
+    @Column()
+    private int documentsAvailable;
    
     @OneToMany(mappedBy = "searchDocumentsSet", fetch = FetchType.LAZY)
 	@Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)    
@@ -110,6 +113,14 @@ public class SearchDocumentsSet extends Resource {
 
 	public void setSearchDocumentsPage(Set<SearchDocumentsPage> searchDocumentsPage) {
 		this.searchDocumentsPage = searchDocumentsPage;
+	}
+
+	public int getDocumentsAvailable() {
+		return documentsAvailable;
+	}
+
+	public void setDocumentsAvailable(int documentsAvailable) {
+		this.documentsAvailable = documentsAvailable;
 	}
 	
 }

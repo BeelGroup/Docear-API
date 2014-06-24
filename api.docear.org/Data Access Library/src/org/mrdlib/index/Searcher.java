@@ -31,6 +31,10 @@ import org.slf4j.LoggerFactory;
  *
  * @author Mario Lipinski <a href="mailto:lipinski@sciplore.org">lipinski@sciplore.org</a>
  */
+/**
+ * @author stefan
+ *
+ */
 public class Searcher {	
 	private final static Logger logger = LoggerFactory.getLogger(Searcher.class);
 	private String indexDir = Config.getProperties("org.mrdlib").getProperty("indexDir");
@@ -50,24 +54,49 @@ public class Searcher {
 	}
 	
 	public List<DocumentHashItem> search(String search) throws ParseException, IOException {
-		return search(search, "text", 0, 100);
+		return search(search, "text", 0, 100, null);
 	}
 			
-	public List<DocumentHashItem> search(String search, String defaultField, int offset, int number) throws ParseException, IOException {	
+	public List<DocumentHashItem> search(String search, String defaultField, int offset, int number, Integer returnNumber) throws ParseException, IOException {	
 		if (defaultField == null) {
 			defaultField = "text";
 		}
 		
 		Query query = new QueryParser(Version.LUCENE_46, defaultField, new StandardAnalyzer(Version.LUCENE_46)).parse(search);
-		return search(query, offset, number);
+		return search(query, offset, number, returnNumber);
 	}
 	
 	public List<DocumentHashItem> search(Query query, int offset, int number) throws ParseException, IOException {
+		return search(query, offset, number, null);
+	}
+	
+	/**
+	 * @param query
+	 * @param offset
+	 * @param number number of docs that should be retrieved from lucene (important for paginator)
+	 * @param returnNumber number of docs that should be returned
+	 * @return List of DocumentHashItem retrieved from Lucene
+	 * @throws ParseException
+	 * @throws IOException
+	 */
+	public List<DocumentHashItem> search(Query query, int offset, int number, Integer returnNumber) throws ParseException, IOException {
 		List<DocumentHashItem> documentHashItem = new ArrayList<DocumentHashItem>();		
 		TopDocs td = is.search(query, offset+number);
 		
+		if (returnNumber == null) {
+			returnNumber = number;
+		}
+		
 		int rank = 0;
-		for (ScoreDoc sd : td.scoreDocs) {			
+		int i = 0;
+		
+		ScoreDoc[] docs = td.scoreDocs;
+		int documentsAvailable = docs.length;
+		for (ScoreDoc sd : td.scoreDocs) {
+			if (i++ >= returnNumber) {
+				break;
+			}
+			
 			DocumentHashItem item = new DocumentHashItem();
 			rank++;
 			if (rank > offset) {
@@ -75,7 +104,8 @@ public class Searcher {
     				item.documentId = Integer.parseInt((is.doc(sd.doc).get("id")));
     				item.pdfHash = is.doc(sd.doc).get("hash");				
     				item.rank = rank;
-    				item.relevance =sd.score;
+    				item.relevance = sd.score;
+    				item.documentsAvailable = documentsAvailable;
     				documentHashItem.add(item);
     			}
     			catch (Exception e) {

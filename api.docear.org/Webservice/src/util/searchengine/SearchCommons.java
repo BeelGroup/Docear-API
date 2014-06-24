@@ -70,7 +70,6 @@ public class SearchCommons {
 		
 		// compute which documents really need to be searched, when the stored ones are used
 		int effectiveOffset = (page-1) * number;
-		int effectiveNumber = number;
 		
 		SearchDocumentsPage searchDocumentsPage = new SearchDocumentsPage(session);
 		try {
@@ -84,7 +83,14 @@ public class SearchCommons {
 			searchDocumentsPage.setSearchDocumentsSet(searchDocumentsSet);
 			
 			Searcher searcher = new Searcher();		
-			Collection<DocumentHashItem> items = searcher.search(search, defaultField, effectiveOffset, effectiveNumber);
+			// 100 == maximum number of documents for paginator (10 pages with 10 results)
+			Collection<DocumentHashItem> items = searcher.search(search, defaultField, effectiveOffset, number, 100);
+			if (items != null && items.size()>0) {
+				searchDocumentsPage.getSearchDocumentsSet().setDocumentsAvailable(items.iterator().next().documentsAvailable);
+			}
+			else {
+				searchDocumentsPage.getSearchDocumentsSet().setDocumentsAvailable(0);
+			}
 			searchDocumentsPage.setSearchDocuments(getSearchDocumentsFromDocumentHashItem(session, searchDocumentsPage, items, effectiveOffset));
 		}
 		catch (Exception e) {

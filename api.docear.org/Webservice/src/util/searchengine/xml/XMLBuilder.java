@@ -20,6 +20,7 @@ public class XMLBuilder {
 			Element root = dom.createElement("search_results");
 			root.setAttribute("id", String.valueOf(searchDocumentsPage.getSearchDocumentsSet().getId()));
 			root.setAttribute("page", String.valueOf(searchDocumentsPage.getPage()));
+			root.setAttribute("documentsAvailable", String.valueOf(searchDocumentsPage.getSearchDocumentsSet().getDocumentsAvailable()));
 			dom.appendChild(root);
 			
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
