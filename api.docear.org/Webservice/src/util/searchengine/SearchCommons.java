@@ -70,7 +70,7 @@ public class SearchCommons {
 		
 		// compute which documents really need to be searched, when the stored ones are used
 		int effectiveOffset = (page-1) * number;
-		int effectiveNumber = effectiveOffset + number;
+		int effectiveNumber = number;
 		
 		SearchDocumentsPage searchDocumentsPage = new SearchDocumentsPage(session);
 		try {
