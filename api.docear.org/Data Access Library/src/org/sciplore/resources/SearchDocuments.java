@@ -16,7 +16,7 @@ import org.sciplore.eventhandler.Required;
 
 @Entity
 @Table(name = "search_documents")
-public class SearchDocuments extends Resource {
+public class SearchDocuments extends Resource implements Comparable<SearchDocuments>{
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "search_documents_page_id")
@@ -127,6 +127,11 @@ public class SearchDocuments extends Resource {
 
 	public void setRelevance(Float relevance) {
 		this.relevance = relevance;
+	}
+
+	@Override
+	public int compareTo(SearchDocuments o) {
+		return this.getPresentationRank().compareTo(o.getPresentationRank());
 	}
 
 }

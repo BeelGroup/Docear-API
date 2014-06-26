@@ -1,8 +1,8 @@
 package org.sciplore.resources;
 
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -47,7 +47,7 @@ public class SearchDocumentsSet extends Resource {
    
     @OneToMany(mappedBy = "searchDocumentsSet", fetch = FetchType.LAZY)
 	@Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)    
-	private Set<SearchDocumentsPage> searchDocumentsPage = new HashSet<SearchDocumentsPage>();
+	private Set<SearchDocumentsPage> searchDocumentsPage = new TreeSet<SearchDocumentsPage>();
     
     public SearchDocumentsSet() {
     	

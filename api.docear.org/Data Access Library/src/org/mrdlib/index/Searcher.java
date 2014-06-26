@@ -103,7 +103,7 @@ public class Searcher {
     			try {
     				item.documentId = Integer.parseInt((is.doc(sd.doc).get("id")));
     				item.pdfHash = is.doc(sd.doc).get("hash");				
-    				item.rank = rank;
+    				item.rank = rank-offset;
     				item.relevance = sd.score;
     				item.documentsAvailable = documentsAvailable;
     				documentHashItem.add(item);

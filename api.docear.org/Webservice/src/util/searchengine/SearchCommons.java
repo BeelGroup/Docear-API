@@ -2,10 +2,10 @@ package util.searchengine;
 
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.hibernate.Session;
 import org.mrdlib.index.DocumentHashItem;
@@ -101,7 +101,7 @@ public class SearchCommons {
 	}
 	
 	public static Set<SearchDocuments> getSearchDocumentsFromDocumentHashItem(Session session, SearchDocumentsPage searchDocPage, Collection<DocumentHashItem> items, int offset) {
-		Set<SearchDocuments> searchDocuments = new HashSet<SearchDocuments>();
+		Set<SearchDocuments> searchDocuments = new TreeSet<SearchDocuments>();
     	for (DocumentHashItem item : items) {
     		Document doc = null;
     		FulltextUrl fulltextUrl = null;
@@ -146,7 +146,7 @@ public class SearchCommons {
 		SearchDocuments searchDoc = new SearchDocuments(session);
 		searchDoc.setSearchDocumentsPage(searchDocPage);
 		searchDoc.setFulltextUrl(fulltextUrl);
-		searchDoc.setOriginalRank(offset+rank);
+		searchDoc.setOriginalRank(rank);
 		searchDoc.setPresentationRank(rank);
 		searchDoc.setRelevance(relevance);
 		rank++;
