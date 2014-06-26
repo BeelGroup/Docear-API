@@ -31,7 +31,7 @@ public class SearchDocumentsPage extends Resource {
 	private Integer page;
 	
     @Column()
-    private Integer documents_per_page;
+    private Integer documentsPerPage;
    
     @Column
     private Date created;
@@ -89,13 +89,13 @@ public class SearchDocumentsPage extends Resource {
 	public void setPage(Integer page) {
 		this.page = page;
 	}
-
-	public Integer getDocuments_per_page() {
-		return documents_per_page;
+	
+	public Integer getDocumentsPerPage() {
+		return documentsPerPage;
 	}
 
-	public void setDocuments_per_page(Integer documents_per_page) {
-		this.documents_per_page = documents_per_page;
+	public void setDocumentsPerPage(Integer documentsPerPage) {
+		this.documentsPerPage = documentsPerPage;
 	}
 
 	public Date getCreated() {

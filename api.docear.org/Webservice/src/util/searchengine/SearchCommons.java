@@ -78,13 +78,13 @@ public class SearchCommons {
 			
 			searchDocumentsPage.setCreated(new Date());
 			searchDocumentsPage.setComputationTime(System.currentTimeMillis()-time);
-			searchDocumentsPage.setDocuments_per_page(number);
+			searchDocumentsPage.setDocumentsPerPage(number);
 			searchDocumentsPage.setPage(page);
 			searchDocumentsPage.setSearchDocumentsSet(searchDocumentsSet);
 			
 			Searcher searcher = new Searcher();		
 			// 100 == maximum number of documents for paginator (10 pages with 10 results)
-			Collection<DocumentHashItem> items = searcher.search(search, defaultField, effectiveOffset, number, 100);
+			Collection<DocumentHashItem> items = searcher.search(search, defaultField, effectiveOffset, 100, number);
 			if (items != null && items.size()>0) {
 				searchDocumentsPage.getSearchDocumentsSet().setDocumentsAvailable(items.iterator().next().documentsAvailable);
 			}
