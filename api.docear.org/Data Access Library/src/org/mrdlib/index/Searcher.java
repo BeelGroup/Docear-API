@@ -99,7 +99,7 @@ public class Searcher {
 			
 			DocumentHashItem item = new DocumentHashItem();
 			rank++;
-			if (rank > offset) {
+			if (rank >= offset) {
     			try {
     				item.documentId = Integer.parseInt((is.doc(sd.doc).get("id")));
     				item.pdfHash = is.doc(sd.doc).get("hash");				
