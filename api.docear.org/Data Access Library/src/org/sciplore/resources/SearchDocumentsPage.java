@@ -1,7 +1,9 @@
 package org.sciplore.resources;
 
+import java.util.Comparator;
 import java.util.Date;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeSet;
 
 import javax.persistence.Column;
@@ -14,6 +16,9 @@ import javax.persistence.Table;
 
 import org.hibernate.Session;
 import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.OrderBy;
+import org.hibernate.annotations.Sort;
+import org.hibernate.annotations.SortType;
 import org.sciplore.eventhandler.Required;
 import org.sciplore.queries.SearchDocumentsPageQueries;
 
@@ -46,8 +51,15 @@ public class SearchDocumentsPage extends Resource {
     private Date received;
   
     @OneToMany(mappedBy = "searchDocumentsPage", fetch = FetchType.LAZY)
-	@Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)    
-	private Set<SearchDocuments> searchDocuments = new TreeSet<SearchDocuments>();
+	@Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
+    @Sort(type=SortType.COMPARATOR, comparator=SearchDocuments.class)
+    @OrderBy(clause = "presentationRank ASC")
+	private SortedSet<SearchDocuments> searchDocuments = new TreeSet<SearchDocuments>(new Comparator<SearchDocuments>() {
+		@Override
+		public int compare(SearchDocuments o1, SearchDocuments o2) {
+			return o1.getPresentationRank().compareTo(o2.getPresentationRank());
+		}
+	});
     
     public SearchDocumentsPage() {
     	
@@ -134,9 +146,7 @@ public class SearchDocumentsPage extends Resource {
 		return searchDocuments;
 	}
 
-	public void setSearchDocuments(Set<SearchDocuments> searchDocuments) {
+	public void setSearchDocuments(SortedSet<SearchDocuments> searchDocuments) {
 		this.searchDocuments = searchDocuments;
 	}
-
-	
 }

@@ -1,10 +1,11 @@
 package util.searchengine;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.hibernate.Session;
@@ -100,8 +101,13 @@ public class SearchCommons {
 		return searchDocumentsPage;
 	}
 	
-	public static Set<SearchDocuments> getSearchDocumentsFromDocumentHashItem(Session session, SearchDocumentsPage searchDocPage, Collection<DocumentHashItem> items, int offset) {
-		Set<SearchDocuments> searchDocuments = new TreeSet<SearchDocuments>();
+	public static SortedSet<SearchDocuments> getSearchDocumentsFromDocumentHashItem(Session session, SearchDocumentsPage searchDocPage, Collection<DocumentHashItem> items, int offset) {
+		SortedSet<SearchDocuments> searchDocuments = new TreeSet<SearchDocuments>(new Comparator<SearchDocuments>() {
+			@Override
+			public int compare(SearchDocuments o1, SearchDocuments o2) {
+				return o1.getPresentationRank().compareTo(o2.getPresentationRank());
+			}
+		});
     	for (DocumentHashItem item : items) {
     		Document doc = null;
     		FulltextUrl fulltextUrl = null;
@@ -134,6 +140,7 @@ public class SearchCommons {
     		}
     
     		SearchDocuments searchDoc = createSearchDocument(session, searchDocPage, fulltextUrl, item.rank, item.relevance, offset);
+    		System.out.println("stsm: rank: "+item.rank);
     		if (searchDoc != null) {
     			searchDocuments.add(searchDoc);
     		}

@@ -1,5 +1,6 @@
 package org.sciplore.resources;
 
+import java.util.Comparator;
 import java.util.Date;
 import java.util.UUID;
 
@@ -16,7 +17,7 @@ import org.sciplore.eventhandler.Required;
 
 @Entity
 @Table(name = "search_documents")
-public class SearchDocuments extends Resource implements Comparable<SearchDocuments>{
+public class SearchDocuments extends Resource implements Comparator<SearchDocuments>, Comparable<SearchDocuments>{
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "search_documents_page_id")
@@ -132,6 +133,11 @@ public class SearchDocuments extends Resource implements Comparable<SearchDocume
 	@Override
 	public int compareTo(SearchDocuments o) {
 		return this.getPresentationRank().compareTo(o.getPresentationRank());
+	}
+
+	@Override
+	public int compare(SearchDocuments o1, SearchDocuments o2) {
+		return o1.getPresentationRank().compareTo(o2.getPresentationRank());
 	}
 
 }

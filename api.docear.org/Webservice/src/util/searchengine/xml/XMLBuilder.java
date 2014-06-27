@@ -2,6 +2,7 @@ package util.searchengine.xml;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Iterator;
 
 import javax.ws.rs.core.UriInfo;
 
@@ -25,11 +26,15 @@ public class XMLBuilder {
 			
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 			String baseUri = uriInfo.getBaseUri().toString();
-			for (SearchDocuments searchDoc : searchDocumentsPage.getSearchDocuments()) {
+			Iterator<SearchDocuments> iter = searchDocumentsPage.getSearchDocuments().iterator();
+			while (iter.hasNext()) {				
+				SearchDocuments searchDoc = iter.next();
+				System.out.println("presentation_rank: "+searchDoc.getPresentationRank());
 				Element searchResult = dom.createElement("search_result");
 				searchResult.setAttribute("id", String.valueOf(searchDoc.getId()));
 				searchResult.setAttribute("fulltext", baseUri+"documents/"+searchDoc.getHashId()+"/download/?userName="+userName);
 				searchResult.setAttribute("created", sdf.format(searchDocumentsPage.getCreated()));
+				searchResult.setAttribute("presentationRank", sdf.format(searchDoc.getPresentationRank()));
 
 				Date clicked = searchDoc.getClicked();
 				if (clicked != null) {
