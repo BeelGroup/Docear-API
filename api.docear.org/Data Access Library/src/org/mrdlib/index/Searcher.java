@@ -81,29 +81,27 @@ public class Searcher {
 	 */
 	public List<DocumentHashItem> search(Query query, int offset, int number, Integer returnNumber) throws ParseException, IOException {
 		List<DocumentHashItem> documentHashItem = new ArrayList<DocumentHashItem>();		
-		TopDocs td = is.search(query, offset+number);
+		TopDocs td = is.search(query, number);
 		
 		if (returnNumber == null) {
 			returnNumber = number;
 		}
-		
-		int rank = 0;
+				
 		int i = 0;
 		
 		ScoreDoc[] docs = td.scoreDocs;
 		int documentsAvailable = docs.length;
 		for (ScoreDoc sd : td.scoreDocs) {
-			if (i++ >= returnNumber) {
+			if (i++ >= returnNumber+offset) {
 				break;
 			}
 			
-			DocumentHashItem item = new DocumentHashItem();
-			rank++;
-			if (rank >= offset) {
+			DocumentHashItem item = new DocumentHashItem();			
+			if (i > offset) {
     			try {
     				item.documentId = Integer.parseInt((is.doc(sd.doc).get("id")));
     				item.pdfHash = is.doc(sd.doc).get("hash");				
-    				item.rank = rank-offset;
+    				item.rank = i-offset;
     				item.relevance = sd.score;
     				item.documentsAvailable = documentsAvailable;
     				documentHashItem.add(item);
@@ -113,7 +111,7 @@ public class Searcher {
     			}
 			}
 		}
-		System.out.println("LuceneQuery added "+rank+" results to result list");
+		System.out.println("LuceneQuery added "+i+" results to result list");
 		return documentHashItem;
 	}
 	
