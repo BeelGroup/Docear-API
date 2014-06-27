@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.FlushMode;
-import org.hibernate.Hibernate;
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.sciplore.database.SessionProvider;

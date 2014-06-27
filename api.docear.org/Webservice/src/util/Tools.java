@@ -1,5 +1,7 @@
 package util;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -34,9 +36,6 @@ import org.hibernate.Session;
 import org.mrdlib.index.Indexer;
 import org.sciplore.database.SessionProvider;
 import org.sciplore.formatter.Bean;
-
-import java.io.File;
-import java.io.FileInputStream;
 
 public class Tools {
 	

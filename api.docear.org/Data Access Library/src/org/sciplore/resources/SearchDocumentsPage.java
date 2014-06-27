@@ -1,6 +1,5 @@
 package org.sciplore.resources;
 
-import java.util.Comparator;
 import java.util.Date;
 import java.util.Set;
 import java.util.SortedSet;
@@ -54,12 +53,7 @@ public class SearchDocumentsPage extends Resource {
 	@Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
     @Sort(type=SortType.COMPARATOR, comparator=SearchDocuments.class)
     @OrderBy(clause = "presentationRank ASC")
-	private SortedSet<SearchDocuments> searchDocuments = new TreeSet<SearchDocuments>(new Comparator<SearchDocuments>() {
-		@Override
-		public int compare(SearchDocuments o1, SearchDocuments o2) {
-			return o1.getPresentationRank().compareTo(o2.getPresentationRank());
-		}
-	});
+	private SortedSet<SearchDocuments> searchDocuments = new TreeSet<SearchDocuments>();
     
     public SearchDocumentsPage() {
     	

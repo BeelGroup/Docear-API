@@ -1,7 +1,8 @@
 package util.searchengine;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -102,13 +103,18 @@ public class SearchCommons {
 	}
 	
 	public static SortedSet<SearchDocuments> getSearchDocumentsFromDocumentHashItem(Session session, SearchDocumentsPage searchDocPage, Collection<DocumentHashItem> items, int offset) {
-		SortedSet<SearchDocuments> searchDocuments = new TreeSet<SearchDocuments>(new Comparator<SearchDocuments>() {
-			@Override
-			public int compare(SearchDocuments o1, SearchDocuments o2) {
-				return o1.getPresentationRank().compareTo(o2.getPresentationRank());
-			}
-		});
-    	for (DocumentHashItem item : items) {
+		SortedSet<SearchDocuments> searchDocuments = new TreeSet<SearchDocuments>();
+		
+		List<DocumentHashItem> list = new ArrayList<DocumentHashItem>(items);
+		if (searchDocPage.getPage() == 1) {
+			Collections.shuffle(list);
+		}
+		else {
+			Collections.sort(list);
+		}
+		
+		int i=1;
+    	for (DocumentHashItem item : list) {    		
     		Document doc = null;
     		FulltextUrl fulltextUrl = null;
     		if (item.pdfHash != null) {
@@ -140,7 +146,7 @@ public class SearchCommons {
     		}
     
     		SearchDocuments searchDoc = createSearchDocument(session, searchDocPage, fulltextUrl, item.rank, item.relevance, offset);
-    		System.out.println("stsm: rank: "+item.rank);
+    		searchDoc.setPresentationRank(i++);
     		if (searchDoc != null) {
     			searchDocuments.add(searchDoc);
     		}
@@ -154,7 +160,6 @@ public class SearchCommons {
 		searchDoc.setSearchDocumentsPage(searchDocPage);
 		searchDoc.setFulltextUrl(fulltextUrl);
 		searchDoc.setOriginalRank(rank);
-		searchDoc.setPresentationRank(rank);
 		searchDoc.setRelevance(relevance);
 		rank++;
 

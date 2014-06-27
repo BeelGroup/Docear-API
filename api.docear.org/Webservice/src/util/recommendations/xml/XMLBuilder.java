@@ -9,7 +9,6 @@ import org.sciplore.resources.Document;
 import org.sciplore.resources.RecommendationsDocuments;
 import org.sciplore.resources.RecommendationsDocumentsSet;
 import org.sciplore.resources.RecommendationsUsersSettings;
-import org.sciplore.resources.SearchModel;
 import org.w3c.dom.Element;
 
 import util.InternalCommons;

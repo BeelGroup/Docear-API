@@ -29,12 +29,11 @@ public class XMLBuilder {
 			Iterator<SearchDocuments> iter = searchDocumentsPage.getSearchDocuments().iterator();
 			while (iter.hasNext()) {				
 				SearchDocuments searchDoc = iter.next();
-				System.out.println("presentation_rank: "+searchDoc.getPresentationRank());
 				Element searchResult = dom.createElement("search_result");
 				searchResult.setAttribute("id", String.valueOf(searchDoc.getId()));
 				searchResult.setAttribute("fulltext", baseUri+"documents/"+searchDoc.getHashId()+"/download/?userName="+userName);
 				searchResult.setAttribute("created", sdf.format(searchDocumentsPage.getCreated()));
-				searchResult.setAttribute("presentationRank", sdf.format(searchDoc.getPresentationRank()));
+				searchResult.setAttribute("presentationRank", String.valueOf(searchDoc.getPresentationRank()));
 
 				Date clicked = searchDoc.getClicked();
 				if (clicked != null) {
