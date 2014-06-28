@@ -44,6 +44,9 @@ public class SearchDocumentsSet extends Resource {
     
     @Column()
     private int documentsAvailable;
+    
+    @Column()
+    private int varQuerySize;
    
     @OneToMany(mappedBy = "searchDocumentsSet", fetch = FetchType.LAZY)
 	@Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)    
@@ -121,6 +124,14 @@ public class SearchDocumentsSet extends Resource {
 
 	public void setDocumentsAvailable(int documentsAvailable) {
 		this.documentsAvailable = documentsAvailable;
+	}
+
+	public int getVarQuerySize() {
+		return varQuerySize;
+	}
+
+	public void setVarQuerySize(int varQuerySize) {
+		this.varQuerySize = varQuerySize;
 	}
 	
 }

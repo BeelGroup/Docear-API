@@ -49,6 +49,7 @@ import org.sciplore.database.SessionProvider;
 import org.sciplore.formatter.Bean;
 import org.sciplore.queries.DocumentQueries;
 import org.sciplore.queries.DocumentsPdfHashQueries;
+import org.sciplore.queries.SearchDocumentsPageQueries;
 import org.sciplore.queries.SearchDocumentsQueries;
 import org.sciplore.resources.Document;
 import org.sciplore.resources.DocumentXref;
@@ -59,6 +60,7 @@ import org.sciplore.resources.SearchDocumentsPage;
 import org.sciplore.resources.SearchDocumentsSet;
 import org.sciplore.resources.SearchModel;
 import org.sciplore.resources.User;
+import org.sciplore.utilities.DocearLogger;
 
 import util.DocumentCommons;
 import util.FulltextCommons;
@@ -590,6 +592,59 @@ public class DocumentResource {
 		catch (Exception e) {
 			e.printStackTrace();
 			return Tools.getHTTPStatusResponse(Status.INTERNAL_SERVER_ERROR, "Error searching for document.");
+		}
+		finally {
+			Tools.tolerantClose(session);
+		}
+	}
+	
+	@PUT
+	@Path("/{q}")
+	public Response confirmSearch(@Context UriInfo uriInfo, @Context HttpServletRequest request, @PathParam(value = "q") String q, @QueryParam("userName") String userName,
+			@QueryParam("page") final Integer page, @QueryParam("searchDocumentsSetId") final Integer searchDocSetId) {
+		
+		final Date now = new Date();
+		Session session = Tools.getSession();
+		try {
+			User user = new User(session).getUserByEmailOrUsername(userName);
+			if (user == null) {
+				return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "unauthorized");
+			}
+//			if (!ResourceCommons.authenticate(request, user)) {
+//				return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "no valid access token.");
+//			}
+			
+			AtomicOperation<Response> op = new AtomicOperation<Response>() {
+				@Override
+				public Response exec(Session session) {
+					try {    				
+						SearchDocumentsSet searchDocumentsSet = (SearchDocumentsSet) session.get(SearchDocumentsSet.class, searchDocSetId);			
+						SearchDocumentsPage searchDocumentsPage = SearchDocumentsPageQueries.getSearchDocumentsPage(session, searchDocumentsSet, page);
+						searchDocumentsPage.setReceived(now);
+	    				
+	    				session.update(searchDocumentsSet);
+	    				session.flush();
+	    			}
+	    			catch(Exception e) {
+	    				DocearLogger.error(e);
+	    				return UserCommons.getHTTPStatusResponse(Status.BAD_REQUEST, "");
+	    			}
+					return UserCommons.getHTTPStatusResponse(Status.OK, "OK");
+					
+				}
+			};
+			AtomicOperationHandle<Response> handle = SessionProvider.atomicManager.addOperation(op);
+			try {
+				return handle.getResult();
+			}
+			catch (IOException e) {
+				DocearLogger.error(e);
+				return UserCommons.getHTTPStatusResponse(Status.INTERNAL_SERVER_ERROR, e.getMessage());
+			}	
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+			return UserCommons.getHTTPStatusResponse(Status.INTERNAL_SERVER_ERROR, e.getMessage());
 		}
 		finally {
 			Tools.tolerantClose(session);

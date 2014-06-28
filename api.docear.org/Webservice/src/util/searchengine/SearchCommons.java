@@ -82,6 +82,7 @@ public class SearchCommons {
 		SearchDocumentsPage searchDocumentsPage = new SearchDocumentsPage(session);
 		try {
 			searchDocumentsSet.setQuery(search);
+			searchDocumentsSet.setVarQuerySize(computeVarQuerySize(search));
 			searchDocumentsSet.setSearchModel(searchModel);
 			
 			searchDocumentsPage.setCreated(new Date());
@@ -106,6 +107,19 @@ public class SearchCommons {
 		}
 		
 		return searchDocumentsPage;
+	}
+	
+	private static int computeVarQuerySize(String query) {
+		int size = 0;
+		query = query.toLowerCase().trim();
+		
+		for (String s : query.split(" ")) {
+			if (!s.equals("and") && !s.equals("or")) {
+				size++;
+			}
+		}
+		
+		return size;
 	}
 	
 	public static SortedSet<SearchDocuments> getSearchDocumentsFromDocumentHashItem(Session session, SearchDocumentsPage searchDocPage, Collection<DocumentHashItem> items, int offset) {

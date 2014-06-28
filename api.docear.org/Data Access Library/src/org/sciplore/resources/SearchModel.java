@@ -45,6 +45,9 @@ public class SearchModel extends Resource {
 	@Column(nullable = true)
 	private Date delivered;
 	
+	@Column(nullable = true)
+	private Date received;
+	
 	public SearchModel() {
 		super();
 	}
@@ -123,6 +126,14 @@ public class SearchModel extends Resource {
 
 	public void setDelivered(Date delivered) {
 		this.delivered = delivered;
+	}
+
+	public Date getReceived() {
+		return received;
+	}
+
+	public void setReceived(Date received) {
+		this.received = received;
 	}
 	
 }

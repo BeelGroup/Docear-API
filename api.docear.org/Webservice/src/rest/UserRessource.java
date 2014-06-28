@@ -92,10 +92,10 @@ public class UserRessource {
 		
 		try {
     		User user = new User(session).getUserByEmailOrUsername(userName);
-    		if (!ResourceCommons.authenticate(request, user)) {
-    			return UserCommons.getHTTPStatusResponse(Status.INTERNAL_SERVER_ERROR, "no valid access token.");
-    		}
-    		
+//    		if (!ResourceCommons.authenticate(request, user)) {
+//    			return UserCommons.getHTTPStatusResponse(Status.INTERNAL_SERVER_ERROR, "no valid access token.");
+//    		}
+//    		
     		SearchModel searchModel = SearchModelQueries.getLatestUnusedSearchModel(session, user);
     		if (searchModel == null) {
     			return UserCommons.getHTTPStatusResponse(Status.NO_CONTENT, "no search model found for this user");
@@ -106,6 +106,61 @@ public class UserRessource {
     		
     		String xml = util.searchengine.xml.XMLBuilder.buildSearchModelXml(searchModel, uriInfo);
     		return UserCommons.getHTTPStatusResponse(Status.OK, xml);
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+			return UserCommons.getHTTPStatusResponse(Status.INTERNAL_SERVER_ERROR, e.getMessage());
+		}			
+		finally {
+			Tools.tolerantClose(session);
+		}
+	}
+	
+	@PUT
+	@Path("/{username}/searchmodel/")
+	public Response confirmSearchModel(@PathParam("username") String userName, @Context UriInfo uriInfo, @Context HttpServletRequest request, 
+			@QueryParam("searchModelId") final Integer searchModelId) {
+		final Session session = SessionProvider.sessionFactory.openSession();
+		session.setFlushMode(FlushMode.MANUAL);
+		
+		try {
+    		User user = new User(session).getUserByEmailOrUsername(userName);
+    		if (!ResourceCommons.authenticate(request, user)) {
+    			return UserCommons.getHTTPStatusResponse(Status.INTERNAL_SERVER_ERROR, "no valid access token.");
+    		}
+    		
+    		if (searchModelId == null) {
+    			return UserCommons.getHTTPStatusResponse(Status.BAD_REQUEST, "no searchModelId set");
+    		}
+    		    		
+    		final Date now = new Date();
+    		
+    		AtomicOperation<Response> op = new AtomicOperation<Response>() {
+				@Override
+				public Response exec(Session session) {
+					try { 
+						SearchModel searchModel = (SearchModel) session.get(SearchModel.class, searchModelId);
+						searchModel.setReceived(now);
+	    				
+	    				session.update(searchModel);
+	    				session.flush();
+	    			}
+	    			catch(Exception e) {
+	    				DocearLogger.error(e);
+	    				return UserCommons.getHTTPStatusResponse(Status.BAD_REQUEST, "");
+	    			}
+					return UserCommons.getHTTPStatusResponse(Status.OK, "OK");
+					
+				}
+			};
+			AtomicOperationHandle<Response> handle = SessionProvider.atomicManager.addOperation(op);
+			try {
+				return handle.getResult();
+			}
+			catch (IOException e) {
+				DocearLogger.error(e);
+				return UserCommons.getHTTPStatusResponse(Status.INTERNAL_SERVER_ERROR, e.getMessage());
+			}
 		}
 		catch(Exception e) {
 			e.printStackTrace();
@@ -183,7 +238,8 @@ public class UserRessource {
 		finally {
 			Tools.tolerantClose(session);
 		}
-    		
+    	
+		final Date now = new Date();	
 		AtomicOperation<Response> op = new AtomicOperation<Response>() {
 			@Override
 			public Response exec(Session session) {
@@ -194,7 +250,7 @@ public class UserRessource {
     				}			
     				
     				if (rating == null && recDocSet.getReceived() == null) {
-    					recDocSet.setReceived(new Date());
+    					recDocSet.setReceived(now);
     				}
     				
     				if (rating != null) {
@@ -312,59 +368,7 @@ public class UserRessource {
 			
 			Tools.tolerantClose(session);
 		}
-		
-	}
-
-	private static int getTimeout(Integer build) {
-		// if generation of documents takes more than 4 seconds,
-		// they probably never arrive at the user with a timeout
-		// of 5 seconds
-
-		int timeout = 6000;
-		// Docear's connection timeout increased from 5s to 7s
-		// on build 135
-		if (build == null || build < 135) {
-			timeout = 4000;
-		}
-
-		return timeout;
-	}
-
-	// @GET
-	// @Path("/{username}/recommendations/{id}")
-	// public Response getLiteratureRecommendations(@PathParam("id") int id,
-	// @PathParam("username") String userName, @Context UriInfo uriInfo,
-	// @Context HttpServletRequest request, @DefaultValue(Tools.DEFAULT_FORMAT)
-	// @QueryParam("format") String format, @QueryParam("stream") boolean
-	// stream) {
-	// final Session session = SessionProvider.sessionFactory.openSession();
-	// try {
-	// User user = new User(session).getUserByEmailOrUsername(userName);
-	// if (!ResourceCommons.authenticate(request, user)) {
-	// return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED,
-	// "no valid access token.");
-	// }
-	//
-	// RecommendationsUsersSettings settings =
-	// UserCommons.getRecommendationsUsersSettings(session, user);
-	//
-	// RecommendationsDocuments recDoc =
-	// RecommendationsDocumentsQueries.getRecommendationsDocuments(session, id,
-	// user);
-	// if (recDoc == null) {
-	// return UserCommons.getHTTPStatusResponse(Status.NO_CONTENT, "");
-	// }
-	//
-	// Bean bean = new BeanFactory(uriInfo,
-	// request).getRecommendationBean(recDoc, "user/" + user.getUsername() +
-	// "/recommendations/", settings);
-	// return Tools.getSerializedResponse(format, bean, stream);
-	// }
-	// finally {
-	// Tools.tolerantClose(session);
-	// }
-	//
-	// }
+	}	
 
 	@POST
 	@Path("/{pathUsername}")
