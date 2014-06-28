@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -29,6 +30,7 @@ import util.recommendations.UserModelKeywordItem;
 
 public class SearchCommons {
 	private final static int MAX_MODEL_SIZE = 20;
+	private final static int MIN_MODEL_SIZE = 5;
 	
 	public static SearchModel createSearchModel(Session session, User user, UserModel userModel, List<UserModelItem> userModelItems) {
 		long time = System.currentTimeMillis();
@@ -37,7 +39,11 @@ public class SearchCommons {
 		Iterator<UserModelItem> iter = userModelItems.iterator();
 		
 		int size = 0;
-		while (iter.hasNext() && size<MAX_MODEL_SIZE) {
+		
+		Random random = new Random();
+		//
+		int maximumSize = random.nextInt(MAX_MODEL_SIZE - MIN_MODEL_SIZE + 1) + MIN_MODEL_SIZE;
+		while (iter.hasNext() && size < maximumSize) {
 			UserModelItem item = iter.next();
 			
 			if (item instanceof UserModelKeywordItem) {
