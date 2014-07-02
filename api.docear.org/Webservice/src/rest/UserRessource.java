@@ -92,10 +92,10 @@ public class UserRessource {
 		
 		try {
     		User user = new User(session).getUserByEmailOrUsername(userName);
-//    		if (!ResourceCommons.authenticate(request, user)) {
-//    			return UserCommons.getHTTPStatusResponse(Status.INTERNAL_SERVER_ERROR, "no valid access token.");
-//    		}
-//    		
+    		if (!ResourceCommons.authenticate(request, user)) {
+    			return UserCommons.getHTTPStatusResponse(Status.INTERNAL_SERVER_ERROR, "no valid access token.");
+    		}
+    		
     		SearchModel searchModel = SearchModelQueries.getLatestUnusedSearchModel(session, user);
     		if (searchModel == null) {
     			return UserCommons.getHTTPStatusResponse(Status.NO_CONTENT, "no search model found for this user");

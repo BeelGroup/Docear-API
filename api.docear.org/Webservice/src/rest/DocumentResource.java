@@ -545,10 +545,10 @@ public class DocumentResource {
 			if (user == null) {
 				return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "unauthorized");
 			}
-//			if (!ResourceCommons.authenticate(request, user)) {
-//				return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "no valid access token.");
-//			}
-//			
+			if (!ResourceCommons.authenticate(request, user)) {
+				return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "no valid access token.");
+			}
+			
 			SearchDocumentsSet searchDocumentsSet = null;
 			if (searchDocSetId != null) {
 				searchDocumentsSet = (SearchDocumentsSet) session.get(SearchDocumentsSet.class, searchDocSetId);
@@ -610,9 +610,9 @@ public class DocumentResource {
 			if (user == null) {
 				return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "unauthorized");
 			}
-//			if (!ResourceCommons.authenticate(request, user)) {
-//				return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "no valid access token.");
-//			}
+			if (!ResourceCommons.authenticate(request, user)) {
+				return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "no valid access token.");
+			}
 			
 			AtomicOperation<Response> op = new AtomicOperation<Response>() {
 				@Override
@@ -662,9 +662,9 @@ public class DocumentResource {
 			if (user == null) {
 				return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "unauthorized");
 			}
-//			if (!ResourceCommons.authenticate(request, user)) {
-//				return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "no valid access token.");
-//			}
+			if (!ResourceCommons.authenticate(request, user)) {
+				return UserCommons.getHTTPStatusResponse(Status.UNAUTHORIZED, "no valid access token.");
+			}
 
 			SearchDocuments searchDoc = SearchDocumentsQueries.getSearchDocument(session, hashId);
 			// only react if not clicked already && recDoc has deliveredDate
