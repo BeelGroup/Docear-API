@@ -605,6 +605,7 @@ public class DocumentResource {
 		
 		final Date now = new Date();
 		Session session = Tools.getSession();
+		session.setFlushMode(FlushMode.MANUAL);
 		try {
 			User user = new User(session).getUserByEmailOrUsername(userName);
 			if (user == null) {
@@ -655,7 +656,7 @@ public class DocumentResource {
 	@Path("/{hash}/download")
 	public Response downloadDocument(@PathParam("hash") String hashId, @Context UriInfo uriInfo, @QueryParam("userName") String userName,
 			@Context HttpServletRequest request, @DefaultValue(Tools.DEFAULT_FORMAT) @QueryParam("format") String format, @QueryParam("stream") boolean stream) {
-		final Session session = SessionProvider.sessionFactory.openSession();
+		Session session = Tools.getSession();
 		session.setFlushMode(FlushMode.MANUAL);
 		try {
 			User user = new User(session).getUserByEmailOrUsername(userName);
@@ -667,8 +668,8 @@ public class DocumentResource {
 			}
 
 			SearchDocuments searchDoc = SearchDocumentsQueries.getSearchDocument(session, hashId);
-			// only react if not clicked already && recDoc has deliveredDate
-			if (searchDoc.getClicked() == null && searchDoc.getSearchDocumentsPage().getDelivered() != null) {
+			// only react if not clicked already
+			if (searchDoc.getClicked() == null) {
 				SearchCommons.click(session, searchDoc);				
 			}
 

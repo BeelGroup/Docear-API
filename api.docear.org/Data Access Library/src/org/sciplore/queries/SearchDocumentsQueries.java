@@ -14,7 +14,7 @@ import org.sciplore.resources.User;
 public class SearchDocumentsQueries {
 
 	@SuppressWarnings("unchecked")
-	public static SearchDocuments getSearchDocument(Session session, String hashId) throws Exception {
+	public static synchronized SearchDocuments getSearchDocument(Session session, String hashId) throws Exception {
 		Criteria criteria = session.createCriteria(SearchDocuments.class).add(Restrictions.eq("hashId", hashId));
 		for (SearchDocuments result : (List<SearchDocuments>) criteria.list()) {
 			// can't check for the user because there might not be a search_model attached if the search was done without search model
@@ -25,14 +25,14 @@ public class SearchDocumentsQueries {
 	}
 
 	@SuppressWarnings("unchecked")
-	public static List<Document> getSearchDocumentsForUser(Session session, User user) {
+	public static synchronized List<Document> getSearchDocumentsForUser(Session session, User user) {
 		Criteria criteria = session.createCriteria(SearchDocumentsSet.class).add(Restrictions.eq("user", user));
 		criteria.createCriteria("searchDocuments");
 		criteria.setProjection(Projections.distinct(Projections.property("document")));
 		return criteria.list();
 	}
 
-	public static SearchDocuments getSearchDocuments(Session session, SearchDocuments searchDoc) {
+	public static synchronized SearchDocuments getSearchDocuments(Session session, SearchDocuments searchDoc) {
 		if (searchDoc.getId() != null) {
 			return (SearchDocuments) session.load(SearchDocuments.class, searchDoc.getId());			
 		}
