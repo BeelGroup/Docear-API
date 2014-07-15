@@ -195,6 +195,17 @@ public class Tools {
 			}
 		}
 	}
+	
+	public static void tolerantClose(Response response) {
+		if (response == null) {
+			return;
+		}
+		
+		try {
+			response.close();
+		}
+		catch(Exception ignore) {};
+	}
 
 	public static Map<String, Object> parseQueryParameter(UriInfo uriInfo) {
 		Map<String, Object> result = new HashMap<String, Object>();
