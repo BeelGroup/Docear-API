@@ -3,6 +3,7 @@ package org.docear;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.LinkedList;
@@ -28,8 +29,10 @@ import org.xml.sax.SAXException;
 
 public class Main {
 	
-	private static int NUMBER_OF_THREADS = 2;
-	private static int NUMBER_OF_FILES = 100;
+//	private static int NUMBER_OF_THREADS = 2;
+//	private static int NUMBER_OF_FILES = 100;
+	private static int NUMBER_OF_THREADS = 1;
+	private static int NUMBER_OF_FILES = 1;
 	
 	public static final String DOCEAR_SERVICES = "https://api.docear.org";
 	public final static Client client = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
@@ -164,13 +167,31 @@ public class Main {
 		if (maxRank != null) {
 			query+="&max_rank="+maxRank;
 		}
-		URL url = new URL (query);		
-		InputStream inputStream = url.openConnection().getInputStream();
+		URL url = new URL (query);
 		
+		HttpURLConnection conn = null;
+		InputStream inputStream = null;
+		LinkedList<TaskItem> resource = null;
 		
-		LinkedList<TaskItem> resource = parseDom(getXMLDocument(inputStream));
-		if (resource == null) {
-			return new LinkedList<TaskItem>();
+		try {
+			conn = (HttpURLConnection) url.openConnection();
+    		inputStream = conn.getInputStream();
+    		
+    		resource = parseDom(getXMLDocument(inputStream));
+    		if (resource == null) {
+    			return new LinkedList<TaskItem>();
+    		}
+		}
+		finally {
+			try {
+				inputStream.close();
+			}
+			catch (Exception ignore) {};
+			
+			try {
+				conn.disconnect();
+			}
+			catch (Exception ignore) {};
 		}
 		
 		return resource;

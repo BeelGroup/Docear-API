@@ -39,7 +39,7 @@ public class FullTextUploadWorker extends ReferenceUploadWorker {
 					formDataMultiPart.field("email", email);
 				}			
 			}
-			
+			System.out.println("posting new document [id:"+docId+"]");
 			WebTarget webTarget = Main.client.target(Main.DOCEAR_SERVICES + "/documents/" + docId	+ "/fulltexts/?format=txt");
 			Invocation.Builder builder = webTarget.request(MediaType.MULTIPART_FORM_DATA_TYPE);
     		builder.header("accessToken", "AEF7AA6612CF44B92012982C6C8A0333");

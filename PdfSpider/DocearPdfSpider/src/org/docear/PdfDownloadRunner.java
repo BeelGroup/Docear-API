@@ -147,12 +147,13 @@ public class PdfDownloadRunner extends Thread {
 				}
 			});
 			future.get(300, TimeUnit.SECONDS);				
-		} catch (Throwable e) {
+		} 
+		catch (Throwable e) {
 			System.out.println("[" + Thread.currentThread().getName() + "] xrefid: " + xref.getId() + ", " + e + ". Skipping and set indexed=null.");
 		}
 		finally {
 			try {
-				executor.shutdown();
+				executor.shutdownNow();
 			} catch (Throwable t) {
 			}
 		}
