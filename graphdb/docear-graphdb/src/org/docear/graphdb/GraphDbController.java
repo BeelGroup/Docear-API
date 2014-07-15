@@ -728,6 +728,7 @@ public class GraphDbController implements KernelEventHandler, TransactionEventLi
 			
 			public void run() {
 				long time = System.currentTimeMillis();
+				ClientResponse response = null;
 				try {
 					// construct data					
 					MultivaluedMap<String, String> formParams = new MultivaluedMapImpl();
@@ -737,7 +738,7 @@ public class GraphDbController implements KernelEventHandler, TransactionEventLi
 					WebResource webResource = client.resource(DOCEAR_SERVICES + "/internal/mindmaps/"+revision+"/pdf_hashes");
 					Builder builder = webResource.header("accessToken", "AEF7AA6612CF44B92012982C6C8A0333");
 
-					ClientResponse response = builder.post(ClientResponse.class, formParams);
+					response = builder.post(ClientResponse.class, formParams);
 
 					if (response.getStatus() != 200) {
 						DocearLogger.error("pdf_hashes for revision("+revision+") Exception: " + response.getStatus());
@@ -747,6 +748,10 @@ public class GraphDbController implements KernelEventHandler, TransactionEventLi
 					DocearLogger.error(e);
 				}
 				finally {
+					try {
+						response.close();
+					}
+					catch(Exception ignore) {};
 					DocearLogger.info("---- post pdf_hashes for revision("+revision+") time: " + (System.currentTimeMillis()-time));
 				}
 				synchronized (servicePostCounter) {
