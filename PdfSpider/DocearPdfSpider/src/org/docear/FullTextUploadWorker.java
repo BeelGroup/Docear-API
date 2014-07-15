@@ -2,12 +2,14 @@ package org.docear;
 
 import java.util.Collection;
 
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.WebResource.Builder;
-import com.sun.jersey.multipart.FormDataMultiPart;
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
+
 
 public class FullTextUploadWorker extends ReferenceUploadWorker {
 	
@@ -23,6 +25,7 @@ public class FullTextUploadWorker extends ReferenceUploadWorker {
 		if (System.getProperty("docear.debug") != null && System.getProperty("docear.debug").equals("true")) {
 			return true;
 		}
+		Response response = null;
 		try {
 			// construct data
 			FormDataMultiPart formDataMultiPart = new FormDataMultiPart();
@@ -36,14 +39,15 @@ public class FullTextUploadWorker extends ReferenceUploadWorker {
 					formDataMultiPart.field("email", email);
 				}			
 			}
-						
-			WebResource webResource = client.resource(Main.DOCEAR_SERVICES + "/documents/" + docId	+ "/fulltexts/?format=txt");
-			Builder builder = webResource.header("accessToken", "AEF7AA6612CF44B92012982C6C8A0333").type(MediaType.MULTIPART_FORM_DATA_TYPE);
-
-			ClientResponse response = builder.post(ClientResponse.class, formDataMultiPart);
+			
+			WebTarget webTarget = Main.client.target(Main.DOCEAR_SERVICES + "/documents/" + docId	+ "/fulltexts/?format=txt");
+			Invocation.Builder builder = webTarget.request(MediaType.MULTIPART_FORM_DATA_TYPE);
+    		builder.header("accessToken", "AEF7AA6612CF44B92012982C6C8A0333");
+			
+			response = builder.post(Entity.entity(formDataMultiPart, MediaType.MULTIPART_FORM_DATA_TYPE));
 
 			if (response.getStatus() != 200) {
-				System.out.println("["+Thread.currentThread().getName()+"] xrefid " + xRefId + ", HTTP status for pdf upload: " + response.getStatus() + "| " + response.getEntity(String.class)
+				System.out.println("["+Thread.currentThread().getName()+"] xrefid " + xRefId + ", HTTP status for pdf upload: " + response.getStatus() + "| " + response.getEntity()
 						+ " --> " + pdfWebUrl);
 			}
 			return true;
@@ -53,6 +57,9 @@ public class FullTextUploadWorker extends ReferenceUploadWorker {
 			System.out.println("["+Thread.currentThread().getName()+"] "+ e + "xrefid: " + xRefId + " Warning: this is not supposed to happen!");
 			e.printStackTrace();
 			return false;
+		}
+		finally {
+			Main.tolerantClose(response);
 		}
 	}
 }

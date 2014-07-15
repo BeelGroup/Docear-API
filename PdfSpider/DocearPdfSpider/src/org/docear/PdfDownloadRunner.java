@@ -11,12 +11,13 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.io.FileUtils;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.WebResource.Builder;
+import org.apache.commons.io.FileUtils;
 
 public class PdfDownloadRunner extends Thread {
 	private Main pdfSpider;
@@ -162,15 +163,16 @@ public class PdfDownloadRunner extends Thread {
 		if (System.getProperty("docear.debug") != null && System.getProperty("docear.debug").equals("true")) {
 			return true;
 		}
+		
+		Response response = null;
 		try {
-			Client client = Client.create(); // expensive operation, so change
-												// so that this is created as
-												// few times as possible
-			WebResource webResource = client.resource(Main.DOCEAR_SERVICES + "/documents/" + String.valueOf(xref.getDocumentId()) + "/xrefs/"
+			WebTarget webTarget = Main.client.target(Main.DOCEAR_SERVICES + "/documents/" + String.valueOf(xref.getDocumentId()) + "/xrefs/" 
 					+ String.valueOf(xref.getId()) + "/?dl_attempt=true");
-			Builder builder = webResource.header("accessToken", "AEF7AA6612CF44B92012982C6C8A0333");
+			
+			Invocation.Builder builder = webTarget.request(MediaType.MULTIPART_FORM_DATA_TYPE);
+    		builder.header("accessToken", "AEF7AA6612CF44B92012982C6C8A0333");
 
-			ClientResponse response = builder.put(ClientResponse.class);
+			response = builder.put(Entity.entity("", MediaType.MULTIPART_FORM_DATA));
 
 			if (response.getStatus() != 200) {
 				System.out.println("[" + Thread.currentThread().getName() + "] xrefid " + xref.getId() + ", HTTP status for database update: "
@@ -178,10 +180,14 @@ public class PdfDownloadRunner extends Thread {
 			}
 			return true;
 
-		} catch (Exception e) {
+		} 
+		catch (Exception e) {
 			System.out.println("[" + Thread.currentThread().getName() + "] " + e + "xrefid: " + xref.getId() + "Warning: this is not supposed to happen!");
 			e.printStackTrace();
 			return false;
+		}
+		finally {
+			Main.tolerantClose(response);
 		}
 	}
 

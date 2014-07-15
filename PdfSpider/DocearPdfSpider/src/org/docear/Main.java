@@ -10,10 +10,14 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Properties;
 
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.core.Response;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.sciplore.utilities.config.Config;
 import org.sciplore.xtract.Xtract;
 import org.w3c.dom.DOMException;
@@ -27,7 +31,8 @@ public class Main {
 	private static int NUMBER_OF_THREADS = 2;
 	private static int NUMBER_OF_FILES = 100;
 	
-	public static String DOCEAR_SERVICES = "https://api.docear.org";
+	public static final String DOCEAR_SERVICES = "https://api.docear.org";
+	public final static Client client = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
 	//public static String DOCEAR_SERVICES = "http://localhost:8080";
 
 	private LinkedList<TaskItem> docs;
@@ -226,5 +231,13 @@ public class Main {
 
 	public void setDocsInProcess(LinkedList<TaskItem> docsInProcess) {
 		this.docsInProcess = docsInProcess;
+	}
+	
+	public static void tolerantClose(Response response) {
+		try {
+			response.close();
+		}
+		catch (Exception ignore) {			
+		}
 	}
 }

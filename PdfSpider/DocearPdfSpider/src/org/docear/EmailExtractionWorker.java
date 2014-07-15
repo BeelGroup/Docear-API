@@ -1,22 +1,21 @@
 package org.docear;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.WebResource.Builder;
-import com.sun.jersey.multipart.FormDataMultiPart;
+
 
 public class EmailExtractionWorker extends ReferenceUploadWorker implements Worker {
 
@@ -91,22 +90,13 @@ public class EmailExtractionWorker extends ReferenceUploadWorker implements Work
 			return true;
 		}
 		try {
-			// construct data
-			FormDataMultiPart formDataMultiPart = new FormDataMultiPart();
-			formDataMultiPart.field("hash", hash);
-			if(emails != null) {
-				for (String email : emails) {
-					formDataMultiPart.field("email", email);
-				}			
-			}
-						
-			WebResource webResource = client.resource(Main.DOCEAR_SERVICES + "/internal/documents/" + hash	+ "/emails/");
-			Builder builder = webResource.header("accessToken", "AEF7AA6612CF44B92012982C6C8A0333").type(MediaType.MULTIPART_FORM_DATA_TYPE);
-
-			ClientResponse response = builder.post(ClientResponse.class, formDataMultiPart);
-
+			WebTarget webTarget = Main.client.target(Main.DOCEAR_SERVICES + "/internal/documents/" + hash	+ "/emails/");
+    		Invocation.Builder builder = webTarget.request(MediaType.MULTIPART_FORM_DATA_TYPE);
+    		builder.header("accessToken", "AEF7AA6612CF44B92012982C6C8A0333");
+    		Response response = builder.post(Entity.entity(emails, MediaType.MULTIPART_FORM_DATA_TYPE));
+			
 			if (response.getStatus() != 200) {
-				System.out.println("["+Thread.currentThread().getName()+"] hash " + hash + ", HTTP status for emails upload: " + response.getStatus() + "| " + response.getEntity(String.class));
+				System.out.println("["+Thread.currentThread().getName()+"] hash " + hash + ", HTTP status for emails upload: " + response.getStatus() + "| " + response.getEntity());
 			}
 			return true;
 
