@@ -353,9 +353,12 @@ public class GraphDbUserModelFactory {
 		try {
 			while (maxTrials > 0 && !valid) {
 				time = System.currentTimeMillis();
-				if (algorithm == null) {
+				System.out.println("debug: entering if algorithm is null: "+(algorithm==null));
+				if (algorithm == null) {					
 					algorithm = AlgorithmCommons.getRandomAlgorithm(session, maxTrials == 5);
+					System.out.println("debug: created algorithm: "+algorithm.getId());
 					session.saveOrUpdate(algorithm);
+					System.out.println("debug: saved algorithm is not null: "+(algorithm!=null));
 					RecommendationCommons.logger.log("created algorithm ["+algorithm.getId()+"] for user ["+user.getId()+"]");					
 				}
 				userModel.setAlgorithm(algorithm);
@@ -427,11 +430,12 @@ public class GraphDbUserModelFactory {
 
 	private List<UserModelItem> extractKeywordsFromResponse(Searcher searcher, Collection<XmlElement> collection, Algorithm alg) throws Exception {
 		List<UserModelItem> keywordItems = new ArrayList<UserModelItem>();
-		if (collection == null || collection.size() == 0) {
+		if (collection == null || collection.size() == 0 || alg == null) {
 			return keywordItems;
 		}
 
 		double factor = 1d;
+		
 		String[] factors = alg.getDataElementTypeWeighting().split(",");
 		if (factors.length >= 1) {
 			factor = Double.valueOf(factors[0]);
@@ -471,9 +475,11 @@ public class GraphDbUserModelFactory {
 		}
 
 		double factor = 1d;
-		String[] factors = alg.getDataElementTypeWeighting().split(",");
-		if (factors.length >= 2) {
-			factor = Double.valueOf(factors[1]);
+		if (alg.getDataElementTypeWeighting() != null) {
+			String[] factors = alg.getDataElementTypeWeighting().split(",");		
+    		if (factors.length >= 2) {
+    			factor = Double.valueOf(factors[1]);
+    		}
 		}
 
 		for (XmlElement element : collection) {
