@@ -432,9 +432,11 @@ public class GraphDbUserModelFactory {
 		}
 
 		double factor = 1d;
-		String[] factors = alg.getDataElementTypeWeighting().split(",");
-		if (factors.length >= 1) {
-			factor = Double.valueOf(factors[0]);
+		if (alg.getDataElementTypeWeighting() != null) {
+			String[] factors = alg.getDataElementTypeWeighting().split(",");		
+    		if (factors.length >= 2) {
+    			factor = Double.valueOf(factors[1]);
+    		}
 		}
 
 		for (XmlElement element : collection) {
