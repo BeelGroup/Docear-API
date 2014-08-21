@@ -5,7 +5,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Random;
 
 import javax.ws.rs.core.MultivaluedMap;
 
@@ -36,7 +35,7 @@ public class GraphDbUserModelFactory {
 
 	private final UserModel userModel;
 	private SearchModel searchModel = null;
-	private final String xml;
+	private String xml;
 	private final User user;
 
 	private Double ratioKeywordsInModel = null;
@@ -46,19 +45,30 @@ public class GraphDbUserModelFactory {
 		this(session, user, null);
 	}
 
-	public GraphDbUserModelFactory(Session session, User user, Algorithm algorithm) throws Exception {		
+	public GraphDbUserModelFactory(Session session, User user, Algorithm algorithm) throws Exception {
 		userModel = new UserModel(session);
-		xml = createModel(session, user, algorithm);	
 		this.user = user;
-		
+
+		try {
+			start(session, algorithm);
+		}
+		catch (Exception e) {
+			start(session, AlgorithmCommons.getDefault(session));
+		}
+	}
+
+	private void start(Session session, Algorithm algorithm) throws Exception {
+		xml = createModel(session, user, algorithm);
+
 		if (xml == null || xml.trim().length() == 0) {
 			Integer algId = null;
 			if (algorithm != null) {
 				algId = algorithm.getId();
 			}
-			RecommendationCommons.logger.log("xml empty for user ["+user.getId()+"] and algorithm ["+algId+"]");
-		}		
-		processXmlModel(session);		
+			RecommendationCommons.logger.log("xml empty for user [" + user.getId() + "] and algorithm [" + algId + "]");
+		}
+		processXmlModel(session);
+
 	}
 
 	private void processXmlModel(Session session) throws Exception {
@@ -86,7 +96,7 @@ public class GraphDbUserModelFactory {
 		userModelItems = extractKeywordsFromResponse(searcher, parser.getKeywords(), userModel.getAlgorithm());
 		userModelItems.addAll(extractReferencesFromResponse(session, searcher, parser.getReferences(), userModel.getAlgorithm()));
 		if (userModelItems == null || userModelItems.size() == 0) {
-			RecommendationCommons.logger.log("userModelItems empty for algorithm["+userModel.getAlgorithm().getId()+"] and xml:\n" + xml); 
+			RecommendationCommons.logger.log("userModelItems empty for algorithm[" + userModel.getAlgorithm().getId() + "] and xml:\n" + xml);
 			return;
 		}
 
@@ -115,8 +125,13 @@ public class GraphDbUserModelFactory {
 
 		storeGoogleDocumentQueries(session, userModelItems);
 
-		int resultAmount = new Random().nextInt(Math.min(userModelItems.size(), AlgorithmCommons.MAX_RESULT_AMOUNT)) + 1;
-		userModel.getAlgorithm().setResultAmount(resultAmount);
+		if (userModel.getAlgorithm().getResultAmount() > userModelItems.size()) {
+			throw new Exception("userModelItems smaller than algorithm's resultAmount!");
+		}
+		// int resultAmount = new
+		// Random().nextInt(Math.min(userModelItems.size(),
+		// AlgorithmCommons.MAX_RESULT_AMOUNT)) + 1;
+		// userModel.getAlgorithm().setResultAmount(resultAmount);
 
 		if (userModel.getAlgorithm().getDataElement() == Algorithm.DATA_ELEMENT_MAPS) {
 			userModel.getAlgorithm().setElementAmount(parser.getMeta("element_amount_maps"));
@@ -128,10 +143,10 @@ public class GraphDbUserModelFactory {
 			userModel.getAlgorithm().setNoDaysSinceMax(parser.getMeta("no_days_since_max_nodes"));
 			userModel.getAlgorithm().setNoDaysSinceChosen(parser.getMeta("no_days_since_chosen_nodes"));
 		}
-		
-		userModelItems = userModelItems.subList(0, resultAmount);
+
+		userModelItems = userModelItems.subList(0, userModel.getAlgorithm().getResultAmount());
 		userModel.setModel(getModelString());
-		
+
 		try {
 			searchModel = SearchCommons.createSearchModel(session, user, userModel, userModelItems);
 		}
@@ -311,14 +326,14 @@ public class GraphDbUserModelFactory {
 				// sbReferences.append(item).append(" ");
 			}
 		}
-		
+
 		return booleanQuery;
 	}
 
 	public UserModel getUserModel() {
 		return userModel;
 	}
-	
+
 	public SearchModel getSearchModel() {
 		return searchModel;
 	}
@@ -353,13 +368,12 @@ public class GraphDbUserModelFactory {
 		try {
 			while (maxTrials > 0 && !valid) {
 				time = System.currentTimeMillis();
-				System.out.println("debug: entering if algorithm is null: "+(algorithm==null));
-				if (algorithm == null) {					
-					algorithm = AlgorithmCommons.getRandomAlgorithm(session, maxTrials == 5);
-					System.out.println("debug: created algorithm: "+algorithm.getId());
-					session.saveOrUpdate(algorithm);
-					System.out.println("debug: saved algorithm is not null: "+(algorithm!=null));
-					RecommendationCommons.logger.log("created algorithm ["+algorithm.getId()+"] for user ["+user.getId()+"]");					
+				System.out.println("debug: entering if algorithm is null: " + (algorithm == null));
+				if (algorithm == null) {
+					algorithm = AlgorithmCommons.getRandomAlgorithm(session, maxTrials == 5);					
+					//session.saveOrUpdate(algorithm);
+					
+					RecommendationCommons.logger.log("created algorithm [" + algorithm.getId() + "] for user [" + user.getId() + "]");
 				}
 				userModel.setAlgorithm(algorithm);
 				valid = true;
@@ -369,20 +383,22 @@ public class GraphDbUserModelFactory {
 					return null;
 				}
 				try {
-    				response = requestUserModel(user, userModel.getAlgorithm(), null);
-    				if (response == null) {
-    					RecommendationCommons.logger.log("empty userModel for user ["+user.getId()+"] and algorithm ["+userModel.getAlgorithm().getId()+"]");
-    					maxTrials--;
-    					algorithm = null;
-    					valid = false;
-    				}
-    				else {
-    					valid = true;
-    				}
+					response = requestUserModel(user, userModel.getAlgorithm(), null);
+					if (response == null) {
+						RecommendationCommons.logger.log("empty userModel for user [" + user.getId() + "] and algorithm [" + userModel.getAlgorithm().getId()
+								+ "]");
+						maxTrials--;
+						algorithm = null;
+						valid = false;
+					}
+					else {
+						valid = true;
+					}
 				}
-				catch(Exception e) {
+				catch (Exception e) {
 					valid = false;
-					RecommendationCommons.logger.log("exception for algorithm ["+userModel.getAlgorithm().getId()+"] and user ["+user.getId()+"]: "+e.getMessage());
+					RecommendationCommons.logger.log("exception for algorithm [" + userModel.getAlgorithm().getId() + "] and user [" + user.getId() + "]: "
+							+ e.getMessage());
 					e.printStackTrace();
 				}
 			}
@@ -390,7 +406,8 @@ public class GraphDbUserModelFactory {
 				time = System.currentTimeMillis();
 				algorithm = AlgorithmCommons.getDefault(session);
 				userModel.setAlgorithm(algorithm);
-				RecommendationCommons.logger.log("using default algorithm ["+userModel.getAlgorithm().getPersistentIdentity().getId()+"] for user ["+user.getId()+"]");
+				RecommendationCommons.logger.log("using default algorithm [" + userModel.getAlgorithm().getPersistentIdentity().getId() + "] for user ["
+						+ user.getId() + "]");
 				response = requestUserModel(user, userModel.getAlgorithm(), null);
 			}
 		}
@@ -436,10 +453,10 @@ public class GraphDbUserModelFactory {
 
 		double factor = 1d;
 		if (alg.getDataElementTypeWeighting() != null) {
-			String[] factors = alg.getDataElementTypeWeighting().split(",");		
-    		if (factors.length >= 2) {
-    			factor = Double.valueOf(factors[1]);
-    		}
+			String[] factors = alg.getDataElementTypeWeighting().split(",");
+			if (factors.length >= 2) {
+				factor = Double.valueOf(factors[1]);
+			}
 		}
 
 		for (XmlElement element : collection) {
@@ -477,10 +494,10 @@ public class GraphDbUserModelFactory {
 
 		double factor = 1d;
 		if (alg.getDataElementTypeWeighting() != null) {
-			String[] factors = alg.getDataElementTypeWeighting().split(",");		
-    		if (factors.length >= 2) {
-    			factor = Double.valueOf(factors[1]);
-    		}
+			String[] factors = alg.getDataElementTypeWeighting().split(",");
+			if (factors.length >= 2) {
+				factor = Double.valueOf(factors[1]);
+			}
 		}
 
 		for (XmlElement element : collection) {
@@ -495,7 +512,7 @@ public class GraphDbUserModelFactory {
 					if (alg.getWeightingScheme() == Algorithm.WEIGHTING_SCHEME_TFIDF) {
 						weight *= searcher.getIDF(term, "references");
 					}
-					weight *= factor;					
+					weight *= factor;
 					if (weight.isInfinite()) {
 						weight = 0.000001;
 					}

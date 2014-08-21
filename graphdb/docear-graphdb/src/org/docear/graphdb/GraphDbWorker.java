@@ -139,9 +139,9 @@ public class GraphDbWorker {
 		
 		Set<Node> nodes = new HashSet<Node>();
 		Iterator<NodeRevision> iter = nodeSet.iterator();		
-			
-		// get random number from size+1 --> amount==0 means take all, everything else means the size itself
-		int amount = new Random().nextInt(Math.min(nodeSet.size(), AlgorithmArguments.MAX_ELEMENT_AMOUNT)+1);		
+		
+		// if not enough elements --> abort
+		int amount = (int) args.getArgument(AlgorithmArguments.ELEMENT_AMOUNT);				
 				
 		if (amount > 0) {
 			if (amount > nodeSet.size()) {
@@ -1015,11 +1015,12 @@ public class GraphDbWorker {
 				// get randomly the number of last days for which the mindmaps will be considered
 				GraphDbHelper.filterByDaysSinceLastForMaps(userMaps, args, userModel);
 
-			// get random number from size+1 --> amount==0 means take all, everything else means the size itself
-			int amount = new Random().nextInt(Math.min(userMaps.size(), AlgorithmArguments.MAX_ELEMENT_AMOUNT)+1);
-			if (amount > 0) {
-				userMaps = userMaps.subList(0, amount);				
+			// if not enough elements --> abort
+			int amount = (int) args.getArgument(AlgorithmArguments.ELEMENT_AMOUNT);
+			if (userMaps.size() < amount) {
+				return null;
 			}
+			userMaps = userMaps.subList(0, amount);				
 			
 			if (countAmount) {
 				for (Node map : userMaps) {

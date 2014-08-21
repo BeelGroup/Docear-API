@@ -2,6 +2,8 @@
 
 import java.util.Random;
 
+// and fix the following parameters: element_amount; results_amount; no_days_since_chosen;
+
 import org.hibernate.Session;
 import org.sciplore.resources.Algorithm;
 

@@ -14,7 +14,7 @@ public class AlgorithmArguments {
 	public static final String CHILDREN = "children";
 	public static final String TIMEFRAME = "timeframe";
 	public static final String ROOTPATH = "rootpath";
-//	public static final String ELEMENT_AMOUNT = "amount";
+	public static final String ELEMENT_AMOUNT = "amount";
 	public static final String ELEMENT_SELECTION_METHOD = "method";
 	public static final String DATA_ELEMENT_TYPE = "type";
 //	public static final String DATA_ELEMENT_TYPE_WEIGHTING = "typeWeighting";
@@ -63,6 +63,7 @@ public class AlgorithmArguments {
 		this.arguments.put(NO_SIBLINGS, 0);
 		this.arguments.put(NO_CHILDREN, 0);
 		this.arguments.put(WORD_COUNT, 0);
+		this.arguments.put(ELEMENT_AMOUNT, 0);
 		
 		if(arguments == null || arguments.trim().length() == 0) {
 			return;
