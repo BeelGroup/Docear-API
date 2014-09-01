@@ -29,10 +29,8 @@ import org.xml.sax.SAXException;
 
 public class Main {
 	
-//	private static int NUMBER_OF_THREADS = 2;
-//	private static int NUMBER_OF_FILES = 100;
-	private static int NUMBER_OF_THREADS = 1;
-	private static int NUMBER_OF_FILES = 1;
+	private static int NUMBER_OF_THREADS = 2;
+	private static int NUMBER_OF_FILES = 100;
 	
 	public static final String DOCEAR_SERVICES = "https://api.docear.org";
 	public final static Client client = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
